@@ -1,8 +1,16 @@
 {
-  "name": "shenanibot-public",
-  "version": "1.4.2",
+  "name": "@madelsberger/shenanibot",
+  "version": "2.0.0",
   "description": "A Twitch bot that manages a queue of levels for Levelhead streamers",
+  "bin": {
+    "shenanibot": "src/platforms/twitch/index.js",
+    "shenanibot-config": "src/config/index.js"
+  },
   "main": "src/platforms/twitch/index.js",
+  "files": [
+    "src",
+    "!src/test"
+  ],
   "dependencies": {
     "@bscotch/rumpus-ce": "^1.2.4",
     "@madelsberger/pausebuffer": "^1.0.0",
@@ -27,17 +35,21 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jajdp/Shenanibot-public.git"
+    "url": "git+https://github.com/madelsberger/Shenanibot-public.git"
   },
   "keywords": [
     "levelhead",
     "twitch",
     "bot"
   ],
-  "author": "FantasmicGalaxy",
+  "contributors": [
+    "jajdp",
+    "FantasmicGalaxy",
+    "madelsberger"
+  ],
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/jajdp/Shenanibot-public/issues"
+    "url": "https://github.com/madelsberger/Shenanibot-public/issues"
   },
-  "homepage": "https://github.com/jajdp/Shenanibot-public#readme"
+  "homepage": "https://github.com/madelsberger/Shenanibot-public#readme"
 }

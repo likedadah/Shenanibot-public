@@ -1,19 +1,24 @@
+const dotenv = require('dotenv');
 const fs = require('fs');
 const fp = require('lodash/fp');
+const os = require('os');
 const path = require("path");
 
 const defaultConfig = require('./defaultConfig');
-const dotenv = require('dotenv');
 
-const configFilename = "config.json";
+const configFilename = path.join(os.homedir(), "shenanibot-config.json");
+const cwdConfigFilename = path.join(process.cwd(), "config.json");
+
+let needResave = false;
 
 const loader = {
   load() {
     const jsonData = loadFromJson();
     const config = fp.merge(defaultConfig, jsonData || loadFromLegacy() || {});
-    if (!jsonData) {
+    if (needResave) {
       try {
         this.save(config);
+        needResave = false;
       } catch(e) {}
     }
     return config;
@@ -53,9 +58,18 @@ const loader = {
 module.exports = loader;
 
 function loadFromJson() {
+  let filename = undefined;
   if (fs.existsSync(configFilename)) {
+    filename = configFilename;
+  } else {
+    needResave = true;
+    if (fs.existsSync(cwdConfigFilename)) {
+      filename = cwdConfigFilename;
+    }
+  }
+  if (filename) {
     try {
-      const data = fs.readFileSync(configFilename);
+      const data = fs.readFileSync(filename);
       return convertToCurrentVersion(JSON.parse(data));
     } catch(e) {}
   }

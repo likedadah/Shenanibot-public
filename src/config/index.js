@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 const inquirer = require("inquirer")
 const fp = require("lodash/fp");
 const Rx = require("rxjs");

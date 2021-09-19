@@ -47,31 +47,33 @@ If you don't know how to program, don't worry. This quick guide will teach every
 In order to run the chatbot, you will need Node.js, which you can download at https://nodejs.org. Click on the button that says *'Recommended for most users'*. Once it has downloaded, open the file, and a window will pop up to help guide you through the installation. The default settings should work fine.
 
 ## Installing the Bot
-Next, you will have to download the code for the bot. Click on the green button at the top of this screen that says **Code**, then click on **Download ZIP**
 
-For new installations, pick a directory for the bot (e.g. "c:\my_user\Documents\Shenanibot-public); this will be referred to as the "bot directory" throughout these instructions. Unpack the contents of the ZIP file into the bot directory. 
+Open a terminal (`cmd` or `PowerShell`) and enter the command
 
-If you're upgrading from a previous version, you can either user your existing bot diretory, or copy your configuration files to a new bot directory.
+`npm install --global @madelsberger/shenanibot`
 
-- To use your existing directory, you should remove the contents of the `src` folder.  (You might want to rename the old folder to `src-old` to keep as a backup until you have the new version working.)
+### Upgrading from a Previous Version
 
-- To use a new directory, you'll want to copy the `.env` file, and the `twitchpoints.json` file if there is one. These files will be used to initialize the new version's configuration. (These files are only used during upgrades to preserve the configuration from the old version; they are not needed for new installations.)
+Older versions of ShenaniBot required you to set up a "bot directory" and stored your configuration in that directory.  ShenaniBot now stores your configuration in your home diretory (e.g. typically "C:\users\&lt;your_name&gt;" on Windows), and the bot can be run from any terminal; so there is no longer a need for a bot directory.
 
-## Installing Project Dependencies
-Next, you'll need to open your computer's terminal, and navigate to the bot directory. (You can open the terminal on Windows by pressing "Window Key + R", then typing in `cmd`; or you can run PowerShell as your terminal.)
+To autotically migrate your configuration from an older version:
 
-Once you are in the directory/folder, you can install the project dependencies by typing:  
++ Open a terminal (`cmd` or `PowerShell`)
++ Navigate (`cd`) to your old bot directory
++ Run the command `shenanibot-config`
 
-`npm install`
+The config utility should load with your old configuration settings.  You can review and update config settings, or just immediately exit the config utility.
 
-This will install several packages the bot uses (such as client libraries for Twitch chat and the Rumpus API), as well as any packages required by those packages.
+You only need to do this once.  When you've verified that the new bot is configured correctly, you will be able to safely discard your old bot directory.
+
+Note that this migration process only works if no configuration file is found in your home directory.  If, when you run `shenanibot-config`, your previous config settings do not appear to be set, it may mean that you need to delete the file `shenanibot-config.json` from your home directory.  (For example, this could happen if you tried to run the new version of the bot before performing the migration process.)
 
 ## Configuration
-For most configuration options, you can run the configuration utility by typing:
+You can run the configuration utility from any terminal by typing:
 
-`npm run conigure`
+`shenanibot-configure`
 
-For new installatios, you will need to provide some information that's needed for the bot to interact with Twitch and with LevelHead. (If you are upgrading from a previous version of ShenaniBot, your configuration should be imported automatically.)
+For new installatios, you will need to provide some information that's needed for the bot to interact with Twitch and with LevelHead.
 
 You can also use the configuration utility to change configuration parameters at any time (although a bot restart is required for changes to take effect).
 
@@ -105,11 +107,13 @@ Once you've configured this feature, the bot will provide a URL with setup instr
 
 
 # Running the Bot
-Each time you run the bot, you'll have to naviagate in the terminal to the bot directory and type:
+To run the bot, open a terminal (`cmd` or `PowerShell`) and type the command
 
-`npm run start`
+`shenanibot`
 
-Then the terminal window will show the connection process to your Twitch channel and greets you with `"Bot Online!"`
+The terminal window will show the connection process to your Twitch channel.  (You will likely see the message "error: No response from Twitch."; this is normal and the bot should still function.)
+
+In your chat, you should see the message "Bot Connected!"
 
 ## Using Markers
 Markers create "breaks" in the queue.  This can be used in a couple different ways.
@@ -163,7 +167,20 @@ This does not mark the expedited level as "high priority".  While this may be su
 
 `add` - Add the level to the queue assuming all requirements for the user to be allowed to submit the level are met.  If a reward is associated with this behavior, then the regular `!add` command is disabled and levels can only be submitted by spending channel points.
 
-## Lastly...
+
+## Developers
+
 Feel free to study JavaScript and understand the code behind the Shenanibot. Make sure to edit and modify it as much as you need or want. And if you change it, feel free to help us make the bot better by sharing your code with us. Cheers!
 
-and shoutouts to the BS brothers for such a fantastic game!
+If you've cloned the repo (or downloaded and extracted a source ZIP), you can configure and run the bot directly from your local repo's root directory.  (This used to be the "normal" way to run the bot.)  To configure, use
+
+`npm run configure`
+
+and to run the bot, use
+
+`npm run start`
+
+
+## Lastly...
+
+Shoutouts to the BS brothers for such a fantastic game!

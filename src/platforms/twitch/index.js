@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 const pb = require('@madelsberger/pausebuffer');
 const TMI = require('tmi.js');
 
