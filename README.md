@@ -36,42 +36,56 @@ You can join the [Butterscotch Shenanigans Discord](https://discord.gg/w55QE5Y) 
 
 ## Getting Started
 **Materials:**  
-+ Node.js
 + LevelHead account
 + Streamer Twitch account
 + Bot Twitch account
 
 If you don't know how to program, don't worry. This quick guide will teach everything you need to know to get the bot up and running!
 
-**Node.js**  
-In order to run the chatbot, you will need Node.js, which you can download at https://nodejs.org. Click on the button that says *'Recommended for most users'*. Once it has downloaded, open the file, and a window will pop up to help guide you through the installation. The default settings should work fine.
-
 ## Installing the Bot
 
-Open a terminal (`cmd` or `PowerShell`) and enter the command
+There are two ways to install the bot: using `npm`, or using pre-compiled stand-alone binaries.
+
+If you are comfortable working with a `node.js` environment, then an `npm`-based installation can help automate upgrades.
+
+If you want the absolute simplicity of downloading an `.exe` (or linux or MacOS binary) and just running it, that's also an option.  Be aware that standard security software may ask for more confirmations when running the stand-alone binaries.
+
+### Installing with `npm`
+
+In order to use npm, you will need Node.js, which you can download at https://nodejs.org. Click on the button that says *'Recommended for most users'*. Once it has downloaded, open the file, and a window will pop up to help guide you through the installation. The default settings should work fine.
+
+Once you have node.js installed, open a terminal (`cmd` or `PowerShell`) and enter the command
 
 `npm install --global @madelsberger/shenanibot`
 
+### Using Pre-Compiled Stand-Alone Binaries
+
+From the project's github page, find the "Latest Release" link (toward the top of the page, to the right of the file list).  From the release page, download the appropriate binaries for your OS.  You should download two binaries (the bot and the config utility - e.g. for Windows, `shenanibot.exe` and `shenanibot-config.exe`.)
+
 ### Upgrading from a Previous Version
 
-Older versions of ShenaniBot required you to set up a "bot directory" and stored your configuration in that directory.  ShenaniBot now stores your configuration in your home diretory (e.g. typically "C:\users\\&lt;your_name&gt;" on Windows), and the bot can be run from any terminal; so there is no longer a need for a bot directory.
+From 2.0.0 onward, you can simply repeat the installation process.  (That is, for an `npm`-based installation, rerun the above install command; or if using stand-alone binaries, replace your old binaries with downloads from the new release.)
+
+Older versions of ShenaniBot (prior to 2.0.0) required you to set up a "bot directory" and stored your configuration in that directory.  ShenaniBot now stores your configuration in your home diretory (e.g. typically "C:\users\\&lt;your_name&gt;" on Windows); so there is no longer a need for a bot directory.
 
 To autotically migrate your configuration from an older version:
 
 + Open a terminal (`cmd` or `PowerShell`)
 + Navigate (`cd`) to your old bot directory
-+ Run the command `shenanibot-config`
++ Run the config utility (`shenanibot-config` for `npm`-based installs, or the config binary you downloaded)
 
 The config utility should load with your old configuration settings.  You can review and update config settings, or just immediately exit the config utility.
 
 You only need to do this once.  When you've verified that the new bot is configured correctly, you will be able to safely discard your old bot directory.
 
-Note that this migration process only works if no configuration file is found in your home directory.  If, when you run `shenanibot-config`, your previous config settings do not appear to be set, it may mean that you need to delete the file `shenanibot-config.json` from your home directory.  (For example, this could happen if you tried to run the new version of the bot before performing the migration process.)
+Note that this migration process only works if no configuration file is found in your home directory.  If, when you run the config utility, your previous config settings do not appear to be set, it may mean that you need to delete the file `shenanibot-config.json` from your home directory.  (For example, this could happen if you tried to run the new version of the bot before performing the migration process.)
 
 ## Configuration
-You can run the configuration utility from any terminal by typing:
+For `npm`-based installs, you can run the configuration utility from any terminal by typing:
 
 `shenanibot-configure`
+
+If you downloaded binaries, the one with `-config` in the filename will launch the config utility.
 
 For new installatios, you will need to provide some information that's needed for the bot to interact with Twitch and with LevelHead.
 
@@ -107,9 +121,11 @@ Once you've configured this feature, the bot will provide a URL with setup instr
 
 
 # Running the Bot
-To run the bot, open a terminal (`cmd` or `PowerShell`) and type the command
+To run the bot from an `npm`-based install open a terminal (`cmd` or `PowerShell`) and type the command
 
 `shenanibot`
+
+If you downloaded binaries, the one _without_ `config` in its name will launch the bot (e.g. `shenanibot.exe` for Windows).
 
 The terminal window will show the connection process to your Twitch channel.  (You will likely see the message "error: No response from Twitch."; this is normal and the bot should still function.)
 

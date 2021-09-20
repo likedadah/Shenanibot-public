@@ -1,6 +1,6 @@
 {
   "name": "@madelsberger/shenanibot",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "A Twitch bot that manages a queue of levels for Levelhead streamers",
   "bin": {
     "shenanibot": "src/platforms/twitch/index.js",
@@ -24,7 +24,8 @@
     "ws": "^7.5.5"
   },
   "devDependencies": {
-    "jasmine": "^3.7.0"
+    "jasmine": "^3.7.0",
+    "pkg": "^5.3.2"
   },
   "scripts": {
     "start": "node .",
@@ -51,5 +52,9 @@
   "bugs": {
     "url": "https://github.com/madelsberger/Shenanibot-public/issues"
   },
-  "homepage": "https://github.com/madelsberger/Shenanibot-public#readme"
+  "homepage": "https://github.com/madelsberger/Shenanibot-public#readme",
+  "pkg": {
+    "assets": "src/web/pub/**/*",
+    "outputPath": "dist"
+  }
 }
