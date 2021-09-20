@@ -3,6 +3,7 @@ const http = require("http");
 const WebSocket = require("ws");
 const path = require("path");
 
+let app = null;
 let wsServer = null;
 let botConfig = null;
 const endpoints = {};
@@ -15,7 +16,7 @@ module.exports = {
       return;
     }
 
-    const app = express();
+    app = express();
     app.use(express.static(path.join(__dirname, "pub")));
 
     const httpServer = http.createServer(app);
@@ -44,6 +45,10 @@ module.exports = {
   },
 
   getConfig: () => botConfig,
+
+  addStaticPath: (url, fsPath) => {
+    app.use(url, express.static(fsPath));
+  },
 
   register: (url, onConnect = (ws,req) => {}, onMessage = (msg,ws) => {}) => {
     endpoints[url] = {

@@ -54,7 +54,7 @@ Open a terminal (`cmd` or `PowerShell`) and enter the command
 
 ### Upgrading from a Previous Version
 
-Older versions of ShenaniBot required you to set up a "bot directory" and stored your configuration in that directory.  ShenaniBot now stores your configuration in your home diretory (e.g. typically "C:\users\&lt;your_name&gt;" on Windows), and the bot can be run from any terminal; so there is no longer a need for a bot directory.
+Older versions of ShenaniBot required you to set up a "bot directory" and stored your configuration in that directory.  ShenaniBot now stores your configuration in your home diretory (e.g. typically "C:\users\\&lt;your_name&gt;" on Windows), and the bot can be run from any terminal; so there is no longer a need for a bot directory.
 
 To autotically migrate your configuration from an older version:
 

@@ -388,6 +388,23 @@ const questions = {
         },
         validate: i => (typeof i !== 'number') ? 'Please enter a valid port number (1 - 65535)' : true
       }, 'The web server requires an unused TCP port.'
+    ),
+    buildConfigQuestion(
+      'config.overlayPath', {
+        when: a => {
+          if (!a.useWebServer) {
+            delete a.config.config.overlayPath;
+            return false;
+          }
+          return true;
+        },
+        message: 'Overlay Path:'
+      },
+        "If you want to supply custom overlay views, then you need to specify the\n"
+      + "directory where they will be found.  When the web server is running, a file\n"
+      + "placed in this directory can be accessed at the URL\n\n"
+      + `\thttp://localhost:${answers.config.config.httpPort}/overlay/usr/<filename>\n\n`
+      + "If you aren't using custom overlay views, you can leave this blank."
     )
   ]
 };

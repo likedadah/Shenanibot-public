@@ -28,6 +28,9 @@ const setLevels = queue => {
 module.exports = {
   init: () => {
     const config = httpServer.getConfig();
+    if (config.overlayPath) {
+      httpServer.addStaticPath('/overlay/usr', config.overlayPath)
+    }
     state.prefix = config.prefix;
     state.acceptCreatorCode = config.creatorCodeMode !== 'reject';
     setStatus(true);
