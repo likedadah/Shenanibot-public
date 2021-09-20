@@ -60,11 +60,11 @@ Once you have node.js installed, open a terminal (`cmd` or `PowerShell`) and ent
 
 ### Using Pre-Compiled Stand-Alone Binaries
 
-From the project's github page, find the "Latest Release" link (toward the top of the page, to the right of the file list).  From the release page, download the appropriate binaries for your OS.  You should download two binaries (the bot and the config utility - e.g. for Windows, `shenanibot.exe` and `shenanibot-config.exe`.)
+From the project's github page, find the "Latest Release" link (toward the top of the page, to the right of the file list).  From the release page, download the appropriate binary for your OS (e.g. for Windows, `shenanibot.exe`).
 
 ### Upgrading from a Previous Version
 
-From 2.0.0 onward, you can simply repeat the installation process.  (That is, for an `npm`-based installation, rerun the above install command; or if using stand-alone binaries, replace your old binaries with downloads from the new release.)
+From 2.0.0 onward, you can simply repeat the installation process.  (That is, for an `npm`-based installation, rerun the above install command; or if using stand-alone binary, replace your old binary with a download from the new release.)
 
 Older versions of ShenaniBot (prior to 2.0.0) required you to set up a "bot directory" and stored your configuration in that directory.  ShenaniBot now stores your configuration in your home diretory (e.g. typically "C:\users\\&lt;your_name&gt;" on Windows); so there is no longer a need for a bot directory.
 
@@ -85,7 +85,9 @@ For `npm`-based installs, you can run the configuration utility from any termina
 
 `shenanibot-configure`
 
-If you downloaded binaries, the one with `-config` in the filename will launch the config utility.
+If you downloaded a binary, run it with the `-c` (or `--config`) command-line option.  For example, on windows
+
+`shenanibot.exe -c`
 
 For new installatios, you will need to provide some information that's needed for the bot to interact with Twitch and with LevelHead.
 
@@ -125,7 +127,7 @@ To run the bot from an `npm`-based install open a terminal (`cmd` or `PowerShell
 
 `shenanibot`
 
-If you downloaded binaries, the one _without_ `config` in its name will launch the bot (e.g. `shenanibot.exe` for Windows).
+If you downloaded a binary, run it with no command line options to start the bot (e.g. `shenanibot.exe` for Windows).
 
 The terminal window will show the connection process to your Twitch channel.  (You will likely see the message "error: No response from Twitch."; this is normal and the bot should still function.)
 
