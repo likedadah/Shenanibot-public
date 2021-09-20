@@ -1,7 +1,7 @@
 #! /usr/bin/bash
 
-./node_modules/.bin/pkg .
-./node_modules/.bin/pkg --out-path dist src/config/index.js
+./node_modules/.bin/pkg -C Brotli .
+./node_modules/.bin/pkg -C Brotli --out-path dist src/config/index.js
 
 mv dist/shenanibot-win.exe dist/shenanibot.exe
 mv dist/index-linux dist/shenanibot-config-linux
