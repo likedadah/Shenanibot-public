@@ -18,8 +18,11 @@
 //     triggered by cb() should move the level from the nth position in the
 //     queue to the "now playing" position.  (The now playing position itself
 //     is postiion 1.)
+// - supportsCreatorCode (default true) : a boolean indicating whether the
+//   bot command or function being tested works with creator codes.  If false,
+//   omits any test that would pass a creator code as the 3rd parameter to cb
 
-module.exports = itPlaysALevel = (n, cb) => {
+module.exports = itPlaysALevel = (n, cb, supportsCreatorCode = true) => {
   describe("changes the 'now playing' entry, so", () => {
     describe("if the new 'now playing' entry is a level, it", () => {
       it("bookmarks the level", async function() {
@@ -58,180 +61,182 @@ module.exports = itPlaysALevel = (n, cb) => {
       });
     });
 
-    describe("if the new 'now playing' entry is a creator code, it", () => {
-      it("updates the clipboard if configured to do so", async function() {
-        const bot = this.buildBotInstance({config: {
-          creatorCodeMode: "clipboard"
-        }});
-        if (n > 1) {
-          await this.addLevels(bot, n - 2);
-          await bot.command("!add emp001", "viewer");
-          await bot.command("!add emp002", "viewer0");
-          await bot.command("!add emp003", "viewer");
-        }
-
-        await cb(bot, "viewer0", "emp002");
-
-        expect(this.clipboard.content).toEqual("emp002");
-      });
-
-      it("picks a level randomly if configured to do so", async function() {
-        let bot;
-        let queue;
-        const setup = async () => {
-          bot = this.buildBotInstance({config: {
-            creatorCodeMode: "auto",
-            httpPort: 8080
+    if (supportsCreatorCode) {
+      describe("if the new 'now playing' entry is a creator code, it", () => {
+        it("updates the clipboard if configured to do so", async function() {
+          const bot = this.buildBotInstance({config: {
+            creatorCodeMode: "clipboard"
           }});
           if (n > 1) {
             await this.addLevels(bot, n - 2);
             await bot.command("!add emp001", "viewer");
-            await bot.command("!add emp010", "viewer0");
+            await bot.command("!add emp002", "viewer0");
             await bot.command("!add emp003", "viewer");
           }
-        };
 
-        await setup();
-        this.setRandomizerToMax();
-        await cb(bot, "viewer0", "emp010");
+          await cb(bot, "viewer0", "emp002");
 
-        queue = await this.getQueue();
-        expect(queue[0].entry.id).toEqual("010l010");
+          expect(this.clipboard.content).toEqual("emp002");
+        });
 
-        await setup();
-        this.setRandomizerToMin();
-        await cb(bot, "viewer0", "emp010");
-
-        queue = await this.getQueue();
-        expect(queue[0].entry.id).toEqual("010l001");
-      });
-
-      it("prefers unplayed levels when choosing randomly", async function() {
-        let bot;
-        let queue;
-        const setup = async () => {
-          bot = this.buildBotInstance({config: {
-            creatorCodeMode: "auto",
-            httpPort: 8080
-          }});
-
-          // not easy for the mocks to let us control which levels are played,
-          // so we'll populate the cache and update played status there
-          this.setRandomizerToMin();
-          await bot.command("!add emp010", "viewer");  // will play 001
-          await bot.command("!add 010l002", "viewer");
-          await bot.command("!add 010l004", "viewer");
-          await bot.command("!add 010l005", "viewer");
-          await bot.command("!add 010l006", "viewer");
-          await bot.command("!add 010l008", "viewer");
-          console.log(await bot.command("!add 010l009", "viewer"));
-          await bot.command("!add 010l010", "viewer");
-          for(let i = 0; i < 8; i++) {
-            await bot.command("!next", "streamer");
-          }
-          if (n > 1) {
-            await this.addLevels(bot, n - 2);
-            await bot.command("!add emp001", "viewer");
-            await bot.command("!add emp010", "viewer0");
-            await bot.command("!add emp003", "viewer");
-          }
-        };
-
-        await setup();
-        this.setRandomizerToMax();
-        await cb(bot, "viewer0", "emp010");
-
-        queue = await this.getQueue();
-        expect(queue[0].entry.id).toEqual("010l007");
-
-        await setup();
-        this.setRandomizerToMin();
-        await cb(bot, "viewer0", "emp010");
-
-        queue = await this.getQueue();
-        expect(queue[0].entry.id).toEqual("010l003");
-      });
-
-      it("sends a websocket update if configured to do so", async function() {
-        const bot = this.buildBotInstance({config: {
-          httpPort: 8080,
-          creatorCodeMode: "webui"
-        }});
-        if (n > 1) {
-          await this.addLevels(bot, n - 2);
-          await bot.command("!add emp001", "viewer");
-          await bot.command("!add emp002", "viewer0");
-          await bot.command("!add emp003", "viewer");
-        }
-
-        await cb(bot, "viewer0", "emp002");
-
-        const creatorInfo = await this.getCreatorInfo();
-        expect(creatorInfo.creatorId).toEqual("emp002");
-        expect(creatorInfo.name).toEqual("EmployEE 002");
-        expect(creatorInfo.levels.map(l => l.id))
-                                              .toEqual(["002l001", "002l002"]);
-      });
-
-      it("takes time to load all the level data for a new creator code",
-         async function() {
-        jasmine.clock().install();
-        const bot = this.buildBotInstance({config: {
-          httpPort: 8080,
-          creatorCodeMode: "webui"
-        }});
-        if (n > 1) {
-          await this.addLevels(bot, n - 2);
-          await bot.command("!add emp001", "viewer");
-          await bot.command("!add emp200", "viewer0");
-          await bot.command("!add emp003", "viewer");
-        }
-
-        await cb(bot, "viewer0", "emp200");
-
-        let creatorInfo = await this.getCreatorInfo();
-        expect(creatorInfo.levels.length).toBe(128);
-
-        jasmine.clock().tick(1000);
-
-        creatorInfo = await this.getCreatorInfo();
-        expect(creatorInfo.levels.length).toBe(200);
-
-        jasmine.clock().uninstall();
-      });
-
-      it("caches the level data for a creator code", async function() {
-        const buildQueue = async () => {
-          if (n > 1) {
-            for (let i = 1; i < n; i++) {
+        it("picks a level randomly if configured to do so", async function() {
+          let bot;
+          let queue;
+          const setup = async () => {
+            bot = this.buildBotInstance({config: {
+              creatorCodeMode: "auto",
+              httpPort: 8080
+            }});
+            if (n > 1) {
+              await this.addLevels(bot, n - 2);
               await bot.command("!add emp001", "viewer");
+              await bot.command("!add emp010", "viewer0");
+              await bot.command("!add emp003", "viewer");
             }
+          };
+
+          await setup();
+          this.setRandomizerToMax();
+          await cb(bot, "viewer0", "emp010");
+
+          queue = await this.getQueue();
+          expect(queue[0].entry.id).toEqual("010l010");
+
+          await setup();
+          this.setRandomizerToMin();
+          await cb(bot, "viewer0", "emp010");
+
+          queue = await this.getQueue();
+          expect(queue[0].entry.id).toEqual("010l001");
+        });
+
+        it("prefers unplayed levels when choosing randomly", async function() {
+          let bot;
+          let queue;
+          const setup = async () => {
+            bot = this.buildBotInstance({config: {
+              creatorCodeMode: "auto",
+              httpPort: 8080
+            }});
+
+            // not easy for the mocks to let us control which levels are played,
+            // so we'll populate the cache and update played status there
+            this.setRandomizerToMin();
+            await bot.command("!add emp010", "viewer");  // will play 001
+            await bot.command("!add 010l002", "viewer");
+            await bot.command("!add 010l004", "viewer");
+            await bot.command("!add 010l005", "viewer");
+            await bot.command("!add 010l006", "viewer");
+            await bot.command("!add 010l008", "viewer");
+            console.log(await bot.command("!add 010l009", "viewer"));
+            await bot.command("!add 010l010", "viewer");
+            for(let i = 0; i < 8; i++) {
+              await bot.command("!next", "streamer");
+            }
+            if (n > 1) {
+              await this.addLevels(bot, n - 2);
+              await bot.command("!add emp001", "viewer");
+              await bot.command("!add emp010", "viewer0");
+              await bot.command("!add emp003", "viewer");
+            }
+          };
+  
+          await setup();
+          this.setRandomizerToMax();
+          await cb(bot, "viewer0", "emp010");
+
+          queue = await this.getQueue();
+          expect(queue[0].entry.id).toEqual("010l007");
+
+          await setup();
+          this.setRandomizerToMin();
+          await cb(bot, "viewer0", "emp010");
+
+          queue = await this.getQueue();
+          expect(queue[0].entry.id).toEqual("010l003");
+        });
+
+        it("sends a websocket update if configured to do so", async function() {
+          const bot = this.buildBotInstance({config: {
+            httpPort: 8080,
+            creatorCodeMode: "webui"
+          }});
+          if (n > 1) {
+            await this.addLevels(bot, n - 2);
+            await bot.command("!add emp001", "viewer");
+            await bot.command("!add emp002", "viewer0");
+            await bot.command("!add emp003", "viewer");
+          }
+
+          await cb(bot, "viewer0", "emp002");
+
+          const creatorInfo = await this.getCreatorInfo();
+          expect(creatorInfo.creatorId).toEqual("emp002");
+          expect(creatorInfo.name).toEqual("EmployEE 002");
+          expect(creatorInfo.levels.map(l => l.id))
+                                              .toEqual(["002l001", "002l002"]);
+        });
+
+        it("takes time to load all the level data for a new creator code",
+           async function() {
+          jasmine.clock().install();
+          const bot = this.buildBotInstance({config: {
+            httpPort: 8080,
+            creatorCodeMode: "webui"
+          }});
+          if (n > 1) {
+            await this.addLevels(bot, n - 2);
+            await bot.command("!add emp001", "viewer");
             await bot.command("!add emp200", "viewer0");
             await bot.command("!add emp003", "viewer");
           }
-        }
 
-        jasmine.clock().install();
-        const bot = this.buildBotInstance({config: {
-          httpPort: 8080,
-          creatorCodeMode: "webui"
-        }});
-        await buildQueue();
-        await cb(bot, "viewer0", "emp200");
-        jasmine.clock().tick(1000);
-        const queue = await this.getSimpleQueue();
-        for (const entry of queue) {
-          await bot.command("!next", "streamer");
-        }
-        await buildQueue();
+          await cb(bot, "viewer0", "emp200");
 
-        await cb(bot, "viewer0", "emp200");
+          let creatorInfo = await this.getCreatorInfo();
+          expect(creatorInfo.levels.length).toBe(128);
 
-        creatorInfo = await this.getCreatorInfo();
-        expect(creatorInfo.levels.length).toBe(200);
+          jasmine.clock().tick(1000);
 
-        jasmine.clock().uninstall();
+          creatorInfo = await this.getCreatorInfo();
+          expect(creatorInfo.levels.length).toBe(200);
+
+          jasmine.clock().uninstall();
+        });
+
+        it("caches the level data for a creator code", async function() {
+          const buildQueue = async () => {
+            if (n > 1) {
+              for (let i = 1; i < n; i++) {
+                await bot.command("!add emp001", "viewer");
+              }
+              await bot.command("!add emp200", "viewer0");
+              await bot.command("!add emp003", "viewer");
+            }
+          }
+
+          jasmine.clock().install();
+          const bot = this.buildBotInstance({config: {
+            httpPort: 8080,
+            creatorCodeMode: "webui"
+          }});
+          await buildQueue();
+          await cb(bot, "viewer0", "emp200");
+          jasmine.clock().tick(1000);
+          const queue = await this.getSimpleQueue();
+          for (const entry of queue) {
+            await bot.command("!next", "streamer");
+          }
+          await buildQueue();
+
+          await cb(bot, "viewer0", "emp200");
+
+          creatorInfo = await this.getCreatorInfo();
+          expect(creatorInfo.levels.length).toBe(200);
+
+          jasmine.clock().uninstall();
+        });
       });
-    });
+    }
   });
 };

@@ -96,6 +96,8 @@ class ShenaniBot {
         return args[1] ? this.checkLevel(args[1]) : "";
       case "add":
         return args[1] ? this.addLevelToQueue(args[1], username) : "";
+      case "chadd":
+        return args[1] ? this.checkAndAddLevel(args[1], username) : "";
       case "remove":
         return args[1] ? this.removeLevelFromQueue(args[1], username) : "";
       case "boost":
@@ -313,29 +315,7 @@ class ShenaniBot {
   }
 
   async checkLevel(levelId) {
-    if (this._getIdType(levelId) !== "level") {
-      return "Please enter a valid level code to check.";
-    }
-
-    let levelInfo = await this.rce.levelhead.levels.search({ levelIds: levelId, includeMyInteractions: true } );
-
-    if (!levelInfo.length) {
-      return "Oops! That level does not exist!";
-    }
-
-    const level = new ViewerLevel(levelInfo[0].levelId, levelInfo[0].title, "");
-    const interactions = levelInfo[0].interactions;
-    let verb = "not played";
-    if (interactions) {
-      if (interactions.played) {
-        verb = "played";
-      }
-      if (interactions.completed) {
-        verb = "beaten";
-      }
-    }
-
-    return `${this.streamer} has ${verb} ${level.display}.`;
+    return (await this._checkLevel(levelId)).message;
   }
 
   async addLevelToQueue(id, username, rewardType) {
@@ -415,6 +395,15 @@ class ShenaniBot {
       this.levels[id] = "is already in the queue";
     }
     return response;
+  }
+
+  async checkAndAddLevel(id, username) {
+    const check = await this._checkLevel(id);
+
+    if (check.isUnplayedLevel) {
+      return `${check.message} ${await this.addLevelToQueue(id, username)}`;
+    }
+    return check.message;
   }
 
   removeLevelFromQueue(id, username) {
@@ -633,6 +622,41 @@ class ShenaniBot {
       }
     },
     this.options.roundDuration * 60000);
+  }
+
+  async _checkLevel(levelId) {
+    if (this._getIdType(levelId) !== "level") {
+      return {
+        isUnplayedLevel: false,
+        message: "Please enter a valid level code to check."
+      };
+    }
+
+    let levelInfo = await this.rce.levelhead.levels.search({ levelIds: levelId, includeMyInteractions: true } );
+
+    if (!levelInfo.length) {
+      return {
+        isUnplayedLevel: false,
+        message: "Oops! That level does not exist!"
+      };
+    }
+
+    const level = new ViewerLevel(levelInfo[0].levelId, levelInfo[0].title, "");
+    const interactions = levelInfo[0].interactions;
+    let verb = "not played";
+    if (interactions) {
+      if (interactions.played) {
+        verb = "played";
+      }
+      if (interactions.completed) {
+        verb = "beaten";
+      }
+    }
+
+    return {
+      isUnplayedLevel: verb === "not played",
+      message: `${this.streamer} has ${verb} ${level.display}.`
+    };
   }
 
   _updatePlayingRound(round) {
