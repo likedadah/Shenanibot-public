@@ -20,6 +20,83 @@ module.exports = itAddsALevel = cb => {
       expect(this.bookmarks).toEqual(["valid01"]);
     });
 
+    it("respects fifo ordering", async function() {
+      const bot = this.buildBotInstance({config: {
+        httpPort: 8080,
+        priority: "fifo"
+      }});
+
+      await bot.command("!add valid01", "viewer2");
+      await bot.command("!add valid02", "viewer2");
+      await cb(bot, "viewer", "valid03");
+
+      const queue = await this.getQueue();
+      expect(queue.map(e => e.entry.id))
+                                  .toEqual(["valid01", "valid02", "valid03"]);
+    });
+
+    it("respects rotation ordering", async function() {
+      const bot = this.buildBotInstance({config: {
+        httpPort: 8080,
+        priority: "rotation"
+      }});
+
+      await bot.command("!add valid01", "viewer2");
+      await bot.command("!add valid02", "viewer2");
+      await cb(bot, "viewer", "valid03");
+
+      const queue = await this.getQueue();
+      expect(queue.map(e => e.entry.id))
+                                  .toEqual(["valid01", "valid03", "valid02"]);
+    });
+
+    it("does nothing if the queue is closed", async function() {
+      const bot = this.buildBotInstance();
+      await bot.command("!close", "streamer");
+
+      await cb(bot, "viewer", "valid01");
+      expect(this.bookmarks).toEqual([]);
+    });
+
+    it("can be used when permitted", async function() {
+      const bot = this.buildBotInstance();
+      await bot.command("!close", "streamer");
+
+      await bot.command("!permit viewer", "streamer");
+      await cb(bot, "viewer", "valid01");
+      expect(this.bookmarks).toEqual(['valid01']);
+    });
+
+    it("affects the level limit", async function() {
+      const bot = this.buildBotInstance({config: {
+        levelLimit: 1,
+        levelLimitType: "session",
+        httpPort: 8080
+      }});
+
+      await cb(bot, "viewer", "valid01");
+      await cb(bot, "viewer", "valid02");
+
+      await bot.command("!add valid11", "viewer2");
+      await cb(bot, "viewer2", "valid12");
+
+      await cb(bot, "viewer3", "valid21");
+      await bot.command("!add valid22", "viewer3");
+
+      const queue = await this.getQueue();
+      expect(queue.map(e => e.entry.id))
+                                  .toEqual(["valid01", "valid11", "valid21"]);
+    });
+
+    it("does not bypass the add reward", async function() {
+      const bot = this.buildBotInstance({twitch: {
+        rewardBehaviors: {"reward-id-add": "add"}
+      }});
+
+      await cb(bot, "viewer", "valid01");
+      expect(this.bookmarks).toEqual([]);
+    });
+
     it("rejects levels that are already in the queue", async function() {
       const bot = this.buildBotInstance({config: { httpPort: 8080 }});
 
