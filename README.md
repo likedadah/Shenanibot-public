@@ -19,9 +19,10 @@ The bot stores a list of viewer-submitted levelcodes for you to play, and automa
   
 **Viewer Commands**  
 `!check [level code]` : Checks if the streamer has played a level; note that very recent plays may not be reported  
-`!add [level code]` : Adds a level to the level queue  
-`!remove [level code]` : Removes a level from the queue, you can only remove your own levels  
-`!boost [level code]` : Marks a level as "high priority" and moves it to the front of the qeuue, as though the `urgent` channel point reward had been applied. This command can be used by the streamer, or with permission from the streamer (see the `giveboost` command)  
+`!add [level code | creator code]` : Adds a level (or creator profile if support is enabled) to the level queue  
+`!chadd [level code]` : Checks if the streamer has played a level and, if not, tries to add it to the level queue  
+`!remove [level code | creator code]` : Removes a level from the queue, you can only remove your own levels  
+`!boost [level code | creator code]` : Marks a level as "high priority" and moves it to the front of the qeuue, as though the `urgent` channel point reward had been applied. This command can be used by the streamer, or with permission from the streamer (see the `giveboost` command)  
 `!queue` : Shows up to 10 of the next levels in the queue  
 `!commands` or `!help` : Shows some quick commands for viewers  
 `!bot` : Shows bot description  
