@@ -26,8 +26,12 @@ const options = {
   channels: [params.auth.channel]
 };
 
-//TODO: re-add support for throttle options
 const client = pb.wrap(TMI.Client(options));
+client.setMessageCountLimit(params.config.chatThrottle.limit);
+client.setThrottle({
+  high: params.config.chatThrottle.delay,
+  low: params.config.chatThrottle.delay
+});
 const shenanibot = new ShenaniBot(params,
                                   m => client.say(params.auth.channel, m),
                                   (u, m) => client.whisper(u, m),

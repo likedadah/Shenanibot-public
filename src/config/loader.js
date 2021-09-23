@@ -80,14 +80,26 @@ function loadFromJson() {
 function convertToCurrentVersion(opts) {
   const version = opts.version || [0,0,0];
 
-  if (version[0] > 1 || (version[0] === 1 && version[1] > 3)) {
+  if (version[0] > 2 || (version[0] === 2 && version[1] > 1)) {
     return opts;
   }
-
-  const updatedOpts = {...opts};
-  updatedOpts.version = [1,4,0];
+  const updatedOpts = fp.cloneDeep(opts);
+  updatedOpts.version = [2,2,0];
 
   try {
+    delete updatedOpts.config.useThrottle;
+    updatedOpts.config.chatThrottle = opts.config.useThrottle ? {
+      limit: 20,
+      delay: 1500
+    } : {
+      limit: 100,
+      delay: 0
+    };
+
+    if (version[0] > 1 || (version[0] === 1 && version[1] > 3)) {
+      return updatedOpts;
+    }
+
     updatedOpts.config.httpPort = opts.config.overlayPort;
     delete updatedOpts.config.overlayPort;
   } finally {

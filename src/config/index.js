@@ -123,7 +123,8 @@ const questions = {
         message: "Streamer Username:",
         validate: validateTwitchUsername,
         filter: i => i.toLowerCase(),
-        default: a => a.config.auth.streamer || a.config.auth.channel
+        default: a =>    fp.get('config.auth.streamer', a)
+                      || fp.get('config.auth.channel', a)
       },
         'To make sure that only you can run streamer commands, the bot needs to know\n'
       + 'your twitch username. Normally this should be the same as your channel name.\n'
@@ -236,7 +237,7 @@ const questions = {
           return false;
         },
         message: 'Round Duration (in minutes):',
-        default: a => a.config.config.roundDuration || 30,
+        default: a => fp.get('config.config.roundDuration', a) || 30,
         // type: 'number' acts up when validation fails, so use this instead
         filter: i => typeof i === 'string' && i.match(/^\s*[1-9]\d*\s*$/) ? parseInt(i) : i,
         validate: i => (typeof i !== 'number') ? 'Please enter a number of minutes' : true
@@ -272,7 +273,7 @@ const questions = {
           return true;
         },
         message: 'Level Submission Limit:',
-        default: a => a.config.config.levelLimit || 1,
+        default: a => fp.get('config.config.levelLimit', a) || 1,
         // type: 'number' acts up when validation fails, so use this instead
         filter: i => typeof i === 'string' && i.match(/^\s*[1-9]\d*\s*$/) ? parseInt(i) : i,
         validate: i => (typeof i !== 'number') ? 'Please enter a number of levels' : true
@@ -328,17 +329,45 @@ const questions = {
       + 'punctuation character is used (such as $).'
     ),
     buildConfigQuestion(
-      'config.useThrottle', {
-        type: 'confirm',
-        message: 'Enable message throttling?',
-        askAnswered: true
+      'config.chatThrottle.limit', {
+        message: 'Chat Message Limit:',
+        default: a => fp.get('config.config.chatThrottle.limit', a) || 20,
+        // type: 'number' acts up when validation fails, so use this instead
+        filter: i => typeof i === 'string' && i.match(/^\s*[1-9]\d*\s*$/) ? parseInt(i) : i,
+        validate: i => (typeof i !== 'number') ? 'Please enter a number of messages' : true
       },
-        'Message throttling limits the rate at which the bot sends chat messages.\n'
-      + 'This helps prevent the bot from accidentally triggering Twitch\'s anti-spam\n'
-      + 'protections.\n'
+        'Message throttling limits the rate at which the bot sends chat messages and\n'
+      + 'direct messages.  This helps prevent the bot from accidentally triggering\n'
+      + 'anti-spam measures.  For reference, Twitch message-rate limits may be found\n'
+      + 'at https://dev.twitch.tv/docs/irc/guide#rate-limits\n'
       + '\n'
-      + 'The throttle settings used by the bot may delay messages, but will not drop\n'
-      + 'them entirely. Use of throttling is recommended.'
+      + 'The throttle settings used by the bot may delay chat messages, but will not\n'
+      + 'drop them entirely. Direct messages may be rejected (e.g. if the bot has\n'
+      + 'messaged too many users) or may be delayed due to rate limits.\n'
+      + '\n'
+      + 'Note that ShenaniBot may be sharing your bot account with other scripts, in\n'
+      + 'which case platform-imposed anti-spam measures apply to the total traffic\n'
+      + 'from the bot account.  You may want to set conservative limits to allow for\n'
+      + 'this.\n'
+      + '\n'
+      + 'The chat message limit controls how many messages may be sent in any\n'
+      + '30-second period.'
+    ),
+    buildConfigQuestion(
+      'config.chatThrottle.delay', {
+        message: 'Chat Message Delay (ms):',
+        default: a => {
+          const oldVal = fp.get('config.config.chatThrottle.delay', a);
+          return (typeof oldVal === 'number')? oldVal : 1500;
+        },
+        // type: 'number' acts up when validation fails, so use this instead
+        filter: i => typeof i === 'string' && i.match(/^\s*\d+\s*$/) ? parseInt(i) : i,
+        validate: i => (typeof i !== 'number') ? 'Please enter a number of milliseconds' : true
+      },
+        'If two messages are sent too close together, the second message may not\n'
+      + 'go through.  The chat message delay value sets a minimum time between the\n'
+      + "bot's chat messages.  If the bot account is a moderator, this may not be\n"
+      + 'necessary.'
     ),
   ],
 

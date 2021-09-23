@@ -5,6 +5,9 @@ module.exports = {
     levelLimit: 0,
     creatorCodeMode: 'manual',
     prefix: '!',
-    useThrottle: true
+    chatThrottle: {
+      limit: 20,
+      delay: 1500
+    }
   }
 }

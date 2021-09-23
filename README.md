@@ -23,6 +23,7 @@ The bot stores a list of viewer-submitted levelcodes for you to play, and automa
 `!chadd [level code]` : Checks if the streamer has played a level and, if not, tries to add it to the level queue  
 `!remove [level code | creator code]` : Removes a level from the queue, you can only remove your own levels  
 `!boost [level code | creator code]` : Marks a level as "high priority" and moves it to the front of the qeuue, as though the `urgent` channel point reward had been applied. This command can be used by the streamer, or with permission from the streamer (see the `giveboost` command)  
+`!nospoil` : Request that the bot send you a direct message when the current level is removed from the queue.  This only works when a level is being played (i.e. the queue is not empty and there is not a marker at the top of the queue), and the bot may reject the request if it appears the DM can't be sent (e.g. if the bot has reached a limit on how many users it may DM)  
 `!queue` : Shows up to 10 of the next levels in the queue  
 `!commands` or `!help` : Shows some quick commands for viewers  
 `!bot` : Shows bot description  
@@ -115,7 +116,7 @@ The bot needs a token with the following permissions:
 Here you can decide whether levels are taken into the queue in the order received, or whether viewers "take turns" in a rotation; configure limits on how many levels each viewer may submit; and determine how to handle creator codes.
 
 ### Chat Options
-Options that control the bot's interaction with chat are found here. You can change the prefix used to recognize bot cmmands. (By default this is !, and it is recommended to use this if possible.) You can also enable or disable message throttling.
+Options that control the bot's interaction with chat are found here. You can change the prefix used to recognize bot cmmands. (By default this is !, and it is recommended to use this if possible.) You can also configure message throttling. (As of version 2.2.0, it is not possible to disable throttling entirely; but you can specify the per-message delay and the 30-second message count limit.)
 
 ### Web Server Options
 You can enable or diable the embedded web server. This allows you to use overlays to include information about the queue in your stream layout (provided your streaming software can be set up to display a web view, such as with OBS Browser Sources) and can be used to provide an interactive UI for choosing levels for submitted creator codes.
