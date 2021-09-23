@@ -2,18 +2,16 @@
 // level from the queue after that level has been played.
 
 // Params:
-// - cb(bot, username) : a callback that accepts a bot instance as its 1st
-//   parameter and a username as its 2nd parameter.  The callback should
-//   trigger the bot command or function being tested, which is expected to
-//   remove the "now playing" level.  The bot will already have its queue
-//   initialized in a manner consistent with the other parameters.  (In all
-//   cases, there will be a level in the "now playing" position submitted
-//   by the user specified in the username parameter.)
+// - cb(bot) : a callback that accepts a bot instance as its 1st parameter
+//   The callback should trigger the bot command or function being tested,
+//   which is expected to remove the "now playing" level.  The bot will
+//   already have its queue initialized in a manner consistent with the
+//   other parameters.
 // - nextPosition : the position in the queue that would be promoted to the
 //   "now playing" position when cb() is called.
 // - nextRequired : if truthy, cb() may assume there will be a level in
-//   nextPosition with id "valid00"; it will be the only level other than
-//   the "now playing" level submitted by "viewer0".  If nextRequired is
+//   nextPosition with id "valid00"; other than the "now playing" level, it
+//   will be the only level submitted by "viewer0".  If nextRequired is
 //   false, then tests that don't depend on the next level will not place
 //   any level at nextPosition.
 // - updateCurrentRound : a boolean indicating how the command updates the
@@ -43,7 +41,7 @@ module.exports = async (cb, nextPosition = 2, nextRequired = false,
       await buildQueue(bot);
       expect(this.bookmarks).toContain("valid01");
 
-      await cb(bot, "viewer0");
+      await cb(bot);
 
       expect(this.bookmarks).not.toContain("valid01");
     });
@@ -56,7 +54,7 @@ module.exports = async (cb, nextPosition = 2, nextRequired = false,
       }});
       await buildQueue(bot);
 
-      await cb(bot, "viewer0");
+      await cb(bot);
       await bot.command("!add 001l001", "viewer0");
 
       const queue = await this.getSimpleQueue();
@@ -73,7 +71,7 @@ module.exports = async (cb, nextPosition = 2, nextRequired = false,
       });
       await buildQueue(bot, true);
 
-      await cb(bot, "viewer0");
+      await cb(bot);
 
       if (updateCurrentRound) {
         await bot.command("!add 001l001", "newviewer");
@@ -101,7 +99,7 @@ module.exports = async (cb, nextPosition = 2, nextRequired = false,
         await buildQueue(bot, true);
 
         jasmine.clock().tick(59999);
-        await cb(bot, "viewer0");
+        await cb(bot);
         jasmine.clock().tick(1);
         await bot.command("!add 001l001", "newviewer");
         jasmine.clock().tick(60000);
@@ -123,7 +121,7 @@ module.exports = async (cb, nextPosition = 2, nextRequired = false,
       await bot.command('!nospoil', 'viewer1');
       await bot.command('!nospoil', 'viewer2');
 
-      await cb(bot, "viewer0");
+      await cb(bot);
 
       expect(Object.keys(this.getAllDms())).toEqual(['viewer1', 'viewer2']);
       expect(this.getDmsFor('viewer1')).toEqual([
@@ -142,7 +140,7 @@ module.exports = async (cb, nextPosition = 2, nextRequired = false,
       await bot.command('!nospoil', 'viewer2');
 
       this.resetDms();
-      await cb(bot, "viewer0");
+      await cb(bot);
 
       expect(Object.keys(this.getAllDms())).toEqual(['viewer2']);
     });
@@ -158,7 +156,7 @@ module.exports = async (cb, nextPosition = 2, nextRequired = false,
       const token = await this.openWebSocket("ui/creatorCode");
 
       const wsMsg = (await Promise.all([
-        cb(bot, "viewer0"),
+        cb(bot),
         this.waitForNextWsMessage(token)
       ]))[1];
 

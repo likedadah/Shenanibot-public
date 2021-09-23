@@ -41,8 +41,8 @@ describe("the !play command", () => {
   });
 
   describe("when given 'next from @username'", () => {
-    const cb = async (bot, user) =>
-                    await bot.command(`!play next from @${user}`, "streamer");
+    const cb = async bot =>
+                    await bot.command(`!play next from @viewer0`, "streamer");
     itDequeues(cb, 5, true, false);
     itPlaysALevel(5, cb);
 
@@ -95,8 +95,8 @@ describe("the !play command", () => {
   });
 
   describe("when given 'last from @username'", () => {
-    const cb = async (bot, user) =>
-                    await bot.command(`!play last from @${user}`, "streamer");
+    const cb = async bot =>
+                    await bot.command(`!play last from @viewer0`, "streamer");
     itDequeues(cb, 5, true, false);
     itPlaysALevel(5, cb);
 
