@@ -117,6 +117,36 @@ module.exports = async (cb, nextPosition = 2, nextRequired = false,
       });
     }
 
+    it("notifies any nospoil users for this level", async function() {
+      const bot = this.buildBotInstance();
+      await buildQueue(bot);
+      await bot.command('!nospoil', 'viewer1');
+      await bot.command('!nospoil', 'viewer2');
+
+      await cb(bot, "viewer0");
+
+      expect(Object.keys(this.getAllDms())).toEqual(['viewer1', 'viewer2']);
+      expect(this.getDmsFor('viewer1')).toEqual([
+                    'streamer has finished playing Valid Level 01 (valid01)']);
+      expect(this.getDmsFor('viewer2')).toEqual([
+                    'streamer has finished playing Valid Level 01 (valid01)']);
+    });
+
+    it("notifies only the current level's nospoil users", async function() {
+      const bot = this.buildBotInstance();
+
+      await bot.command("!add 001l001", "viewer1");
+      await buildQueue(bot);
+      await bot.command('!nospoil', 'viewer1');
+      await bot.command('!next', 'streamer');
+      await bot.command('!nospoil', 'viewer2');
+
+      this.resetDms();
+      await cb(bot, "viewer0");
+
+      expect(Object.keys(this.getAllDms())).toEqual(['viewer2']);
+    });
+
     it("clears the creator code UI", async function() {
       const bot = this.buildBotInstance({
         config: {

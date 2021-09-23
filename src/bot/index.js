@@ -9,8 +9,11 @@ const overlay = require("../web/overlay");
 const httpServer = require("../web/server");
 
 class ShenaniBot {
-  constructor(botOptions, sendAsync = _ => {}) {
+  constructor(botOptions, sendAsync = _ => {}, dm = (_u, _m) => {},
+              canDm = _ => true) {
     this.sendAsync = sendAsync;
+    this.dm = dm;
+    this.canDm = canDm;
     this.rce = new Rumpus.RumpusCE(botOptions.auth.delegationToken);
     this.profileCache = new ProfileCache();
     this.options = botOptions.config;
@@ -19,6 +22,7 @@ class ShenaniBot {
     this.queueOpen = true;
     this.users = {};
     this.levels = {};
+    this.noSpoilUsers = new Set();
     this.onStatus = _ => {};
     this.onQueue = _ => {};
 
@@ -104,6 +108,8 @@ class ShenaniBot {
         return args[1] ? this.boostLevel(args[1], username) : "";
       case "queue":
         return this.showQueue();
+      case "nospoil":
+        return this.noSpoil(username);
       case "commands":
       case "help":
         return this.showBotCommands();
@@ -476,6 +482,18 @@ class ShenaniBot {
     return response;
   }
 
+  noSpoil(username) {
+    if (!this.queue[0]) {
+      return "There is no current level!";
+    }
+    if (!this.canDm(username)) {
+      return `I won't be able to send you a direct message, @${username}.`;
+    }
+    this.noSpoilUsers.add(username);
+    return `@${username}, I'll send a direct message when the current level `
+         + `is done`;
+  }
+
   showBotCommands() {
     const prefix = this.options.prefix;
     return `${prefix}add [levelcode | creatorCode], ${prefix}bot, ${prefix}check [levelcode], ${prefix}queue, ${prefix}remove [levelcode | creatorCode]`;
@@ -716,6 +734,11 @@ class ShenaniBot {
       this.rce.levelhead.bookmarks.remove(this.queue[0].id);
       this.levels[this.queue[0].id] = "was already played";
     }
+    for (const user of this.noSpoilUsers) {
+      this.dm(user,
+          `${this.streamer} has finished playing ${this.queue[0].display}`);
+    }
+    this.noSpoilUsers.clear();
     this._removeFromQueue(0);
 
     if (this.options.priority === "rotation" && this.queue[0]) {
@@ -882,7 +905,8 @@ class ShenaniBot {
   }
 
   _hasLimit() {
-    return this.options.levelLimitType !== "none" && this.options.levelLimit > 0;
+    return this.options.levelLimitType !== "none"
+        && this.options.levelLimit > 0;
   }
 }
 

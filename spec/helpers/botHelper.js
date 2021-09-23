@@ -11,10 +11,15 @@ defaultConfig.twitch = {
   rewardBehaviors: {}
 };
 
+let dms;
+
 beforeAll(function() {
   this.buildBotInstance = (configOverrides = {}) => {
     const config = fp.merge(defaultConfig, configOverrides);
-    return new ShenaniBot(config);
+    return new ShenaniBot(config, _ => {}, (u,m) => {
+      dms[u] = dms[u] || [];
+      dms[u].push(m);
+    }, u => !u.includes("nodm"));
   };
 
   this.optionQueueJumpRewards = {
@@ -30,6 +35,14 @@ beforeAll(function() {
       bot.command(`!add valid${id}`, username || `viewer${id}`);
     }
   }
+
+  this.getDmsFor = user => dms[user] || [];
+  this.getAllDms = () => dms;
+  this.resetDms = () => dms = {};
+});
+
+beforeEach(function() {
+  this.resetDms();
 });
 
 afterEach(async () => {

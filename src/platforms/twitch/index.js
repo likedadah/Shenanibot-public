@@ -26,10 +26,12 @@ const options = {
   channels: [params.auth.channel]
 };
 
-const _client = TMI.Client(options);
-const client = params.config.useThrottle ? pb.wrap(_client) : _client;
+//TODO: re-add support for throttle options
+const client = pb.wrap(TMI.Client(options));
 const shenanibot = new ShenaniBot(params,
-                                  m => client.say(params.auth.channel, m));
+                                  m => client.say(params.auth.channel, m),
+                                  (u, m) => client.whisper(u, m),
+                                  u => client.canWhisperTo(u));
 
 (async function main() {
   // Connect bot to server
