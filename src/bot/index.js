@@ -486,7 +486,7 @@ class ShenaniBot {
     if (!this.queue[0]) {
       return "There is no current level!";
     }
-    if (!this.canDm(username)) {
+    if (!this.canDm(username, true)) {
       return `I won't be able to send you a direct message, @${username}.`;
     }
     this.noSpoilUsers.add(username);

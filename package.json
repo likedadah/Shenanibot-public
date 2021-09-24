@@ -1,6 +1,6 @@
 {
   "name": "@madelsberger/shenanibot",
-  "version": "2.2.0",
+  "version": "2.3.0-prerelease",
   "description": "A Twitch bot that manages a queue of levels for Levelhead streamers",
   "bin": {
     "shenanibot": "./shenanibot.js",
@@ -13,7 +13,7 @@
   ],
   "dependencies": {
     "@bscotch/rumpus-ce": "^1.2.4",
-    "@madelsberger/pausebuffer": "^1.1.0",
+    "@madelsberger/pausebuffer": "^1.2.0",
     "axios": "^0.21.1",
     "clipboardy": "^2.3.0",
     "dotenv": "^8.2.0",
