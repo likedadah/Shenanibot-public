@@ -20,6 +20,18 @@ describe("the 'add' channel point reward", () => {
     expect(this.bookmarks).toEqual(["valid02"]);
   });
 
+  it("works with creator codes", async function() {
+    const bot = this.buildBotInstance({config: {
+      httpPort: 8080
+    }, twitch: {
+      rewardBehaviors: {"reward-id-add": "add"}
+    }});
+
+    await bot.command("emp001", "viewer", "reward-id-add");
+    const queue = await this.getQueue();
+    expect(queue.map(e => e.entry.id)).toEqual(["emp001"]);
+  });
+
   it("does not affect the streamer", async function() {
     const bot = this.buildBotInstance({twitch: {
       rewardBehaviors: {"reward-id-add": "add"}
