@@ -1,6 +1,7 @@
 const Rumpus = require("@bscotch/rumpus-ce");
 const clipboard = require("clipboardy");
 
+const version = require('../../package.json').version;
 const { ViewerLevel, Creator } = require("./lib/queueEntry");
 const { ProfileCache } = require("./lib/profileCache");
 const { rewardHelper } = require("../config/loader");
@@ -11,6 +12,7 @@ const httpServer = require("../web/server");
 class ShenaniBot {
   constructor(botOptions, sendAsync = _ => {}, dm = (_u, _m) => {},
               canDm = _ => true) {
+    console.log(`Shenanibot version ${version} ...`);
     this.sendAsync = sendAsync;
     this.dm = dm;
     this.canDm = canDm;
