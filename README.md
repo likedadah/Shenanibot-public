@@ -85,7 +85,7 @@ Note that this migration process only works if no configuration file is found in
 ## Configuration
 For `npm`-based installs, you can run the configuration utility from any terminal by typing:
 
-`shenanibot-configure`
+`shenanibot-config`
 
 If you downloaded a binary, run it with the `-c` (or `--config`) command-line option.  For example, on windows
 
