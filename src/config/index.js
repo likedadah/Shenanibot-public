@@ -239,7 +239,7 @@ const questions = {
         message: 'Round Duration (in minutes):',
         default: a => fp.get('config.config.roundDuration', a) || 30,
         // type: 'number' acts up when validation fails, so use this instead
-        filter: i => typeof i === 'string' && i.match(/^\s*[1-9]\d*\s*$/) ? parseInt(i) : i,
+        filter: i => typeof i === 'string' && i.match(/^\s*[1-9]\d*\s*$/) ? parseInt(i, 10) : i,
         validate: i => (typeof i !== 'number') ? 'Please enter a number of minutes' : true
       }
     ),
@@ -275,7 +275,7 @@ const questions = {
         message: 'Level Submission Limit:',
         default: a => fp.get('config.config.levelLimit', a) || 1,
         // type: 'number' acts up when validation fails, so use this instead
-        filter: i => typeof i === 'string' && i.match(/^\s*[1-9]\d*\s*$/) ? parseInt(i) : i,
+        filter: i => typeof i === 'string' && i.match(/^\s*[1-9]\d*\s*$/) ? parseInt(i, 10) : i,
         validate: i => (typeof i !== 'number') ? 'Please enter a number of levels' : true
       }
     ),
@@ -333,7 +333,7 @@ const questions = {
         message: 'Chat Message Limit:',
         default: a => fp.get('config.config.chatThrottle.limit', a) || 20,
         // type: 'number' acts up when validation fails, so use this instead
-        filter: i => typeof i === 'string' && i.match(/^\s*[1-9]\d*\s*$/) ? parseInt(i) : i,
+        filter: i => typeof i === 'string' && i.match(/^\s*[1-9]\d*\s*$/) ? parseInt(i, 10) : i,
         validate: i => (typeof i !== 'number') ? 'Please enter a number of messages' : true
       },
         'Message throttling limits the rate at which the bot sends chat messages and\n'
@@ -361,7 +361,7 @@ const questions = {
           return (typeof oldVal === 'number')? oldVal : 1500;
         },
         // type: 'number' acts up when validation fails, so use this instead
-        filter: i => typeof i === 'string' && i.match(/^\s*\d+\s*$/) ? parseInt(i) : i,
+        filter: i => typeof i === 'string' && i.match(/^\s*\d+\s*$/) ? parseInt(i, 10) : i,
         validate: i => (typeof i !== 'number') ? 'Please enter a number of milliseconds' : true
       },
         'If two messages are sent too close together, the second message may not\n'
@@ -408,7 +408,7 @@ const questions = {
         // type: 'number' acts up when validation fails, so use this instead
         filter: i => {
           if (typeof i === 'string' && i.match(/^\s*[1-9]\d*\s*$/)) {
-            const n = parseInt(i);
+            const n = parseInt(i, 10);
             if (n < 65536) {
               return n;
             }
