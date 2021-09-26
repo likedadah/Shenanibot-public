@@ -499,12 +499,12 @@ class ShenaniBot {
 
   showBotCommands() {
     const prefix = this.options.prefix;
-    return `${prefix}add [levelcode | creatorCode], ${prefix}bot, ${prefix}check [levelcode], ${prefix}queue, ${prefix}remove [levelcode | creatorCode]`;
+    return `${prefix}add [levelCode | creatorCode], ${prefix}boost [levelCode | creatorCode], ${prefix}bot, ${prefix}chadd [levelCode], ${prefix}check [levelCode], ${prefix}nospoil, ${prefix}queue, ${prefix}remove [levelCode | creatorCode]`;
   }
 
   showBotInfo() {
-    return `This bot was created for the LevelHead Community by jajdp and FantasmicGalaxy.
-    Want to use it in your own stream? You can get it here: https://github.com/jajdp/Shenanibot-public`;
+    return `ShenaniBot was created for the LevelHead Community by the LevelHead Community.
+    Want to use it in your own stream? Learn about it here: https://github.com/madelsberger/Shenanibot-public`;
   }
 
   processReward(rewardId, message, username) {
