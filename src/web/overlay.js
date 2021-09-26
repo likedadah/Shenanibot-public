@@ -20,8 +20,8 @@ const setStatus = open => {
 
 const setLevels = queue => {
   state.levels = JSON.stringify(queue.map(e => ({
-    type: e ? e.type : "mark",
-    entry: e || undefined
+    type: e.type,
+    entry: e.type === "mark" ? undefined : e
   })));
 };
 

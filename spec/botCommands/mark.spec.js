@@ -10,7 +10,15 @@ describe("the !mark command", () => {
     expect(this.bookmarks).toEqual(["valid01"]);
   });
 
-  it("will not place back-to-back markers", async function() {
+  it("can take a marker name", async function() {
+    const bot = this.buildBotInstance();
+
+    await bot.command("!mark Power Build Time!", "streamer");
+
+    expect(await bot.command("!queue")).toContain("Power Build Time!");
+  });
+
+  it("will not place back-to-back unnamed markers", async function() {
     const bot = this.buildBotInstance();
 
     await bot.command("!mark", "streamer");
@@ -20,6 +28,20 @@ describe("the !mark command", () => {
     expect(this.bookmarks).toEqual([]);
     await bot.command("!next", "streamer");
     expect(this.bookmarks).toEqual(["valid01"]);
+  });
+
+  it("will place named markers next to other markers", async function() {
+    const bot = this.buildBotInstance({config: {
+      httpPort: 8080
+    }});
+
+    await bot.command("!mark", "streamer");
+    await bot.command("!mark name1", "streamer");
+    await bot.command("!mark name2", "streamer");
+    await bot.command("!mark", "streamer");
+
+    const queue = await this.getQueue();
+    expect(queue.length).toEqual(4);
   });
 
   it("updates the overlay", async function() {

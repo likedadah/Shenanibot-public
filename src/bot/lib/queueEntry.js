@@ -9,7 +9,7 @@ class QueueEntry {
 
 class ViewerLevel extends QueueEntry {
   constructor(levelId, levelName, submittedBy) {
-    super(levelId, levelName, "level", submittedBy)
+    super(levelId, levelName, "level", submittedBy);
   }
 
   get display() {
@@ -19,7 +19,7 @@ class ViewerLevel extends QueueEntry {
 
 class Creator extends QueueEntry {
   constructor(creatorId, creatorName, submittedBy) {
-    super(creatorId, creatorName, "creator", submittedBy)
+    super(creatorId, creatorName, "creator", submittedBy);
   }
 
   get display() {
@@ -27,4 +27,14 @@ class Creator extends QueueEntry {
   }
 }
 
-module.exports = { ViewerLevel, Creator };
+class Marker extends QueueEntry {
+  constructor(markerName) {
+    super(null, markerName, "mark", null);
+  }
+
+  get display() {
+    return `[== ${this.name || "BREAK"} ==]`;
+  }
+}
+
+module.exports = { ViewerLevel, Creator, Marker };

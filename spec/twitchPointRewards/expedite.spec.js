@@ -33,7 +33,7 @@ describe("the 'expedite' channel point reward", () => {
       await this.bot.command("!mark", "streamer");
       await this.bot.command("!add valid02", "viewer01");
 
-      await this.bot.command("valid02", "viewer", "reward-id-priority");
+      await this.bot.command("valid02", "viewer", "reward-id-expedite");
 
       const queue = await this.getSimpleQueue();
       expect(queue).toEqual([

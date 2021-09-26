@@ -2,7 +2,7 @@ const Rumpus = require("@bscotch/rumpus-ce");
 const clipboard = require("clipboardy");
 
 const version = require('../../package.json').version;
-const { ViewerLevel, Creator } = require("./lib/queueEntry");
+const { ViewerLevel, Creator, Marker } = require("./lib/queueEntry");
 const { ProfileCache } = require("./lib/profileCache");
 const { rewardHelper } = require("../config/loader");
 const creatorCodeUi = require("../web/creatorCodeUi");
@@ -85,7 +85,7 @@ class ShenaniBot {
         case "random":
           return this.randomLevel();
         case "mark":
-          return this.makeMarker();
+          return this.makeMarker(args.slice(1).join(" "));
         case "reward":
           return args[1] ? this.setReward(args[1].toLowerCase(), rewardId) : "";
         case "noreward":
@@ -180,7 +180,7 @@ class ShenaniBot {
       const stop = i => last ? i > 0 : i < this.queue.length;
       const increment = last ? -1 : 1;
       for (let i = start; stop(i); i += increment) {
-        if (this.queue[i] && this.queue[i].submittedBy === match[2]) {
+        if (this.queue[i].submittedBy === match[2]) {
           index = i;
           break;
         }
@@ -195,7 +195,7 @@ class ShenaniBot {
     if (typeof index != "number") {
       return "";
     }
-    if (!this.queue[index]) {
+    if (!this.queue[index] || this.queue[index].type === "mark") {
       return `There is no level at position ${index + 1} in the queue!`;
     }
     if (index === 0) {
@@ -223,7 +223,7 @@ class ShenaniBot {
   randomLevel() {
     let {empty, response} = this._dequeue();
     if (!empty) {
-      const markerIndex = this.queue.indexOf(null);
+      const markerIndex = this.queue.findIndex(e => e.type === "mark");
       if (markerIndex !== 0) {
         let groupLength = (markerIndex > -1) ? markerIndex : this.queue.length;
 
@@ -250,13 +250,15 @@ class ShenaniBot {
     return response;
   }
 
-  async makeMarker() {
-    // no point making back-to-back markers
-    if (this.queue.length > 0 && !this.queue[this.queue.length - 1]) {
-      return "";
+  async makeMarker(markerName) {
+    if (this.queue.length > 0) {
+      const lastEntry = this.queue[this.queue.length - 1];
+      if (lastEntry.type === "mark" && !lastEntry.name && !markerName) {
+        return "";
+      }
     }
 
-    this.queue.push(null);
+    this.queue.push(new Marker(markerName));
     this.onQueue();
     return "A marker has been added to the queue.";
   }
@@ -455,7 +457,8 @@ class ShenaniBot {
 
   showQueue() {
     if (  this.queue.length === 0
-       || (this.queue.length === 1 && !this.queue[0]) ) {
+       || (   this.queue.length === 1
+           && this.queue[0].type === "mark" && !this.queue[0].name) ) {
       return "There aren't any levels in the queue!";
     }
 
@@ -469,10 +472,8 @@ class ShenaniBot {
         round = entry.round;
         response = `${response} **Round ${round}** :`;
       }
-      if (entry) {
-        response = `${response} [${entry.display}]`;
-      } else {
-        response = `${response} [== break ==]`;
+      response = `${response} [${entry.display}]`;
+      if (entry.type === "mark") {
         if (maxIndex < this.queue.length - 1) {
           maxIndex += 1;
         } else {
@@ -485,7 +486,7 @@ class ShenaniBot {
   }
 
   noSpoil(username) {
-    if (!this.queue[0]) {
+    if (!this.queue[0] || this.queue[0].type === "mark") {
       return "There is no current level!";
     }
     if (!this.canDm(username, true)) {
@@ -539,7 +540,8 @@ class ShenaniBot {
       entry.round = this.playingRound;
     }
     let newIndex = this.queue.findIndex(
-        (e, i) => i && (!e || !e.priority || e.round > this.playingRound)
+        (e, i) => i && (e.type === "mark" || !e.priority
+                                          || e.round > this.playingRound)
     );
     if (newIndex === -1) {
       newIndex = this.queue.length;
@@ -566,7 +568,8 @@ class ShenaniBot {
     entry.priority = true;
     let i;
     for (i = index - 1; i > 0; i--) {
-      if (!this.queue[i] || this.queue[i].priority || this.queue[i].round < entry.round) {
+      if (   this.queue[i].type === "mark"
+          || this.queue[i].priority || this.queue[i].round < entry.round) {
         break;
       }
     }
@@ -584,7 +587,7 @@ class ShenaniBot {
 
     if (index === 1) {
       response = "You can't expedite a level that's already next to be played.";
-    } else if (!this.queue[index - 1]) {
+    } else if (this.queue[index - 1].type === "mark") {
       response = "You can't expedite a level that's right after a break in the queue.";
     } else if (this.queue[index - 1].round < entry.round) {
       response = "You can't expedite a level that's already the first to be played in its round.";
@@ -693,7 +696,8 @@ class ShenaniBot {
     if (this.options.priority === "rotation") {
       entry.round = Math.max((user.lastRound || 0) + 1, this.minOpenRound);
       user.lastRound = entry.round;
-      const n = this.queue.findIndex(e => e && e.round > entry.round);
+      const n = this.queue.findIndex(e => e.type !== "mark"
+                                       && e.round > entry.round);
       if (n > -1) {
         laterEntries = this.queue.splice(n);
       }
@@ -710,10 +714,10 @@ class ShenaniBot {
 
     while (laterEntries.length) {
       const laterEntry = laterEntries.shift();
-      if (laterEntries[0] === null) {
-        this.queue.push(null);
+      if (laterEntries[0] && laterEntries[0].type === "mark") {
+        this.queue.push(laterEntries[0]);
       }
-      if (laterEntry) {
+      if (laterEntry.type !== "mark") {
         this.queue.push(laterEntry);
       }
     }
@@ -743,7 +747,8 @@ class ShenaniBot {
     this.noSpoilUsers.clear();
     this._removeFromQueue(0);
 
-    if (this.options.priority === "rotation" && this.queue[0]) {
+    if (   this.options.priority === "rotation"
+        && this.queue[0] && this.queue[0].type !== "mark") {
       this._updatePlayingRound(this.queue[0].round);
     }
 
@@ -754,44 +759,42 @@ class ShenaniBot {
   }
 
   _playLevel() {
-    if (this.queue[0]) {
-      if (this.queue[0].type === "level") {
-        this.rce.levelhead.bookmarks.add(this.queue[0].id);
-        this.profileCache.updateLevel({id: this.queue[0].id, played: true});
-        return `Now playing ${this.queue[0].display} submitted by ${this.queue[0].submittedBy}`;
+    if (this.queue[0].type === "level") {
+      this.rce.levelhead.bookmarks.add(this.queue[0].id);
+      this.profileCache.updateLevel({id: this.queue[0].id, played: true});
+      return `Now playing ${this.queue[0].display} submitted by ${this.queue[0].submittedBy}`;
+    }
+    if (this.queue[0].type === "creator") {
+      switch (this.options.creatorCodeMode) {
+        case "clipboard":
+          clipboard.writeSync(this.queue[0].id);
+          break;
+        case "auto":
+          const creatorId = this.queue[0].id;
+          let levels = [];
+          this._getLevelsForCreator(this.queue[0].id,
+                                    l => levels = levels.concat(l), () => {
+            if (!levels.length) {
+              this.sendAsync(`Unable to find levels for ${this.queue[0].display}!`);
+              return;
+            }
+            if (levels.find(l => !l.played)) {
+              levels = levels.filter(l => !l.played);
+            }
+            const i = Math.floor(Math.random() * levels.length);
+            this._specifyLevelForCreator(creatorId, levels[i]);
+          });
+          break;
+        case "webui":
+          creatorCodeUi.setCreatorInfo({
+            creatorId: this.queue[0].id,
+            name: this.queue[0].name
+          });
+          this._getLevelsForCreator(this.queue[0].id,
+                                    creatorCodeUi.addLevelsToCreatorInfo)
+          break;
       }
-      if (this.queue[0].type === "creator") {
-        switch (this.options.creatorCodeMode) {
-          case "clipboard":
-            clipboard.writeSync(this.queue[0].id);
-            break;
-          case "auto":
-            const creatorId = this.queue[0].id;
-            let levels = [];
-            this._getLevelsForCreator(this.queue[0].id,
-                                      l => levels = levels.concat(l), () => {
-              if (!levels.length) {
-                this.sendAsync(`Unable to find levels for ${this.queue[0].display}!`);
-                return;
-              }
-              if (levels.find(l => !l.played)) {
-                levels = levels.filter(l => !l.played);
-              }
-              const i = Math.floor(Math.random() * levels.length);
-              this._specifyLevelForCreator(creatorId, levels[i]);
-            });
-            break;
-          case "webui":
-            creatorCodeUi.setCreatorInfo({
-              creatorId: this.queue[0].id,
-              name: this.queue[0].name
-            });
-            this._getLevelsForCreator(this.queue[0].id,
-                                      creatorCodeUi.addLevelsToCreatorInfo)
-            break;
-        }
-        return `Picking a level from ${this.queue[0].display} (submitted by ${this.queue[0].submittedBy})...`;
-      }
+      return `Picking a level from ${this.queue[0].display} (submitted by ${this.queue[0].submittedBy})...`;
     }
     return "Not currently playing a queued level.";
   }
@@ -831,7 +834,7 @@ class ShenaniBot {
         user.lastRound = 0;
         for (let i = index + 1; i < this.queue.length; i++) {
           const laterEntry = this.queue[i];
-          if (laterEntry && laterEntry.submittedBy === username) {
+          if (laterEntry.submittedBy === username) {
             this.queue[index] = laterEntry;
             index = i;
             const nextDestRound = laterEntry.round;

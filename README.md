@@ -12,7 +12,7 @@ The bot stores a list of viewer-submitted levelcodes for you to play, and automa
 `!next` : Moves the queue forward a level  
 `!random` : Chooses a random level from the queue and puts it at the front of the queue to play.  If there are markers in the queue, a level will be chosen from before the first marker.  If priority rules other than order have been applied to the queue, this command respects them; so the chosen level will always be one of thoes with the highest priority  
 `!play` : Move the queue forward, pulling a specified level (by username or queue position) to the front to be played next. You can say, for example, `!play from username` to play the next level submitted by `username`; or `!play last from username` to play the level most recently submitted by `username`; or `!play 5` to play whatever level is at position #5 in the queue. Note that this will override any other priority rule, so it should be used with caution if, for example, channel points have been spent on priority  
-`!mark` : Place a marker in the queue.  See [Using Markers](#using-markers) for details  
+`!mark [name]` : Place a marker in the queue.  You can optionally proivde a name for the marker, which will show up when displaying the queue.  See [Using Markers](#using-markers) for details  
 `!giveboost [user name]` : Allows a user to use the `!boost` command one time  
 `!reward [reward behavior]` : Sets up a channel points reward.  Unlike other commands, this must be sent as the message for a custom channel points reward; it assigns a behavior to that particular custom reward.  See [Channel Points Integration](#channel-points-integration) for details  
 `!noreward [reward behavior]` : Removes the assignment of a reward behavior from whatever custom reward currently has that behavior  
@@ -141,6 +141,8 @@ Markers create "breaks" in the queue.  This can be used in a couple different wa
 Markers occupy a spot in the queue.  When a marker reaches the top of the queue, no level from the queue will be bookmarked and the queue will report that no level is currently being played.  This can be used to prevent the first submission from automatically moving to "now playing" - e.g. if you want to use `!random` to shuffle the levels.  It also allows for planned breaks from viewer levels - such as for workshop sessions, tower trials, non-LH segments, etc.
 
 Additionally, `!random` will only consider levels up to the next marker.  (That is, if the top of the queue is a marker, it will be discarded as normal; but then a level will be chosen from those that are before the subsequent marker in the queue.)  
+
+If you place a marker to reserve a time for some non-level activity (e.g. a level-building session, a tower trial run, a chat game, etc.), you can name the marker to indicate that purpose; the marker name will show up in `!queue` output and/or the queue overlay.  
 
 ### Markers and Priority Mode
 
