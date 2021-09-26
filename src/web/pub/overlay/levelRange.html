@@ -68,7 +68,7 @@
               break;
             case "mark":
               el.classList.add("marker");
-              el.innerHTML = "[ BREAK ]";
+              el.innerHTML = `[ ${item.entry.name || "BREAK"} ]`;
           }
           container.appendChild(el);
         };
@@ -80,7 +80,8 @@
             type: "level",
             entry: {name: "Castle Of Fear", id: "z00678g"}
           }, {
-            type: "mark"
+            type: "mark",
+            entry: {name: ""}
           }, {
             type: "creator",
             entry: {name: "Duckbag", id: "t0p3ya"}

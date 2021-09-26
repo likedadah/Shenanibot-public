@@ -29,7 +29,7 @@ class Creator extends QueueEntry {
 
 class Marker extends QueueEntry {
   constructor(markerName) {
-    super(null, markerName, "mark", null);
+    super(undefined, markerName, "mark", undefined);
   }
 
   get display() {

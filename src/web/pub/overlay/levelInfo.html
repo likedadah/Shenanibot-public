@@ -106,6 +106,9 @@
                   model.id = `@${item.entry.id}`;
                   model.submittedBy = item.entry.submittedBy;
                   break;
+                case "mark":
+                  model.name = `[ ${item.entry.name || 'BREAK'} ]`;
+                  break;
               }
             }
             updateView();

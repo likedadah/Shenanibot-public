@@ -53,7 +53,13 @@ describe("the !mark command", () => {
       this.waitForNextWsMessage(token)
     ]))[1];
 
-    expect(msg).toEqual([{type: "mark"}]);
+    expect(msg).toEqual([{
+      type: "mark",
+      entry: {
+        type: 'mark',
+        name: ''
+      }
+    }]);
   });
 
   it("only works for the streamer", async function() {
