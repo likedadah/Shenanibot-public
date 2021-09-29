@@ -67,6 +67,12 @@ beforeAll(function() {
     }));
   };
 
+  this.getCounts = async () => {
+    const token = await this.openWebSocket('overlay/counts');
+    const messages = await this.closeWebSocket(token);
+    return messages[0];
+  };
+
   this.getCreatorInfo = async () => {
     const token = await this.openWebSocket('ui/creatorCode');
     const messages = await this.closeWebSocket(token);

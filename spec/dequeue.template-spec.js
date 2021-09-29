@@ -25,7 +25,11 @@ module.exports = async (cb, nextPosition = 2, nextRequired = false,
                         updateCurrentRound = true) => {
   let addLevels;
   const buildQueue = async (bot, withNext, firstCode = "valid01") => {
-    await bot.command(`!add ${firstCode}`, "viewer0");
+    if (firstCode) {
+      await bot.command(`!add ${firstCode}`, "viewer0");
+    } else {
+      await bot.command("!mark", "streamer");
+    }
 
     if (withNext || nextRequired) {
       addLevels(bot, nextPosition - 2, 2);
@@ -166,6 +170,33 @@ module.exports = async (cb, nextPosition = 2, nextRequired = false,
         name: null,
         levels: []
       });
+    });
+
+    it("increases the played level count", async function() {
+      const bot = this.buildBotInstance({config: {
+        httpPort: 8080
+      }});
+      await buildQueue(bot);
+
+      const preCounts = await this.getCounts();
+      expect(preCounts.played).toEqual(0);
+
+      await cb(bot);
+
+      const postCounts = await this.getCounts();
+      expect(postCounts.played).toEqual(1);
+    });
+
+    it("does not count a marker as a played level", async function() {
+      const bot = this.buildBotInstance({config: {
+        httpPort: 8080
+      }});
+      await buildQueue(bot, false, null);
+
+      await cb(bot);
+
+      const postCounts = await this.getCounts();
+      expect(postCounts.played).toEqual(0);
     });
   });
 };

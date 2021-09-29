@@ -25,6 +25,7 @@ The bot stores a list of viewer-submitted levelcodes for you to play, and automa
 `!boost [level code | creator code]` : Marks a level as "high priority" and moves it to the front of the qeuue, as though the `urgent` channel point reward had been applied. This command can be used by the streamer, or with permission from the streamer (see the `giveboost` command)  
 `!nospoil` : Request that the bot send you a direct message when the current level is removed from the queue.  This only works when a level is being played (i.e. the queue is not empty and there is not a marker at the top of the queue), and the bot may reject the request if it appears the DM can't be sent (e.g. if the bot has reached a limit on how many users it may DM)  
 `!queue` : Shows up to 10 of the next levels in the queue  
+`!stats` : Shows level-count stats  
 `!commands` or `!help` : Shows some quick commands for viewers  
 `!bot` : Shows bot description  
 

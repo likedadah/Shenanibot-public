@@ -2,12 +2,16 @@ const httpServer = require("./server");
 
 const statusUrl = '/overlay/status';
 const levelsUrl = '/overlay/levels';
+const countsUrl = '/overlay/counts';
 
 const state = {
   prefix: "",
   acceptCreatorCode: false,
-  levels: "[]",
-  status: ""
+  status: "",
+
+  levels: "",
+
+  counts: ""
 };
 
 const setStatus = open => {
@@ -25,6 +29,10 @@ const setLevels = queue => {
   })));
 };
 
+const setCounts = counts => {
+  state.counts = JSON.stringify(counts);
+};
+
 module.exports = {
   init: () => {
     const config = httpServer.getConfig();
@@ -35,6 +43,7 @@ module.exports = {
     state.acceptCreatorCode = config.creatorCodeMode !== 'reject';
     setStatus(true);
     setLevels([]);
+    setCounts({});
 
     console.log(`Go to http://localhost:${config.httpPort}/overlay/ for overlay setup instructions`);
 
@@ -43,6 +52,9 @@ module.exports = {
     });
     httpServer.register(statusUrl, ws => {
       ws.send(state.status);
+    });
+    httpServer.register(countsUrl, ws => {
+      ws.send(state.counts);
     });
   },
 
@@ -54,5 +66,10 @@ module.exports = {
   sendLevels: queue => {
     setLevels(queue);
     httpServer.broadcast(levelsUrl, state.levels);
+  },
+
+  sendCounts: counts => {
+    setCounts(counts);
+    httpServer.broadcast(countsUrl, state.counts);
   }
 };

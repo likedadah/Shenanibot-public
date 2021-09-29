@@ -25,8 +25,12 @@ class ShenaniBot {
     this.users = {};
     this.levels = {};
     this.noSpoilUsers = new Set();
+    this.counts = {
+      played: 0
+    }
     this.onStatus = _ => {};
     this.onQueue = _ => {};
+    this.onPlayed = _ => {};
 
     if (this.options.priority === "rotation") {
       this.playingRound = 1;
@@ -35,8 +39,13 @@ class ShenaniBot {
     if (this.options.httpPort) {
       httpServer.start(this.options);
       overlay.init();
+      overlay.sendCounts(this.counts);
       this.onStatus = isOpen => overlay.sendStatus(isOpen);
       this.onQueue = () => overlay.sendLevels(this.queue);
+      this.onPlayed = () => {
+        this.counts.played += 1;
+        overlay.sendCounts(this.counts);
+      }
       if (this.options.creatorCodeMode === "webui") {
         creatorCodeUi.init((c, l) => this._specifyLevelForCreator(c, l));
       }
@@ -112,6 +121,8 @@ class ShenaniBot {
         return this.showQueue();
       case "nospoil":
         return this.noSpoil(username);
+      case "stats":
+        return this.showStats();
       case "commands":
       case "help":
         return this.showBotCommands();
@@ -497,9 +508,13 @@ class ShenaniBot {
          + `is done`;
   }
 
+  showStats() {
+    return `Levels Played: ${this.counts.played}`;
+  }
+
   showBotCommands() {
     const prefix = this.options.prefix;
-    return `${prefix}add [levelCode | creatorCode], ${prefix}boost [levelCode | creatorCode], ${prefix}bot, ${prefix}chadd [levelCode], ${prefix}check [levelCode], ${prefix}nospoil, ${prefix}queue, ${prefix}remove [levelCode | creatorCode]`;
+    return `${prefix}add [levelCode | creatorCode], ${prefix}boost [levelCode | creatorCode], ${prefix}bot, ${prefix}chadd [levelCode], ${prefix}check [levelCode], ${prefix}nospoil, ${prefix}queue, ${prefix}remove [levelCode | creatorCode], ${prefix}stats`;
   }
 
   showBotInfo() {
@@ -736,9 +751,12 @@ class ShenaniBot {
     if (this.options.creatorCodeMode === "webui") {
       creatorCodeUi.clearCreatorInfo();
     }
-    if (this.queue[0] && this.queue[0].type === "level") {
+    if (this.queue[0].type === "level") {
       this.rce.levelhead.bookmarks.remove(this.queue[0].id);
       this.levels[this.queue[0].id] = "was already played";
+    }
+    if (this.queue[0].type !== "mark") {
+      this.onPlayed();
     }
     for (const user of this.noSpoilUsers) {
       this.dm(user,
