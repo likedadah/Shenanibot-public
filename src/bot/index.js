@@ -93,6 +93,8 @@ class ShenaniBot {
           return this.playSpecificLevel(args.slice(1).join(" ").toLowerCase());
         case "random":
           return this.randomLevel();
+        case "skip":
+          return this.nextLevel(false);
         case "mark":
           return this.makeMarker(args.slice(1).join(" "));
         case "reward":
@@ -171,8 +173,8 @@ class ShenaniBot {
     return `@${username}, you may boost one level in the queue now.`;
   }
 
-  nextLevel() {
-    let {empty, response} = this._dequeue();
+  nextLevel(played = true) {
+    let {empty, response} = this._dequeue(played);
     if (!empty) {
       response = this._playLevel();
     }
@@ -740,7 +742,7 @@ class ShenaniBot {
     return pos;
   }
 
-  _dequeue() {
+  _dequeue(updatePlayed = true) {
     if (this.queue.length === 0) {
       return {
         empty: true,
@@ -755,7 +757,7 @@ class ShenaniBot {
       this.rce.levelhead.bookmarks.remove(this.queue[0].id);
       this.levels[this.queue[0].id] = "was already played";
     }
-    if (this.queue[0].type !== "mark") {
+    if (this.queue[0].type !== "mark" && updatePlayed) {
       this.onPlayed();
     }
     for (const user of this.noSpoilUsers) {

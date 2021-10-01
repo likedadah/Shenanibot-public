@@ -20,9 +20,12 @@
 //   the current round should be increased to match the new "now playing"
 //   level; if false, the new "now playing" level should be moved into the
 //   current round
+// - incrementPlayed : if true, it is expected that the command will add 1
+//   to the "played levels" count; if false, the count is not checked by
+//   these tests
 
 module.exports = async (cb, nextPosition = 2, nextRequired = false,
-                        updateCurrentRound = true) => {
+                        updateCurrentRound = true, incrementPlayed = true) => {
   let addLevels;
   const buildQueue = async (bot, withNext, firstCode = "valid01") => {
     if (firstCode) {
@@ -122,16 +125,16 @@ module.exports = async (cb, nextPosition = 2, nextRequired = false,
     it("notifies any nospoil users for this level", async function() {
       const bot = this.buildBotInstance();
       await buildQueue(bot);
-      await bot.command('!nospoil', 'viewer1');
-      await bot.command('!nospoil', 'viewer2');
+      await bot.command("!nospoil", "viewer1");
+      await bot.command("!nospoil", "viewer2");
 
       await cb(bot);
 
-      expect(Object.keys(this.getAllDms())).toEqual(['viewer1', 'viewer2']);
-      expect(this.getDmsFor('viewer1')).toEqual([
-                    'streamer has finished playing Valid Level 01 (valid01)']);
-      expect(this.getDmsFor('viewer2')).toEqual([
-                    'streamer has finished playing Valid Level 01 (valid01)']);
+      expect(Object.keys(this.getAllDms())).toEqual(["viewer1", "viewer2"]);
+      expect(this.getDmsFor("viewer1")).toEqual([
+                    "streamer has finished playing Valid Level 01 (valid01)"]);
+      expect(this.getDmsFor("viewer2")).toEqual([
+                    "streamer has finished playing Valid Level 01 (valid01)"]);
     });
 
     it("notifies only the current level's nospoil users", async function() {
@@ -139,14 +142,14 @@ module.exports = async (cb, nextPosition = 2, nextRequired = false,
 
       await bot.command("!add 001l001", "viewer1");
       await buildQueue(bot);
-      await bot.command('!nospoil', 'viewer1');
-      await bot.command('!next', 'streamer');
-      await bot.command('!nospoil', 'viewer2');
+      await bot.command("!nospoil", "viewer1");
+      await bot.command("!next", "streamer");
+      await bot.command("!nospoil", "viewer2");
 
       this.resetDms();
       await cb(bot);
 
-      expect(Object.keys(this.getAllDms())).toEqual(['viewer2']);
+      expect(Object.keys(this.getAllDms())).toEqual(["viewer2"]);
     });
 
     it("clears the creator code UI", async function() {
@@ -172,31 +175,33 @@ module.exports = async (cb, nextPosition = 2, nextRequired = false,
       });
     });
 
-    it("increases the played level count", async function() {
-      const bot = this.buildBotInstance({config: {
-        httpPort: 8080
-      }});
-      await buildQueue(bot);
+    if (incrementPlayed) {
+      it("increases the played level count", async function() {
+        const bot = this.buildBotInstance({config: {
+          httpPort: 8080
+        }});
+        await buildQueue(bot);
 
-      const preCounts = await this.getCounts();
-      expect(preCounts.played).toEqual(0);
+        const preCounts = await this.getCounts();
+        expect(preCounts.played).toEqual(0);
 
-      await cb(bot);
+        await cb(bot);
 
-      const postCounts = await this.getCounts();
-      expect(postCounts.played).toEqual(1);
-    });
+        const postCounts = await this.getCounts();
+        expect(postCounts.played).toEqual(1);
+      });
 
-    it("does not count a marker as a played level", async function() {
-      const bot = this.buildBotInstance({config: {
-        httpPort: 8080
-      }});
-      await buildQueue(bot, false, null);
+      it("does not count a marker as a played level", async function() {
+        const bot = this.buildBotInstance({config: {
+          httpPort: 8080
+        }});
+        await buildQueue(bot, false, null);
 
-      await cb(bot);
+        await cb(bot);
 
-      const postCounts = await this.getCounts();
-      expect(postCounts.played).toEqual(0);
-    });
+        const postCounts = await this.getCounts();
+        expect(postCounts.played).toEqual(0);
+      });
+    }
   });
 };

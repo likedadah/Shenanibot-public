@@ -1,0 +1,49 @@
+const itDequeues = require("../dequeue.template-spec");
+const itPlaysALevel = require("../playLevel.template-spec");
+
+describe("the !skip command", () => {
+  const cb = async bot => await bot.command("!skip", "streamer");
+  itDequeues(cb, 2, false, true, false);
+  itPlaysALevel(2, cb);
+
+  it("leaves the played level count unchanged", async function() {
+    const bot = this.buildBotInstance({config: {
+      httpPort: 8080
+    }});
+    await bot.command("!add valid01", "viewer");
+    await bot.command("!skip", "streamer");
+
+    const postCounts = await this.getCounts();
+    expect(postCounts.played).toEqual(0);
+  });
+
+  it("updates the overlay", async function() {
+    const bot = this.buildBotInstance({ config: {httpPort: 8080 }});
+    await this.addLevels(bot, 2);
+    const token = await this.openWebSocket("overlay/levels");
+
+    const levelsMessage = (await Promise.all([
+      bot.command("!skip", "streamer"),
+      this.waitForNextWsMessage(token)
+    ]))[1];
+    expect(levelsMessage).toEqual([{
+      type: "level",
+      entry: {
+        id: "valid02",
+        name: "Valid Level 02",
+        type: "level",
+        submittedBy: "viewer02"
+      }
+    }]);
+  });
+
+  it("only works for the streamer", async function() {
+    const bot = this.buildBotInstance({ config: {httpPort: 8080 }});
+    await this.addLevels(bot, 2);
+
+    await bot.command("!skip", "viewer");
+
+    const queue = await this.getSimpleQueue();
+    expect(queue.map(e => e.id)).toEqual(["valid01", "valid02"]);
+  });
+});
