@@ -307,7 +307,33 @@ const questions = {
       + 'creator codes are accepted into the queue and, if so, how the bot behaves\n'
       + 'when a creator code reaches the top of the queue (since unlike level codes\n'
       + 'they cannot simply be bookmarked).'
-    )
+    ),
+    buildConfigQuestion(
+      'config.defaultAdvance', {
+        type: 'list',
+        message: 'Default Advance Mode:',
+        choices: [{
+          name: 'Move to the next level in the queue (like !next)',
+          value: 'next'
+        }, {
+          name: 'Choose randomly (subject to the same rules as !random)',
+          value: 'random'
+        }, {
+          name: 'Alternate between working like !next and !random',
+          value: 'alternate'
+        }]
+      },
+       'Some commands (like !skip) advance the queue, but they do not specify how the\n'
+     + 'new "now playing" level is to be chosen.  By default, they work like !next;\n'
+     + 'but you can change the "default advance mode" to change this behavior.\n'
+     + '\n'
+     + 'Note that commands like !next and !random are not affected by the deafult\n'
+     + 'advance mode, since they are defined to specify how the "now playing" level\n'
+     + 'is chosen.  By contrast, commands like !skip are defined to modify how the\n'
+     + 'level counts are updated; so rather than require more verbose syntax that\n'
+     + 'specifies both the advance mode and the "now playing" selection method each\n'
+     + 'time you advance the qeuue, commands like !skip rely on this setting.'
+    ),
   ],
 
   chatConfig: [

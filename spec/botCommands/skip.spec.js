@@ -1,16 +1,21 @@
 const itDequeues = require("../dequeue.template-spec");
 const itPlaysALevel = require("../playLevel.template-spec");
+const itUsesDefaultAdvance = require("../defaultAdvance.template-spec");
 
 describe("the !skip command", () => {
   const cb = async bot => await bot.command("!skip", "streamer");
   itDequeues(cb, 2, false, true, false);
   itPlaysALevel(2, cb);
+  itUsesDefaultAdvance(cb);
 
   it("leaves the played level count unchanged", async function() {
     const bot = this.buildBotInstance({config: {
-      httpPort: 8080
+      httpPort: 8080,
+      defaultAdvance: "alternate"
     }});
     await bot.command("!add valid01", "viewer");
+    await bot.command("!add valid02", "viewer");
+    await bot.command("!skip", "streamer");
     await bot.command("!skip", "streamer");
 
     const postCounts = await this.getCounts();

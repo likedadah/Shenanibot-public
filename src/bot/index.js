@@ -28,6 +28,7 @@ class ShenaniBot {
     this.counts = {
       played: 0
     }
+    this.defaultAdvanceCallCount = 0;
     this.onStatus = _ => {};
     this.onQueue = _ => {};
     this.onPlayed = _ => {};
@@ -94,7 +95,7 @@ class ShenaniBot {
         case "random":
           return this.randomLevel();
         case "skip":
-          return this.nextLevel(false);
+          return this.defaultAdvance();
         case "mark":
           return this.makeMarker(args.slice(1).join(" "));
         case "reward":
@@ -173,6 +174,18 @@ class ShenaniBot {
     return `@${username}, you may boost one level in the queue now.`;
   }
 
+  defaultAdvance() {
+    switch (this.options.defaultAdvance) {
+      case "random":
+        return this.randomLevel(false);
+      case "alternate":
+        return (this.defaultAdvanceCallCount++ % 2) ? this.randomLevel(false)
+                                                    : this.nextLevel(false);
+      default:
+        return this.nextLevel(false);
+    }
+  }
+
   nextLevel(played = true) {
     let {empty, response} = this._dequeue(played);
     if (!empty) {
@@ -233,8 +246,8 @@ class ShenaniBot {
     return response;
   }
 
-  randomLevel() {
-    let {empty, response} = this._dequeue();
+  randomLevel(played = true) {
+    let {empty, response} = this._dequeue(played);
     if (!empty) {
       const markerIndex = this.queue.findIndex(e => e.type === "mark");
       if (markerIndex !== 0) {
