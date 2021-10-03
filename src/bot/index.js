@@ -26,7 +26,8 @@ class ShenaniBot {
     this.levels = {};
     this.noSpoilUsers = new Set();
     this.counts = {
-      played: 0
+      played: 0,
+      won: 0
     }
     this.defaultAdvanceCallCount = 0;
     this.onStatus = _ => {};
@@ -95,7 +96,9 @@ class ShenaniBot {
         case "random":
           return this.randomLevel();
         case "skip":
-          return this.defaultAdvance();
+          return this.defaultAdvance(false);
+        case "win":
+          return this.winLevel();
         case "mark":
           return this.makeMarker(args.slice(1).join(" "));
         case "reward":
@@ -174,15 +177,23 @@ class ShenaniBot {
     return `@${username}, you may boost one level in the queue now.`;
   }
 
-  defaultAdvance() {
+  winLevel() {
+    if (!this.queue[0] || this.queue[0].type === 'mark') {
+      return "There is no current level to win!";
+    }
+    this.counts.won += 1;
+    return this.defaultAdvance();
+  }
+
+  defaultAdvance(played = true) {
     switch (this.options.defaultAdvance) {
       case "random":
-        return this.randomLevel(false);
+        return this.randomLevel(played);
       case "alternate":
-        return (this.defaultAdvanceCallCount++ % 2) ? this.randomLevel(false)
-                                                    : this.nextLevel(false);
+        return (this.defaultAdvanceCallCount++ % 2) ? this.randomLevel(played)
+                                                    : this.nextLevel(played);
       default:
-        return this.nextLevel(false);
+        return this.nextLevel(played);
     }
   }
 

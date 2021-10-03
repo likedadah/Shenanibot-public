@@ -10,7 +10,8 @@ The bot stores a list of viewer-submitted levelcodes for you to play, and automa
 `!close` : Closes the queue  
 `!permit [user name]` : Allows a user to add one level to the queue even if it is closed or they have reached the submission limit  
 `!next` : Moves the queue forward a level  
-`!skip` : Moves the queue forward, but does not increment the "played levels" count.  The "default advance mode" determines wich level is moved up to the "now playing" position.  
+`!win` : Increases the "won" count and moves the queue forward.  The "default advance mode" determines which level is moved up to the "now playing" position.  
+`!skip` : Moves the queue forward, but does not increment the "played levels" count.  The "default advance mode" determines which level is moved up to the "now playing" position.  
 `!random` : Chooses a random level from the queue and puts it at the front of the queue to play.  If there are markers in the queue, a level will be chosen from before the first marker.  If priority rules other than order have been applied to the queue, this command respects them; so the chosen level will always be one of thoes with the highest priority  
 `!play` : Move the queue forward, pulling a specified level (by username or queue position) to the front to be played next. You can say, for example, `!play from username` to play the next level submitted by `username`; or `!play last from username` to play the level most recently submitted by `username`; or `!play 5` to play whatever level is at position #5 in the queue. Note that this will override any other priority rule, so it should be used with caution if, for example, channel points have been spent on priority  
 `!mark [name]` : Place a marker in the queue.  You can optionally proivde a name for the marker, which will show up when displaying the queue.  See [Using Markers](#using-markers) for details  
