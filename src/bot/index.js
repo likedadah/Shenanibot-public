@@ -27,7 +27,8 @@ class ShenaniBot {
     this.noSpoilUsers = new Set();
     this.counts = {
       played: 0,
-      won: 0
+      won: 0,
+      lost: 0
     }
     this.defaultAdvanceCallCount = 0;
     this.onStatus = _ => {};
@@ -99,6 +100,8 @@ class ShenaniBot {
           return this.defaultAdvance(false);
         case "win":
           return this.winLevel();
+        case "lose":
+          return this.loseLevel();
         case "mark":
           return this.makeMarker(args.slice(1).join(" "));
         case "reward":
@@ -182,6 +185,14 @@ class ShenaniBot {
       return "There is no current level to win!";
     }
     this.counts.won += 1;
+    return this.defaultAdvance();
+  }
+
+  loseLevel() {
+    if (!this.queue[0] || this.queue[0].type === 'mark') {
+      return "There is no current level to lose!";
+    }
+    this.counts.lost += 1;
     return this.defaultAdvance();
   }
 

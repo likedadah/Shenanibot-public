@@ -2,23 +2,23 @@ const itDequeues = require("../dequeue.template-spec");
 const itPlaysALevel = require("../playLevel.template-spec");
 const itUsesDefaultAdvance = require("../defaultAdvance.template-spec");
 
-describe("the !win command", () => {
-  const cb = async bot => await bot.command("!win", "streamer");
+describe("the !lose command", () => {
+  const cb = async bot => await bot.command("!lose", "streamer");
   itDequeues(cb);
   itPlaysALevel(2, cb);
   itUsesDefaultAdvance(cb);
 
-  it("increases the 'won' count", async function() {
+  it("increases the 'lost' count", async function() {
     const bot = this.buildBotInstance({ config: {httpPort: 8080 }});
     await bot.command("!add valid01", "viewer");
 
     const preCounts = await this.getCounts();
-    expect(preCounts.won).toEqual(0);
+    expect(preCounts.lost).toEqual(0);
 
-    await bot.command("!win", "streamer");
+    await bot.command("!lose", "streamer");
 
     const postCounts = await this.getCounts();
-    expect(postCounts.won).toEqual(1);
+    expect(postCounts.lost).toEqual(1);
   });
 
   it("does not work on markers", async function() {
@@ -26,20 +26,20 @@ describe("the !win command", () => {
     await bot.command("!mark", "streamer");
     await bot.command("!add valid01", "viewer");
 
-    await bot.command("!win", "streamer");
+    await bot.command("!lose", "streamer");
 
     const postCounts = await this.getCounts();
-    expect(postCounts.won).toEqual(0);
+    expect(postCounts.lost).toEqual(0);
     expect(this.bookmarks).toEqual([]);
   });
 
   it("does nothing when the queue is empty", async function() {
     const bot = this.buildBotInstance({ config: {httpPort: 8080 }});
 
-    await bot.command("!win", "streamer");
+    await bot.command("!lose", "streamer");
 
     const postCounts = await this.getCounts();
-    expect(postCounts.won).toEqual(0);
+    expect(postCounts.lost).toEqual(0);
   });
 
   it("updates the overlay", async function() {
@@ -48,7 +48,7 @@ describe("the !win command", () => {
     const token = await this.openWebSocket("overlay/levels");
 
     const levelsMessage = (await Promise.all([
-      bot.command("!win", "streamer"),
+      bot.command("!lose", "streamer"),
       this.waitForNextWsMessage(token)
     ]))[1];
     expect(levelsMessage).toEqual([{
@@ -66,7 +66,7 @@ describe("the !win command", () => {
     const bot = this.buildBotInstance({ config: {httpPort: 8080 }});
     await this.addLevels(bot, 2);
 
-    await bot.command("!win", "viewer");
+    await bot.command("!lose", "viewer");
 
     const queue = await this.getSimpleQueue();
     expect(queue.map(e => e.id)).toEqual(["valid01", "valid02"]);
