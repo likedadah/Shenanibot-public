@@ -1,12 +1,14 @@
 const itDequeues = require("../dequeue.template-spec");
 const itPlaysALevel = require("../playLevel.template-spec");
 const itUsesDefaultAdvance = require("../defaultAdvance.template-spec");
+const itPicksALevel = require("../pickLevel.template-spec");
 
 describe("the !win command", () => {
   const cb = async bot => await bot.command("!win", "streamer");
   itDequeues(cb);
   itPlaysALevel(2, cb);
   itUsesDefaultAdvance(cb);
+  itPicksALevel("!win and play");
 
   it("increases the 'won' count", async function() {
     const bot = this.buildBotInstance({ config: {httpPort: 8080 }});

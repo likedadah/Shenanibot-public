@@ -33,7 +33,7 @@ class ShenaniBot {
     this.defaultAdvanceCallCount = 0;
     this.onStatus = _ => {};
     this.onQueue = _ => {};
-    this.onPlayed = _ => {};
+    this.onCounts = _ => {};
 
     if (this.options.priority === "rotation") {
       this.playingRound = 1;
@@ -45,8 +45,7 @@ class ShenaniBot {
       overlay.sendCounts(this.counts);
       this.onStatus = isOpen => overlay.sendStatus(isOpen);
       this.onQueue = () => overlay.sendLevels(this.queue);
-      this.onPlayed = () => {
-        this.counts.played += 1;
+      this.onCounts = () => {
         overlay.sendCounts(this.counts);
       }
       if (this.options.creatorCodeMode === "webui") {
@@ -97,13 +96,13 @@ class ShenaniBot {
         case "random":
           return this.randomLevel();
         case "skip":
-          return this.defaultAdvance(false);
+          return this.skipLevel(args);
         case "advance":
-          return this.defaultAdvance();
+          return this.advance();
         case "win":
-          return this.winLevel();
+          return this.winLevel(args);
         case "lose":
-          return this.loseLevel();
+          return this.loseLevel(args);
         case "mark":
           return this.makeMarker(args.slice(1).join(" "));
         case "reward":
@@ -182,36 +181,47 @@ class ShenaniBot {
     return `@${username}, you may boost one level in the queue now.`;
   }
 
-  winLevel() {
+  skipLevel(args) {
+    if (!this.queue[0] || this.queue[0].type === 'mark') {
+      return "There is no current level to skip!";
+    }
+    this.counts.played -= 1;
+    return this.advance(args);
+  }
+
+  winLevel(args) {
     if (!this.queue[0] || this.queue[0].type === 'mark') {
       return "There is no current level to win!";
     }
     this.counts.won += 1;
-    return this.defaultAdvance();
+    return this.advance(args);
   }
 
-  loseLevel() {
+  loseLevel(args) {
     if (!this.queue[0] || this.queue[0].type === 'mark') {
       return "There is no current level to lose!";
     }
     this.counts.lost += 1;
-    return this.defaultAdvance();
+    return this.advance(args);
   }
 
-  defaultAdvance(played = true) {
+  advance(args = []) {
+    if (args.slice(1, 3).join(" ").toLowerCase() === 'and play') {
+      return this.playSpecificLevel(args.slice(3).join(" ").toLowerCase());
+    }
     switch (this.options.defaultAdvance) {
       case "random":
-        return this.randomLevel(played);
+        return this.randomLevel();
       case "alternate":
-        return (this.defaultAdvanceCallCount++ % 2) ? this.randomLevel(played)
-                                                    : this.nextLevel(played);
+        return (this.defaultAdvanceCallCount++ % 2) ? this.randomLevel()
+                                                    : this.nextLevel();
       default:
-        return this.nextLevel(played);
+        return this.nextLevel();
     }
   }
 
-  nextLevel(played = true) {
-    let {empty, response} = this._dequeue(played);
+  nextLevel() {
+    let {empty, response} = this._dequeue();
     if (!empty) {
       response = this._playLevel();
     }
@@ -270,8 +280,8 @@ class ShenaniBot {
     return response;
   }
 
-  randomLevel(played = true) {
-    let {empty, response} = this._dequeue(played);
+  randomLevel() {
+    let {empty, response} = this._dequeue();
     if (!empty) {
       const markerIndex = this.queue.findIndex(e => e.type === "mark");
       if (markerIndex !== 0) {
@@ -779,7 +789,7 @@ class ShenaniBot {
     return pos;
   }
 
-  _dequeue(updatePlayed = true) {
+  _dequeue() {
     if (this.queue.length === 0) {
       return {
         empty: true,
@@ -794,8 +804,9 @@ class ShenaniBot {
       this.rce.levelhead.bookmarks.remove(this.queue[0].id);
       this.levels[this.queue[0].id] = "was already played";
     }
-    if (this.queue[0].type !== "mark" && updatePlayed) {
-      this.onPlayed();
+    if (this.queue[0].type !== "mark") {
+      this.counts.played += 1;
+      this.onCounts();
     }
     for (const user of this.noSpoilUsers) {
       this.dm(user,

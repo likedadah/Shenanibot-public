@@ -5,23 +5,44 @@ The Shenanibot is a free Twitch chatbot developed to help streamers manage a que
 The bot stores a list of viewer-submitted levelcodes for you to play, and automatically syncs them to your bookmarks directly in LevelHead, so that you don't have to type in the level codes and keep track of them!
 
 ## Commands
-**Streamer Commands**  
+### Streamer Commands
+
 `!open` : Opens the queue for viewers to submit levels  
 `!close` : Closes the queue  
 `!permit [user name]` : Allows a user to add one level to the queue even if it is closed or they have reached the submission limit  
-`!next` : Moves the queue forward a level  
-`!advance`: Moves the queue forward.  The "default advance mode" determines which level is moved up to the "now playing" position  
-`!win` : Increases the "won" count and moves the queue forward.  The "default advance mode" determines which level is moved up to the "now playing" position  
-`!lose` : Increases the "lost" count and moves the queue forward.  The "default advance mode" determines which level is moved up to the "now playing" position  
-`!skip` : Moves the queue forward, but does not increment the "played levels" count.  The "default advance mode" determines which level is moved up to the "now playing" position  
-`!random` : Chooses a random level from the queue and puts it at the front of the queue to play.  If there are markers in the queue, a level will be chosen from before the first marker.  If priority rules other than order have been applied to the queue, this command respects them; so the chosen level will always be one of thoes with the highest priority  
-`!play` : Move the queue forward, pulling a specified level (by username or queue position) to the front to be played next. You can say, for example, `!play from username` to play the next level submitted by `username`; or `!play last from username` to play the level most recently submitted by `username`; or `!play 5` to play whatever level is at position #5 in the queue. Note that this will override any other priority rule, so it should be used with caution if, for example, channel points have been spent on priority  
 `!mark [name]` : Place a marker in the queue.  You can optionally proivde a name for the marker, which will show up when displaying the queue.  See [Using Markers](#using-markers) for details  
 `!giveboost [user name]` : Allows a user to use the `!boost` command one time  
 `!reward [reward behavior]` : Sets up a channel points reward.  Unlike other commands, this must be sent as the message for a custom channel points reward; it assigns a behavior to that particular custom reward.  See [Channel Points Integration](#channel-points-integration) for details  
 `!noreward [reward behavior]` : Removes the assignment of a reward behavior from whatever custom reward currently has that behavior  
+
+**Advancing the Queue**  
+When you are done with the current "now playing" level, there are several commands you can use to advance the queue (depending on how you want the new "now playing" level chosen and/or how you want level counts updated).
+
+This first group of commands is normally used if your `!stats` command is not configured to count wins or losses.
+
+`!next` : Moves the queue forward a level  
+`!random` : Chooses a random level from the queue and puts it at the front of the queue to play.  If there are markers in the queue, a level will be chosen from before the first marker.  If priority rules other than order have been applied to the queue, this command respects them; so the chosen level will always be one of thoes with the highest priority  
+`!play` : Move the queue forward, pulling a specified level (by username or queue position) to the front to be played next. You can say, for example, `!play from username` to play the next level submitted by `username`; or `!play last from username` to play the level most recently submitted by `username`; or `!play 5` to play whatever level is at position #5 in the queue. Note that this will override any other priority rule, so it should be used with caution if, for example, channel points have been spent on priority  
+
+If you are using win and loss counts, then any of the above commands will count the level as "played", but not as "won" or "lost" - so it will appear as if you're counting it as a draw.  This next group of commands allow you to control how levels are counted.
+
+For each of these commands, you can specify what level to play next using the "and play" option; but normally you probably won't want to, so if "and play" is omitted, these commands use the "default advance mode" (configured under [Queue Management Options](#queue-management-options)) to determine the new "now playing" level.
   
-**Viewer Commands**  
+`!win [and play ...]` : Increases the "won" count  
+`!lose [and play ...]` : Increases the "lost" count  
+
+Whether or not you are counting wins and losses, you might want to move past a level without including it in your "played levels" count (as though you had `!remove`d it before it reached the "now playing" position).  In that case you can use 
+
+`!skip [and play ...]` : Moves the queue forward, but does not increment the "played levels" count  
+
+Like `!win` and `!lose`, `!skip` will use the "default advance mode" if the "and play" option is omitted.
+
+Finally, if you have set the "default advance mode" to alternate, there may be situations where you want to take advantage of this ability to automatically alternate between `!next` and `!random` even though none of the above commands that do that are applicable.  For example, you may not be counting wins and losses; or you may want to count the level as a draw.  In those cases, you can use
+
+`!advance`: Moves the queue forward.  The "default advance mode" determines which level is moved up to the "now playing" position.  The "played levels" count is incraesed, but the "win" or "loss" counts are not  
+
+### Viewer Commands
+
 `!check [level code]` : Checks if the streamer has played a level; note that very recent plays may not be reported  
 `!add [level code | creator code]` : Adds a level (or creator profile if support is enabled) to the level queue  
 `!chadd [level code]` : Checks if the streamer has played a level and, if not, tries to add it to the level queue  
