@@ -98,6 +98,8 @@ class ShenaniBot {
           return this.randomLevel();
         case "skip":
           return this.defaultAdvance(false);
+        case "advance":
+          return this.defaultAdvance();
         case "win":
           return this.winLevel();
         case "lose":
