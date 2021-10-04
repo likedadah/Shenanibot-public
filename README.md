@@ -18,7 +18,7 @@ The bot stores a list of viewer-submitted levelcodes for you to play, and automa
 **Advancing the Queue**  
 When you are done with the current "now playing" level, there are several commands you can use to advance the queue (depending on how you want the new "now playing" level chosen and/or how you want level counts updated).
 
-This first group of commands is normally used if your `!stats` command is not configured to count wins or losses.
+This first group of commands is normally used if you don't want to show win/loss counts:
 
 `!next` : Moves the queue forward a level  
 `!random` : Chooses a random level from the queue and puts it at the front of the queue to play.  If there are markers in the queue, a level will be chosen from before the first marker.  If priority rules other than order have been applied to the queue, this command respects them; so the chosen level will always be one of thoes with the highest priority  

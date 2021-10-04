@@ -558,7 +558,15 @@ class ShenaniBot {
   }
 
   showStats() {
-    return `Levels Played: ${this.counts.played}`;
+    const stats = [];
+    if (this.counts.won) {
+      stats.push(`Wins: ${this.counts.won}`);
+    }
+    if (this.counts.lost) {
+      stats.push(`Losses: ${this.counts.lost}`);
+    }
+    stats.push(`Total Played: ${this.counts.played}`);
+    return stats.join(" ; ");
   }
 
   showBotCommands() {
