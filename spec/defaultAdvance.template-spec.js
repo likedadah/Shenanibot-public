@@ -9,7 +9,6 @@
 
 module.exports = itUsesDefaultAdvance = cb => {
   describe("advances the queue per the defaultAdvance setting, so it", () => {
-
     beforeEach(function () {
       this.buildBot = async opts => {
         const bot = this.buildBotInstance(opts);
@@ -21,27 +20,47 @@ module.exports = itUsesDefaultAdvance = cb => {
 
     it("acts like !next by default", async function() {
       const bot = await this.buildBot();
-      cb(bot);
+      await cb(bot);
       expect(this.bookmarks).toEqual(["valid02"]);
-      cb(bot);
+      await cb(bot);
       expect(this.bookmarks).toEqual(["valid03"]);
     });
 
     it("can be configured to act like !random", async function() {
       const bot = await this.buildBot({config: {defaultAdvance: "random"}});
-      cb(bot);
+      await cb(bot);
       expect(this.bookmarks).toEqual(["valid08"]);
-      cb(bot);
+      await cb(bot);
       expect(this.bookmarks).toEqual(["valid07"]);
     });
 
     it("can be configured to alternate between !next and !random behavior",
         async function() {
       const bot = await this.buildBot({config: {defaultAdvance: "alternate"}});
-      cb(bot);
+      await cb(bot);
       expect(this.bookmarks).toEqual(["valid02"]);
-      cb(bot);
+      await cb(bot);
       expect(this.bookmarks).toEqual(["valid08"]);
+    });
+
+    it("updates the overlay", async function() {
+      const bot = this.buildBotInstance({ config: {httpPort: 8080 }});
+      await this.addLevels(bot, 2);
+      const token = await this.openWebSocket("overlay/levels");
+
+      const levelsMessage = (await Promise.all([
+        cb(bot),
+        this.waitForNextWsMessage(token)
+      ]))[1];
+      expect(levelsMessage).toEqual([{
+        type: "level",
+        entry: {
+          id: "valid02",
+          name: "Valid Level 02",
+          type: "level",
+          submittedBy: "viewer02"
+        }
+      }]);
     });
   });
 };

@@ -44,26 +44,6 @@ describe("the !win command", () => {
     expect(postCounts.won).toEqual(0);
   });
 
-  it("updates the overlay", async function() {
-    const bot = this.buildBotInstance({ config: {httpPort: 8080 }});
-    await this.addLevels(bot, 2);
-    const token = await this.openWebSocket("overlay/levels");
-
-    const levelsMessage = (await Promise.all([
-      bot.command("!win", "streamer"),
-      this.waitForNextWsMessage(token)
-    ]))[1];
-    expect(levelsMessage).toEqual([{
-      type: "level",
-      entry: {
-        id: "valid02",
-        name: "Valid Level 02",
-        type: "level",
-        submittedBy: "viewer02"
-      }
-    }]);
-  });
-
   it("only works for the streamer", async function() {
     const bot = this.buildBotInstance({ config: {httpPort: 8080 }});
     await this.addLevels(bot, 2);
