@@ -27,19 +27,22 @@ class MockRumpusCE {
           const validLevelMatch = levelIds && levelIds.match(/^valid(\d\d)$/);
           if (validLevelMatch) {
             return [{
-              title: `Valid Level ${validLevelMatch[1]}`
+              title: `Valid Level ${validLevelMatch[1]}`,
+              avatarUrl: () => ''
             }]
           }
           const eLvlMatch = levelIds && levelIds.match(/^(\d\d\d)l(\d\d\d)$/);
           if (eLvlMatch && eLvlMatch[1] >= eLvlMatch[2]) {
             return [{
-              title: `Employee ${eLvlMatch[1]} Level ${eLvlMatch[2]}`
+              title: `Employee ${eLvlMatch[1]} Level ${eLvlMatch[2]}`,
+              avatarUrl: () => ''
             }];
           }
           const playedMatch = levelIds && levelIds.match(/^played(\d)$/);
           if (playedMatch) {
             const playedLevel = {
-              title: `Played Level ${playedMatch[1]}`
+              title: `Played Level ${playedMatch[1]}`,
+              avatarUrl: () => ''
             };
             if (includeMyInteractions) {
               playedLevel.interactions = {played: true};
@@ -49,7 +52,8 @@ class MockRumpusCE {
           const beatenMatch = levelIds && levelIds.match(/^beaten(\d)$/);
           if (beatenMatch) {
             const beatenLevel = {
-              title: `Cleared Level ${beatenMatch[1]}`
+              title: `Cleared Level ${beatenMatch[1]}`,
+              avatarUrl: () => ''
             };
             if (includeMyInteractions) {
               beatenLevel.interactions = {played: true, completed: true};
@@ -78,11 +82,11 @@ class MockRumpusCE {
         search: ({userIds, includeAliases}) => {
           const validCreatorMatch = userIds.match(/^emp(\d\d\d)$/);
           if (validCreatorMatch) {
-            return [{
+            return [{ data: {
               alias: includeAliases ? {
                 alias: `EmployEE ${validCreatorMatch[1]}`
               } : undefined
-            }]
+            }}]
           }
           return [];
         }

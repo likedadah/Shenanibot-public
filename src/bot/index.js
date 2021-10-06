@@ -430,7 +430,8 @@ class ShenaniBot {
       entry = new ViewerLevel(
         id,
         levelInfo[0].title,
-        username
+        username,
+        levelInfo[0].avatarUrl()
       );
     }
 
@@ -440,11 +441,11 @@ class ShenaniBot {
       if (!creatorInfo.length) {
         return "Oops! That creator does not exist!";
       }
-
       entry = new Creator(
         id,
-        creatorInfo[0].alias.alias,
-        username
+        creatorInfo[0].data.alias.alias,
+        username,
+        creatorInfo[0].data.alias.avatarId
       );
     }
 
@@ -945,9 +946,8 @@ class ShenaniBot {
     do {
       const levelInfo = await this.rce.levelhead.levels.search(query);
       const loadedLevels = levelInfo.map(li => ({
-        ...new ViewerLevel(li.levelId, li.title, ""),
+        ...new ViewerLevel(li.levelId, li.title, "", li.avatarUrl()),
         date: li.createdAt,
-        avatar: li.avatarUrl(),
         players: li.requiredPlayers,
         tags: li.tagNames,
         difficulty: li.stats.Players > 10 ? li.stats.Diamonds : null,
@@ -974,7 +974,8 @@ class ShenaniBot {
                   || oldEntry.id !== creatorId) {
       return false;
     }
-    const entry = new ViewerLevel(level.id, level.name, oldEntry.submittedBy);
+    const entry = new ViewerLevel(
+                    level.id, level.name, oldEntry.submittedBy, level.avatar);
     for (const key of Object.keys(oldEntry).filter(k => !(k in entry))) {
       entry[key] = oldEntry[key];
     }

@@ -148,12 +148,13 @@ module.exports = itAddsALevel = cb => {
       ]))[1];
 
       expect(msg).toEqual([{
-        type: 'level',
+        type: "level",
         entry: {
-          id: 'valid01',
-          name: 'Valid Level 01',
-          type: 'level',
-          submittedBy: 'viewer'
+          id: "valid01",
+          name: "Valid Level 01",
+          type: "level",
+          submittedBy: "viewer",
+          avatar: ""
         }
       }]);
     });

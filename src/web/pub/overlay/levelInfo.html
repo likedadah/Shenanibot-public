@@ -11,8 +11,17 @@
         padding: 0.5em;
         width: 200px;
       }
+      .top-line {
+        display: flex;
+        height: 21px;
+        justify-content: space-between;
+      }
       .title {
         font-size: 1.125em;
+      }
+      .avatar > img {
+        height: 32px;
+        width: 32px;
       }
       .level-info {
         display: flex;
@@ -40,7 +49,10 @@
   </head>
   <body>
     <div class="container">
-      <span class="title"></span>
+      <div class="top-line">
+        <span class="title"></span>
+        <span class="avatar"></span>
+      </div>
       <div class="level-info">
         <span class="item-name"></span>
         <span class="item-id"></span>
@@ -54,7 +66,8 @@
         title: "",
         name: "",
         id: "",
-        submittedBy: ""
+        submittedBy: "",
+        avatar: "",
       };
       const updateView = () => {
         const containerEl = document.getElementsByClassName("container")[0];
@@ -62,6 +75,7 @@
         if (model.type) {
           containerEl.classList.add(model.type);
         }
+        document.getElementsByClassName("avatar")[0].innerHTML = model.avatar ? `<img src=${model.avatar}>` : '';
         document.getElementsByClassName("item-id")[0].innerHTML = model.id;
         document.getElementsByClassName("item-name")[0].innerHTML = model.name;
         if (model.submittedBy && model.submittedBy.trim().length) {
@@ -78,6 +92,7 @@
           model.name = "Blopfush Race";
           model.id = "kbt89w5";
           model.submittedBy = "madelsberger";
+          model.avatar = "https://img.bscotch.net/fit-in/128x128/avatars/blopfush-love.png";
           updateView();
         } else {
           model.title = params.get("title");
@@ -93,6 +108,7 @@
             model.id = "";
             model.submittedBy = "";
             model.type = "";
+            model.avatar = "";
             if (item) {
               model.type = item.type === "mark" ? "marker" : item.type;
               switch (item.type) {
@@ -100,11 +116,13 @@
                   model.name = item.entry.name;
                   model.id = item.entry.id;
                   model.submittedBy = item.entry.submittedBy;
+                  model.avatar = item.entry.avatar;
                   break;
                 case "creator":
                   model.name = `Level from ${item.entry.name}`;
                   model.id = `@${item.entry.id}`;
                   model.submittedBy = item.entry.submittedBy;
+                  model.avatar = item.entry.avatar;
                   break;
                 case "mark":
                   model.name = `[ ${item.entry.name || 'BREAK'} ]`;

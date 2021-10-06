@@ -58,7 +58,8 @@ module.exports = itUsesDefaultAdvance = cb => {
           id: "valid02",
           name: "Valid Level 02",
           type: "level",
-          submittedBy: "viewer02"
+          submittedBy: "viewer02",
+          avatar: ""
         }
       }]);
     });
