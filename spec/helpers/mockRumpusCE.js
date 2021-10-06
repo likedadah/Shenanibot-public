@@ -70,7 +70,7 @@ class MockRumpusCE {
               const n = (i < 100 ? "0" : "") + (i < 10 ? "0" : "") + i;
               levels.push(makeLevel(i, `${empMatch[1]}l${n}`,
                                     `Employee ${empMatch[1]} Level ${n}`,
-                                     userIds));
+                                    userIds));
             }
             return levels;
           }
@@ -82,11 +82,11 @@ class MockRumpusCE {
         search: ({userIds, includeAliases}) => {
           const validCreatorMatch = userIds.match(/^emp(\d\d\d)$/);
           if (validCreatorMatch) {
-            return [{ data: {
-              alias: includeAliases ? {
+            return [{
+              alias: new Promise(r => r({
                 alias: `EmployEE ${validCreatorMatch[1]}`
-              } : undefined
-            }}]
+              }))
+            }]
           }
           return [];
         }

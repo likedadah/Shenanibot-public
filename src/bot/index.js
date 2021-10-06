@@ -441,11 +441,12 @@ class ShenaniBot {
       if (!creatorInfo.length) {
         return "Oops! That creator does not exist!";
       }
+      const aliasInfo = await creatorInfo[0].alias;
       entry = new Creator(
         id,
-        creatorInfo[0].data.alias.alias,
+        aliasInfo.alias,
         username,
-        creatorInfo[0].data.alias.avatarId
+        aliasInfo.avatarId
       );
     }
 
