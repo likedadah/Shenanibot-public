@@ -28,6 +28,7 @@
       <li><a href="#now-playing">Now Playing</a>
       <li><a href="#queue-status">Queue Status</a>
       <li><a href="#random-pool">Random Pool</a>
+      <li><a href="#record">Record</a>
       <li><a href="#up-next">Up Next</a>
     </ul>
 
@@ -220,6 +221,31 @@
                the command text is more specifically controlled by
                <code>command-keyword</code></p>
             <p><dfn>command-keyword</dfn> The text of the "add" command</p>
+    <hr>
+
+    <a name="record"><h1>Record</h1></a>
+        <p>Show your session win/loss/draw record.</p>
+
+        <iframe width="252" height="70" src="./record.html?demo=true"></iframe>
+
+        <h2>Main URL</h2>
+            <span class="baseUrl"></span>/record.html
+
+        <h2>Query Parameters:</h2>
+            <p>None</p>
+
+        <h2>URL Aliases:</h2>
+            <p>None</p>
+
+        <h2>CSS Classes:</h2>
+            <p><dfn>container</dfn> The block containing all of the information
+               being diaplayed.  By default this is a simple block container
+               with a black background.<p>
+            <p><dfn>wins</dfn> The text indicating how many levels were won</p>
+            <p><dfn>losses</dfn> The text indicating how many levels were
+               lost</p>
+            <p><dfn>draws</dfn> The text indicating how many of the played
+	       levels were neither won nor lost</p>
     <hr>
 
     <script language="javascript" type="text/javascript">

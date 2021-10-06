@@ -1,0 +1,64 @@
+<html>
+  <head>
+    <style type="text/css">
+      .container {
+        background-color: #000000;
+        color: #cfcfcf;
+        height: 1.125em;
+        padding: 1em;
+	text-align: center;
+        width: 200px;
+      }
+      .wins {
+        color: #7FFF7F;
+      }
+      .losses {
+        color: #FF7F7F;
+      }
+      .draws {
+        color: #FFFF7F;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      Record:
+      <span class="wins"></span>
+      /
+      <span class="losses"></span>
+      /
+      <span class="draws"></span>
+    </div>
+    <script language="javascript" type="text/javascript">
+      const params = new URLSearchParams(window.location.search);
+      const model = {
+        won: 0,
+        lost: 0,
+        drawn: 0
+      };
+      const updateView = () => {
+        document.getElementsByClassName("wins")[0].innerHTML = `${model.won} W`;
+        document.getElementsByClassName("losses")[0].innerHTML = `${model.lost} L`;
+        document.getElementsByClassName("draws")[0].innerHTML = `${model.drawn} D`;
+      };
+
+      (() => {
+        if (params.get("demo") === "true") {
+          model.won = 5;
+          model.lost = 2;
+          model.drawn = 1;
+          updateView();
+        } else {
+          const ws = new WebSocket(`ws://${window.location.host}/overlay/counts`);
+          ws.onmessage = m => {
+            const data = JSON.parse(m.data);
+            model.won = data.won;
+            model.lost = data.lost;
+            model.drawn = data.played - data.won - data.lost;
+            updateView();
+          };
+        }
+      })();
+    </script>
+  </body>
+</html>
