@@ -1,0 +1,234 @@
+describe("the !back command", () => {
+  it("restores the previous 'now playing' entry", async function() {
+    const bot = this.buildBotInstance();
+    await bot.command("!add valid01", "viewer");
+    await bot.command("!next", "streamer");
+
+    await bot.command("!back", "streamer");
+
+    expect(this.bookmarks).toEqual(['valid01']);
+  });
+
+  it("can only remember one previous entry", async function() {
+    const bot = this.buildBotInstance();
+    await this.addLevels(bot, 2);
+    await bot.command("!next", "streamer");
+    await bot.command("!next", "streamer");
+
+    await bot.command("!back", "streamer");
+    await bot.command("!back", "streamer");
+
+    expect(this.bookmarks).toEqual(['valid02']);
+  });
+
+  it("can be used multiple times - just not back to back", async function() {
+    const bot = this.buildBotInstance();
+    await this.addLevels(bot, 3);
+    await bot.command("!next", "streamer");
+    await bot.command("!back", "streamer");
+    await bot.command("!next", "streamer");
+    await bot.command("!next", "streamer");
+
+    await bot.command("!back", "streamer");
+
+    expect(this.bookmarks).toEqual(['valid02']);
+  });
+
+  it("keeps the current order of other queued levels", async function() {
+    const bot = this.buildBotInstance({config: {httpPort: 8080}});
+    await this.addLevels(bot, 5);
+    await bot.command("!play from viewer04", "streamer");
+
+    await bot.command("!back", "streamer");
+    const queue = await this.getSimpleQueue();
+    expect(queue).toEqual([
+      { type: 'level', id: 'valid01' },
+      { type: 'level', id: 'valid04' },
+      { type: 'level', id: 'valid02' },
+      { type: 'level', id: 'valid03' },
+      { type: 'level', id: 'valid05' }
+    ]);
+  });
+
+  it("when pushing a level out of 'now playing' removes the bookmark",
+      async function() {
+    const bot = this.buildBotInstance();
+    await this.addLevels(bot, 2);
+    await bot.command("!next", "streamer");
+
+    await bot.command("!back", "streamer");
+
+    expect(this.bookmarks).toEqual(['valid01']);
+  });
+
+  it("when pushing a creator out of 'now playing' resets the ui",
+      async function() {
+    const bot = this.buildBotInstance({config: {
+      httpPort: 8080,
+      creatorCodeMode: "webui",
+    }});
+    await bot.command("!add valid01", "viewer");
+    await bot.command("!add emp001", "viewer");
+    await bot.command("!next", "streamer");
+
+    await bot.command("!back", "streamer");
+    const creatorInfo = await this.getCreatorInfo();
+    expect(creatorInfo.creatorId).toEqual(null);
+  });
+
+  it("reduces 'played' count when restoring a played level", async function() {
+    const bot = this.buildBotInstance({config: {httpPort: 8080}});
+    await this.addLevels(bot, 3);
+    await bot.command("!win", "streamer");
+    await bot.command("!lose", "streamer");
+    await bot.command("!next", "streamer");
+
+    await bot.command("!back", "streamer");
+    const counts = await this.getCounts();
+    expect(counts).toEqual({
+      played: 2,
+      won: 1,
+      lost: 1
+    });
+  });
+
+  it("leaves 'played' count when restoring a skipped level", async function() {
+    const bot = this.buildBotInstance({config: {httpPort: 8080}});
+    await this.addLevels(bot, 3);
+    await bot.command("!win", "streamer");
+    await bot.command("!lose", "streamer");
+    await bot.command("!skip", "streamer");
+
+    await bot.command("!back", "streamer");
+    const counts = await this.getCounts();
+    expect(counts).toEqual({
+      played: 2,
+      won: 1,
+      lost: 1
+    });
+  });
+
+  it("reduces 'won' count when restoring a won level", async function() {
+    const bot = this.buildBotInstance({config: {httpPort: 8080}});
+    await this.addLevels(bot, 3);
+    await bot.command("!lose", "streamer");
+    await bot.command("!skip", "streamer");
+    await bot.command("!win", "streamer");
+
+    await bot.command("!back", "streamer");
+    const counts = await this.getCounts();
+    expect(counts).toEqual({
+      played: 1,
+      won: 0,
+      lost: 1
+    });
+  });
+
+  it("reduces 'lost' count when restoring a lost level", async function() {
+    const bot = this.buildBotInstance({config: {httpPort: 8080}});
+    await this.addLevels(bot, 3);
+    await bot.command("!skip", "streamer");
+    await bot.command("!win", "streamer");
+    await bot.command("!lose", "streamer");
+
+    await bot.command("!back", "streamer");
+    const counts = await this.getCounts();
+    expect(counts).toEqual({
+      played: 1,
+      won: 1,
+      lost: 0
+    });
+  });
+
+  it("reduces counts only based on the last dequeue", async function() {
+    const bot = this.buildBotInstance({config: {httpPort: 8080}});
+    await this.addLevels(bot, 3);
+    await bot.command("!win", "streamer");
+    await bot.command("!lose", "streamer");
+    await bot.command("!win", "streamer");
+    await bot.command("!back", "streamer");
+    await bot.command("!lose", "streamer");
+    await bot.command("!back", "streamer");
+    await bot.command("!skip", "streamer");
+    await bot.command("!back", "streamer");
+
+    const counts = await this.getCounts();
+    expect(counts).toEqual({
+      played: 2,
+      won: 1,
+      lost: 1
+    });
+  });
+
+  it("leaves counts alone when restoring a marker", async function () {
+    const bot = this.buildBotInstance({config: {httpPort: 8080}});
+    await this.addLevels(bot, 3);
+    await bot.command("!mark", "streamer");
+
+    await bot.command("!win", "streamer");
+    await bot.command("!lose", "streamer");
+    await bot.command("!skip", "streamer");
+    await bot.command("!advance", "streamer");
+
+    await bot.command("!back", "streamer");
+    const counts = await this.getCounts();
+    expect(counts).toEqual({
+      played: 2,
+      won: 1,
+      lost: 1
+    });
+  });
+
+  it("does not affect the original submitter's limit", async function() {
+    const bot = this.buildBotInstance({config: {
+      httpPort: 8080,
+      levelLimitType: "active",
+      levelLimit: 1
+    }});
+
+    await bot.command("!add valid01", "viewer");
+    await bot.command("!next", "streamer");
+    await bot.command("!back", "streamer");
+    await bot.command("!add valid02", "viewer");
+
+    expect(await this.getSimpleQueue()).toEqual([
+      {type: "level", id: "valid01"},
+      {type: "level", id: "valid02"}
+    ]);
+
+    await bot.command("!next", "streamer");
+    await bot.command("!add valid03", "viewer");
+
+    expect(await this.getSimpleQueue()).toEqual([
+      {type: "level", id: "valid02"}
+    ]);
+  });
+
+  it("creates a separate nospoil list for the restored level",
+      async function() {
+    const bot = this.buildBotInstance();
+    await this.addLevels(bot, 2);
+    await bot.command("!next", "streamer");
+
+    await bot.command("!nospoil", "viewer1");
+    await bot.command("!back", "streamer");
+    await bot.command("!nospoil", "viewer2");
+
+    await bot.command("!next", "streamer");
+    expect(Object.keys(this.getAllDms())).toEqual(["viewer2"]);
+
+    this.resetDms();
+    await bot.command("!next", "streamer");
+    expect(Object.keys(this.getAllDms())).toEqual(["viewer1"]);
+  });
+
+  it("only works for the streamer", async function() {
+    const bot = this.buildBotInstance();
+    await bot.command("!add valid01", "viewer");
+    await bot.command("!next", "streamer");
+
+    await bot.command("!back", "viewer");
+
+    expect(this.bookmarks).toEqual([]);
+  });
+});

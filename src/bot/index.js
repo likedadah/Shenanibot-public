@@ -24,7 +24,10 @@ class ShenaniBot {
     this.queueOpen = true;
     this.users = {};
     this.levels = {};
+    this.prevLevel = undefined;
+    this.forcedAdvance = undefined;
     this.noSpoilUsers = new Set();
+    this.nextNoSpoilUsers = null;
     this.counts = {
       played: 0,
       won: 0,
@@ -103,6 +106,8 @@ class ShenaniBot {
           return this.winLevel(args);
         case "lose":
           return this.loseLevel(args);
+        case "back":
+          return this.goBack();
         case "mark":
           return this.makeMarker(args.slice(1).join(" "));
         case "reward":
@@ -185,7 +190,7 @@ class ShenaniBot {
     if (!this.queue[0] || this.queue[0].type === 'mark') {
       return "There is no current level to skip!";
     }
-    this.counts.played -= 1;
+    this.queue[0].counted = false;
     return this.advance(args);
   }
 
@@ -193,6 +198,7 @@ class ShenaniBot {
     if (!this.queue[0] || this.queue[0].type === 'mark') {
       return "There is no current level to win!";
     }
+    this.queue[0].countedWon = true;
     this.counts.won += 1;
     return this.advance(args);
   }
@@ -201,6 +207,7 @@ class ShenaniBot {
     if (!this.queue[0] || this.queue[0].type === 'mark') {
       return "There is no current level to lose!";
     }
+    this.queue[0].countedLost = true;
     this.counts.lost += 1;
     return this.advance(args);
   }
@@ -209,7 +216,9 @@ class ShenaniBot {
     if (args.slice(1, 3).join(" ").toLowerCase() === 'and play') {
       return this.playSpecificLevel(args.slice(3).join(" ").toLowerCase());
     }
-    switch (this.options.defaultAdvance) {
+    const advance = this.forcedAdvance || this.options.defaultAdvance
+    this.forcedAdvance = undefined;
+    switch (advance) {
       case "random":
         return this.randomLevel();
       case "alternate":
@@ -308,6 +317,43 @@ class ShenaniBot {
 
     this.onQueue();
     return response;
+  }
+
+  async goBack() {
+    if (this.prevLevel === undefined) {
+      return "There is no level to go back to!";
+    }
+    if (this.prevLevel === null) {
+      return "You can't go back twice in a row.";
+    }
+
+    this.nextNoSpoilUsers = this.noSpoilUsers;
+    this.noSpoilUsers = new Set();
+    if (this.queue.length) {
+      this._stopPlayingLevel();
+    }
+    this.queue.unshift(this.prevLevel);
+    if (this.prevLevel.counted) {
+      this.counts.played -= 1;
+    }
+    if (this.prevLevel.countedWon) {
+      this.counts.won -= 1;
+    }
+    if (this.prevLevel.countedLost) {
+      this.counts.lost -= 1;
+    }
+
+    delete this.prevLevel.counted;
+    delete this.prevLevel.countedWon;
+    delete this.prevLevel.countedLost;
+    this.prevLevel.wasPrev = true;
+    this.levels[this.prevLevel.id] = "is already in the queue";
+    this.prevLevel = null;
+
+    this.forcedAdvance = "next";
+    this.onCounts();
+    this.onQueue();
+    return `Restoring previous queue entry... ${this._playLevel()}}`;
   }
 
   async makeMarker(markerName) {
@@ -807,22 +853,29 @@ class ShenaniBot {
       };
     }
 
-    if (this.options.creatorCodeMode === "webui") {
-      creatorCodeUi.clearCreatorInfo();
-    }
+    this._stopPlayingLevel();
     if (this.queue[0].type === "level") {
-      this.rce.levelhead.bookmarks.remove(this.queue[0].id);
       this.levels[this.queue[0].id] = "was already played";
     }
     if (this.queue[0].type !== "mark") {
-      this.counts.played += 1;
+      if (this.queue[0].counted === undefined) {
+        this.queue[0].counted = true;
+        this.counts.played += 1;
+      }
       this.onCounts();
     }
     for (const user of this.noSpoilUsers) {
       this.dm(user,
           `${this.streamer} has finished playing ${this.queue[0].display}`);
     }
-    this.noSpoilUsers.clear();
+    if (this.nextNoSpoilUsers) {
+      this.noSpoilUsers = this.nextNoSpoilUsers;
+      this.nextNoSpoilUsers = null;
+    } else {
+      this.noSpoilUsers.clear();
+    }
+
+    this.prevLevel = this.queue[0];
     this._removeFromQueue(0);
 
     if (   this.options.priority === "rotation"
@@ -877,6 +930,15 @@ class ShenaniBot {
     return "Not currently playing a queued level.";
   }
 
+  _stopPlayingLevel() {
+    if (this.queue[0].type === "level") {
+      this.rce.levelhead.bookmarks.remove(this.queue[0].id);
+    }
+    if (this.options.creatorCodeMode === "webui") {
+      creatorCodeUi.clearCreatorInfo();
+    }
+  }
+
   _getIdType(id) {
     if (id.match(/^[a-z0-9]{7}$/)) {
       return "level";
@@ -903,7 +965,8 @@ class ShenaniBot {
       const username = entry.submittedBy;
       const user = this._getUser(username);
 
-      if (this.options.levelLimitType === "active" || index) {
+      if (    (this.options.levelLimitType === "active" || index)
+           && !entry.wasPrev ) {
         user.levelsSubmitted--;
       }
 

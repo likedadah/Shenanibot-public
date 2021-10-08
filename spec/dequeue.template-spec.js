@@ -177,13 +177,24 @@ module.exports = async (cb, nextPosition = 2, nextRequired = false,
 
     if (incrementPlayed) {
       it("increases the played level count", async function() {
-        const bot = this.buildBotInstance({config: {
-          httpPort: 8080
-        }});
+        const bot = this.buildBotInstance({config: { httpPort: 8080 }});
         await buildQueue(bot);
 
         const preCounts = await this.getCounts();
         expect(preCounts.played).toEqual(0);
+
+        await cb(bot);
+
+        const postCounts = await this.getCounts();
+        expect(postCounts.played).toEqual(1);
+      });
+
+      it("counts the level even if it had perviously been skipped",
+          async function() {
+        const bot = this.buildBotInstance({config: { httpPort: 8080 }});
+        await buildQueue(bot);
+        await bot.command("!skip", "streamer");
+        await bot.command("!back", "streamer");
 
         await cb(bot);
 

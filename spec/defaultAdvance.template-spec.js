@@ -43,6 +43,18 @@ module.exports = itUsesDefaultAdvance = cb => {
       expect(this.bookmarks).toEqual(["valid08"]);
     });
 
+    it("always uses !next after a !back command", async function() {
+      this.setRandomizerToMax();
+      const bot = await this.buildBot({config: {defaultAdvance: "alternate"}});
+      await this.addLevels(bot, 5);
+
+      await cb(bot);
+      await bot.command("!back", "streamer");
+      await cb(bot);
+
+      expect(this.bookmarks).toEqual(["valid02"]);
+    });
+
     it("updates the overlay", async function() {
       const bot = this.buildBotInstance({ config: {httpPort: 8080 }});
       await this.addLevels(bot, 2);

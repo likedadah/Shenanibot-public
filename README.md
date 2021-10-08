@@ -41,6 +41,22 @@ Finally, if you have set the "default advance mode" to alternate, there may be s
 
 `!advance`: Moves the queue forward.  The "default advance mode" determines which level is moved up to the "now playing" position.  The "played levels" count is incraesed, but the "win" or "loss" counts are not  
 
+**Rewinding the Queue**
+
+If you accidentally advance the queue and then realize you're not really done with the previous level, you can rewind one entry with
+
+`!back`: put the most-recently dequeued level back in the "now playing" position
+
+If dequeuing the level increased the played and/or win/loss counts, they are returned to their previous values.
+
+Only the most recently dequeued level is remembered; so although you can use the command as many times as you want, you can't use it "twice in a row" to go back two levels.
+
+If the prior command pulled a level forward in the queue (e.g. `!random` or `!play`), that level will remain in the "on deck" position.  That is, all levels are pushed back one space; no further attempt is made to restore the queue order prior to the previous level being dequeued.  For this reason, commands that normally use the default advance mode will always move to the next level when dequeueing a level that was readded using `!back`.
+
+If you're using "active" level limits, the restored level does not count against the original submitter's limit.  (This prevents any ambiguity if they had already submitted their next level.)
+
+Any `nospoil` messages for the previous level will have already been sent; so viewers may have to re-issue `nospoil` commands.  If anyone had entered a `nospoil` command for the next level, it will be remembered for later.
+
 ### Viewer Commands
 
 `!check [level code]` : Checks if the streamer has played a level; note that very recent plays may not be reported  
