@@ -62,6 +62,15 @@ function validateTwitchUsername(username) {
   return true;
 }
 
+function oauthTokenInstructions(username) {
+  return '- Browse to https://twitchapps.com/tmi/ using a browser that is not logged\n'
+       + '  in to twitch (such as an incognito browser window.)\n'
+       + '- Click the "Connect" button.\n'
+       + '- You will be prompted to log in to twitch; make sure to log in as\n'
+       + `  ${username}\n`
+       + '- Copy the oauth token and enter it here.'
+}
+
 const questions = {
   mainMenu: buildMenuQuestion('main', {
     message: "Main Menu:",
@@ -133,6 +142,23 @@ const questions = {
       + '\n'
       + 'If in doubt, send a message in chat and copy the username that appears\n'
       + 'before your message.'
+    ),
+    buildConfigQuestion(
+      'auth.streamerToken', {
+        message: "Streamer Account OAuth Token:",
+        filter: a => ((!a || a.slice(0,6) === 'oauth:') ? '' : 'oauth:') + a
+      },
+        'If you want the bot to send whispers from your account instaed of the bot\n'
+      + `account, enter an OAuth token for ${answers.config.auth.streamer}.\n`
+      + '\n'
+      + '(You can leave this blank, in which case all messages will be sent using\n'
+      + 'the bot account.  Due to safeguards twitch uses to prevent DM spam, whispers\n'
+      + 'may be received more reliably if sent from your account, which viewers are\n'
+      + 'watching and may be following.)\n'
+      + '\n'
+      + 'To create an OAuth token:\n'
+      + '\n'
+      + oauthTokenInstructions(answers.config.auth.streamer)
     )
   ],
 
@@ -152,8 +178,10 @@ const questions = {
         message: "Twitch Bot OAuth Token:",
         filter: a => (a.slice(0,6) === 'oauth:' ? '' : 'oauth:') + a
       },
-        'An OAuth token works like a password for the bot account. You can create\n'
-      + 'the OAuth token at https://twitchapps.com/tmi/'
+        'An OAuth token works like a password for the bot account.  To create an OAuth\n'
+      + 'token:\n'
+      + '\n'
+      + oauthTokenInstructions(answers.config.auth.botUsername)
     )
   ],
 

@@ -142,6 +142,8 @@ The configuration utility presents a menu with the following options:
 ### Twitch Streamer Info (required)
 Here you set yoru Twitch channel name and username. Normally these will be the same (or will differ only by capitalization, which makes no difference to the bot). The bot connects to the chat for the specified channel and grants streamer access (such as the ability to execute streamer commands) for messages that match the username.
 
+If you also provide an OAuth token for your streamer account, then whispers will be sent from your streamer account rather than from the bot account.  (This may be more reliable due to Twitch anti-spam measures.)  You do not have to enter a streamer OAuth token; in that case, all messages are sent from the bot account.
+
 ### Twitch Bot Authentication (required)
 The bot needs an account to use when logging into Twitch chat. This account can be shared with other bots, but it should not be your streamer account.
 
