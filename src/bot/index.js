@@ -729,7 +729,7 @@ class ShenaniBot {
     let response;
 
     if (response = this._typeError(type)) {
-      return response;
+      return { response };
     }
 
     if (i === 0) {
@@ -993,7 +993,7 @@ class ShenaniBot {
     const cachedLevels = this.profileCache.getLevelsForCreator(creatorId);
     if (cachedLevels) {
       levelsCb(cachedLevels);
-      doneCb();
+      setTimeout(doneCb, 0);
       return;
     }
 

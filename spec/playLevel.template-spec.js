@@ -140,7 +140,7 @@ module.exports = itPlaysALevel = (n, cb, supportsCreatorCode = true) => {
               await bot.command("!add emp003", "viewer");
             }
           };
-  
+
           await setup();
           this.setRandomizerToMax();
           await cb(bot, "viewer0", "emp010");
@@ -154,6 +154,45 @@ module.exports = itPlaysALevel = (n, cb, supportsCreatorCode = true) => {
 
           queue = await this.getQueue();
           expect(queue[0].entry.id).toEqual("010l003");
+        });
+
+        it(  "prints the 'picking a level' message before the 'now playing'"
+           + "message when choosing randomly, even if level info is cached",
+           async function() {
+          jasmine.clock().install();
+          const bot = this.buildBotInstance({config: {
+            creatorCodeMode: "auto",
+            httpPort: 8080
+          }});
+
+          await bot.command("!add emp010", "viewer0");
+          await bot.command("!next", "streamer");
+
+          if (n > 1) {
+            await this.addLevels(bot, n - 2);
+            await bot.command("!add emp001", "viewer");
+            await bot.command("!add emp010", "viewer0");
+            await bot.command("!add emp003", "viewer");
+          }
+
+          this.resetChat();
+          await cb(bot, "viewer0", "emp010");
+          jasmine.clock().tick(0);
+
+          const chat = this.getChat();
+          const pickingIndex = chat.findIndex(m => m.includes(
+                    "Picking a level from EmployEE 010's Profile"));
+          const playingIndex = chat.findIndex(m => m.includes(
+                    "Now playing Employee 010 Level"));
+
+          if (pickingIndex === -1) {
+            fail("Did not receive 'picking a level' message");
+          }
+          if (playingIndex === -1) {
+            fail("Did not receive 'now playing' message");
+          }
+          expect(playingIndex).toBeGreaterThan(pickingIndex);
+          jasmine.clock().uninstall();
         });
 
         it("sends a websocket update if configured to do so", async function() {

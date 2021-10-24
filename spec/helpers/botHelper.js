@@ -12,14 +12,27 @@ defaultConfig.twitch = {
 };
 
 let dms;
+const chat = [];
 
 beforeAll(function() {
   this.buildBotInstance = (configOverrides = {}) => {
     const config = fp.merge(defaultConfig, configOverrides);
-    return new ShenaniBot(config, _ => {}, (u,m) => {
+    const bot = new ShenaniBot(config, m => {
+      chat.push(m);
+    }, (u,m) => {
       dms[u] = dms[u] || [];
       dms[u].push(m);
     }, u => !u.includes("nodm"));
+
+    const command = bot.command;
+    bot.command = async (m, u, r) => {
+      const output = await command.call(bot, m, u, r);
+      for (const message of output.split("\n")) {
+        chat.push(message);
+      }
+      return output;
+    }
+    return bot;
   };
 
   this.optionQueueJumpRewards = {
@@ -39,10 +52,14 @@ beforeAll(function() {
   this.getDmsFor = user => dms[user] || [];
   this.getAllDms = () => dms;
   this.resetDms = () => dms = {};
+
+  this.getChat = () => chat;
+  this.resetChat = () => chat.length = 0;
 });
 
 beforeEach(function() {
   this.resetDms();
+  this.resetChat();
 });
 
 afterEach(async () => {
