@@ -564,32 +564,34 @@ class ShenaniBot {
   }
 
   showQueue() {
-    if (  this.queue.length === 0
-       || (   this.queue.length === 1
-           && this.queue[0].type === "mark" && !this.queue[0].name) ) {
-      return "There aren't any levels in the queue!";
+    let response = `Total entries: ${this.queue.length}`;
+    if (this.queue.length === 0) {
+      return response;
     }
 
-    let limit = Math.min(10, this.queue.length);
-    let maxIndex = limit - 1;
-    let response = "";
-    let round = 0;
-    for (let i = 0; i <= maxIndex; i++) {
-      const entry = this.queue[i];
-      if (this.options.priority === "rotation" && entry && entry.round > round) {
-        round = entry.round;
-        response = `${response} **Round ${round}** :`;
-      }
-      response = `${response} [${entry.display}]`;
-      if (entry.type === "mark") {
-        if (maxIndex < this.queue.length - 1) {
-          maxIndex += 1;
-        } else {
-          limit -= 1;
-        }
-      }
+    response += `; Now Playing: ${this.queue[0].display}`;
+    if (this.queue.length === 1) {
+      return response;
     }
-    response = `Next ${limit} levels:${response}`;
+
+    let limit = Math.min(9, this.queue.length - 1);
+    response += ` Next ${limit}:`;
+
+    let nextRoundIndex = this.queue.findIndex((e, i) => i && e.round);
+    for (let i = 1; i <= limit; i++) {
+      const entry = this.queue[i];
+      if (this.options.priority === "rotation" && i === nextRoundIndex) {
+        nextRoundIndex = this.queue.findIndex(e => e.round > entry.round);
+        if (nextRoundIndex < 0) {
+          nextRoundIndex = this.queue.length;
+        }
+
+        const n = nextRoundIndex - i;
+        const entries = `${n} ${n > 1 ? "entries" : "entry"}`;
+        response += ` **Round ${entry.round} (${entries})** :`;
+      }
+      response += ` [${entry.display}]`;
+    }
     return response;
   }
 
