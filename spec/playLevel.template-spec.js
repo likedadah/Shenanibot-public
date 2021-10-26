@@ -111,6 +111,7 @@ module.exports = itPlaysALevel = (n, cb, supportsCreatorCode = true) => {
         });
 
         it("prefers unplayed levels when choosing randomly", async function() {
+          jasmine.clock().install();
           let bot;
           let queue;
           const setup = async () => {
@@ -144,6 +145,7 @@ module.exports = itPlaysALevel = (n, cb, supportsCreatorCode = true) => {
           await setup();
           this.setRandomizerToMax();
           await cb(bot, "viewer0", "emp010");
+          jasmine.clock().tick(0);
 
           queue = await this.getQueue();
           expect(queue[0].entry.id).toEqual("010l007");
@@ -151,9 +153,11 @@ module.exports = itPlaysALevel = (n, cb, supportsCreatorCode = true) => {
           await setup();
           this.setRandomizerToMin();
           await cb(bot, "viewer0", "emp010");
+          jasmine.clock().tick(0);
 
           queue = await this.getQueue();
           expect(queue[0].entry.id).toEqual("010l003");
+          jasmine.clock().uninstall();
         });
 
         it(  "prints the 'picking a level' message before the 'now playing'"
