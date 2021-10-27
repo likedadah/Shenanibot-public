@@ -14,9 +14,6 @@ process.on('SIGINT', function() {
 
 function connectAs(username, password) {
   const options = {
-    options: {
-      debug: true
-    },
     connection: {
       reconnect: true
     },
