@@ -1,9 +1,11 @@
 const levels = {};
 let creators = {};
+let playedInSession = null;
 
 class ProfileCache {
   constructor() {
     this.invalidate();
+    playedInSession = new Set();
   }
 
   addLevelsForCreator(creatorId, newLevels) {
@@ -28,7 +30,11 @@ class ProfileCache {
 
   getLevelsForCreator(creatorId) {
     if (creators[creatorId]) {
-      return Array.from(creators[creatorId]).map(l => levels[l].level);
+      return Array.from(creators[creatorId]).map(l => ({
+        ...levels[l].level,
+        played: playedInSession.has(levels[l].level.id)
+                                                ? true : levels[l].level.played
+      }));
     }
     return null;
   }
@@ -39,6 +45,9 @@ class ProfileCache {
       for (const key of Object.keys(level)) {
         entry.level[key] = level[key];
       }
+    }
+    if (level.played) {
+      playedInSession.add(level.id);
     }
   }
 
