@@ -191,6 +191,8 @@ class ShenaniBot {
       return "There is no current level to skip!";
     }
     this.queue[0].counted = false;
+    this.profileCache.updateSessionInteractions(
+                                 {id: this.queue[0].id, played: false});
     return this.advance(args);
   }
 
@@ -201,7 +203,7 @@ class ShenaniBot {
     this.queue[0].countedWon = true;
     this.counts.won += 1;
     this.profileCache.updateSessionInteractions(
-	                                 {id: this.queue[0].id, beaten: true});
+                                         {id: this.queue[0].id, beaten: true});
     return this.advance(args);
   }
 
@@ -897,7 +899,7 @@ class ShenaniBot {
     if (this.queue[0].type === "level") {
       this.rce.levelhead.bookmarks.add(this.queue[0].id);
       this.profileCache.updateSessionInteractions(
-	                                 {id: this.queue[0].id, played: true});
+                                         {id: this.queue[0].id, played: true});
       return `Now playing ${this.queue[0].display} submitted by ${this.queue[0].submittedBy}`;
     }
     if (this.queue[0].type === "creator") {

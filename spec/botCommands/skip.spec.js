@@ -24,6 +24,20 @@ describe("the !skip command", () => {
     expect(postCounts.played).toEqual(0);
   });
 
+  it("un-marks the level as 'played' in the creator cache", async function() {
+    const bot = this.buildBotInstance({ config: {
+      httpPort: 8080,
+      creatorCodeMode: "webui"
+    }});
+
+    await bot.command("!add 001l001", "viewer");
+    await bot.command("!skip", "streamer");
+    await bot.command("!add emp001", "viewer");
+
+    const creatorInfo = await this.getCreatorInfo();
+    expect(creatorInfo.levels[0].played).toBeFalsy();
+  });
+
   it("only works for the streamer", async function() {
     const bot = this.buildBotInstance({ config: {httpPort: 8080 }});
     await this.addLevels(bot, 2);

@@ -44,6 +44,9 @@ class ProfileCache {
     if (level.played) {
       playedInSession.add(level.id);
     }
+    if (level.played === false) {
+      playedInSession.delete(level.id);
+    }
     if (level.beaten) {
       beatenInSession.add(level.id);
     }
