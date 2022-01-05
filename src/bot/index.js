@@ -1020,8 +1020,7 @@ class ShenaniBot {
         played: !!(li.interactions && li.interactions.played),
         beaten: !!(li.interactions && li.interactions.completed),
       }));
-      this.profileCache.addLevelsForCreator(creatorId, loadedLevels);
-      levelsCb(loadedLevels);
+      levelsCb(this.profileCache.addLevelsForCreator(creatorId, loadedLevels));
 
       gotMaxLevels = levelInfo.length === maxLevels;
       if (gotMaxLevels) {

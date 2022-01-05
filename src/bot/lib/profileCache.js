@@ -18,6 +18,8 @@ class ProfileCache {
         level
       };
     }
+
+    return newLevels.map(mapLevel);
   }
 
   invalidate(creatorId) {
@@ -30,11 +32,8 @@ class ProfileCache {
 
   getLevelsForCreator(creatorId) {
     if (creators[creatorId]) {
-      return Array.from(creators[creatorId]).map(l => ({
-        ...levels[l].level,
-        played: playedInSession.has(levels[l].level.id)
-                                                ? true : levels[l].level.played
-      }));
+      return Array.from(creators[creatorId])
+                  .map(id => mapLevel(levels[id].level));
     }
     return null;
   }
@@ -59,5 +58,10 @@ class ProfileCache {
     }
   }
 }
+
+const mapLevel = level => ({
+  ...level,
+  played: playedInSession.has(level.id) ? true : level.played
+})
 
 module.exports = { ProfileCache };
