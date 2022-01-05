@@ -123,7 +123,7 @@ class ShenaniBot {
 
     switch (command) {
       case "check":
-        return args[1] ? this.checkLevel(args[1]) : "";
+        return args[1] ? this.checkId(args[1]) : "";
       case "add":
         return args[1] ? this.addLevelToQueue(args[1], username) : "";
       case "chadd":
@@ -438,8 +438,44 @@ class ShenaniBot {
          + rewardHelper.updateRewardConfig(behaviors);
   }
 
-  async checkLevel(levelId) {
-    return (await this._checkLevel(levelId)).message;
+  async checkId(id) {
+    const type = this._getIdType(id)
+    const error = this._typeError(type);
+    if (error) {
+      return error;
+    }
+
+    if (type === "level")
+    {
+      return (await this._checkLevel(id)).message;
+    } else {
+      const {creator, error} = await this._getCreatorEntry(id);
+      if (error) {
+        return error;
+      }
+
+      let levels = [];
+      this._getLevelsForCreator(id, l => levels = levels.concat(l), () => {
+        if (!levels.length) {
+          this.sendAsync(`Unable to find levels for ${creator.display}!`);
+          return;
+        }
+        const unplayed = levels.find(l => !l.played);
+        if (unplayed) {
+          const levelEntry = new ViewerLevel(unplayed.id, unplayed.name);
+          this.sendAsync(`The most recent unplayed level from ${creator.display} is ${levelEntry.display}`);
+          return;
+        }
+        const unbeaten = levels.find(l => !l.beaten);
+        if (unbeaten) {
+          const levelEntry = new ViewerLevel(unbeaten.id, unbeaten.name);
+          this.sendAsync(`All levels from ${creator.display} have been played; the most recent unbeaten level is ${levelEntry.display}`);
+          return;
+        }
+        this.sendAsync(`All levels from ${creator.display} have been beaten`);
+      });
+      return "";
+    }
   }
 
   async addLevelToQueue(id, username, rewardType) {
@@ -490,18 +526,12 @@ class ShenaniBot {
     }
 
     if (type === "creator") {
-      const creatorInfo = await this.rce.levelhead.players.search({ userIds: id, includeAliases: true }, { doNotUseKey: true });
 
-      if (!creatorInfo.length) {
-        return "Oops! That creator does not exist!";
+      const {creator, error} = await this._getCreatorEntry(id, username);
+      if (error) {
+        return error;
       }
-      const aliasInfo = await creatorInfo[0].alias;
-      entry = new Creator(
-        id,
-        aliasInfo.alias,
-        username,
-        aliasInfo.avatarId
-      );
+      entry = creator;
     }
 
     const pos = this._enqueue(entry, user);
@@ -998,6 +1028,23 @@ class ShenaniBot {
       }
     }
     this.queue.splice(index, 1);
+  }
+
+  async _getCreatorEntry(id, username) {
+    const creatorInfo = await this.rce.levelhead.players.search({ userIds: id, includeAliases: true }, { doNotUseKey: true });
+
+    if (!creatorInfo.length) {
+      return {
+        error: "Oops! That creator does not exist!"
+      };
+    }
+    const aliasInfo = await creatorInfo[0].alias;
+    return {creator: new Creator(
+      id,
+      aliasInfo.alias,
+      username,
+      aliasInfo.avatarId
+    )};
   }
 
   async _getLevelsForCreator(creatorId, levelsCb, doneCb = () => {}) {
