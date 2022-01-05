@@ -44,6 +44,20 @@ describe("the !win command", () => {
     expect(postCounts.won).toEqual(0);
   });
 
+  it("marks the level 'beaten' in the creator cache", async function() {
+    const bot = this.buildBotInstance({ config: {
+      httpPort: 8080,
+      creatorCodeMode: "webui"
+    }});
+
+    await bot.command("!add 001l001", "viewer");
+    await bot.command("!win", "streamer");
+    await bot.command("!add emp001", "viewer");
+
+    const creatorInfo = await this.getCreatorInfo();
+    expect(creatorInfo.levels[0].beaten).toBeTruthy();
+  });
+
   it("only works for the streamer", async function() {
     const bot = this.buildBotInstance({ config: {httpPort: 8080 }});
     await this.addLevels(bot, 2);

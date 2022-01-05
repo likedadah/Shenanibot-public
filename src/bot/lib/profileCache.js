@@ -1,11 +1,13 @@
 const levels = {};
 let creators = {};
 let playedInSession = null;
+let beatenInSession = null;
 
 class ProfileCache {
   constructor() {
     this.invalidate();
     playedInSession = new Set();
+    beatenInSession = new Set();
   }
 
   addLevelsForCreator(creatorId, newLevels) {
@@ -38,15 +40,12 @@ class ProfileCache {
     return null;
   }
 
-  updateLevel(level) {
-    const entry = levels[level.id];
-    if (entry) {
-      for (const key of Object.keys(level)) {
-        entry.level[key] = level[key];
-      }
-    }
+  updateSessionInteractions(level) {
     if (level.played) {
       playedInSession.add(level.id);
+    }
+    if (level.beaten) {
+      beatenInSession.add(level.id);
     }
   }
 
@@ -61,7 +60,8 @@ class ProfileCache {
 
 const mapLevel = level => ({
   ...level,
-  played: playedInSession.has(level.id) ? true : level.played
+  played: playedInSession.has(level.id) ? true : level.played,
+  beaten: beatenInSession.has(level.id) ? true : level.beaten
 })
 
 module.exports = { ProfileCache };
