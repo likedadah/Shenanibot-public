@@ -335,6 +335,8 @@ class ShenaniBot {
     this.noSpoilUsers = new Set();
     if (this.queue.length) {
       this._stopPlayingLevel();
+      this.profileCache.updateSessionInteractions(
+                                        {id: this.queue[0].id, played: false});
     }
     this.queue.unshift(this.prevLevel);
     if (this.prevLevel.counted) {
@@ -342,6 +344,8 @@ class ShenaniBot {
     }
     if (this.prevLevel.countedWon) {
       this.counts.won -= 1;
+      this.profileCache.updateSessionInteractions(
+                                       {id: this.prevLevel.id, beaten: false});
     }
     if (this.prevLevel.countedLost) {
       this.counts.lost -= 1;

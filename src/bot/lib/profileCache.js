@@ -50,6 +50,9 @@ class ProfileCache {
     if (level.beaten) {
       beatenInSession.add(level.id);
     }
+    if (level.beaten === false) {
+      beatenInSession.delete(level.id);
+    }
   }
 
   removeLevel(levelId) {

@@ -108,6 +108,23 @@ describe("the !back command", () => {
     });
   });
 
+  it("when restoring a skipped level re-adds 'played in session' interaction",
+     async function() {
+    const bot = this.buildBotInstance({ config: {
+      httpPort: 8080,
+      creatorCodeMode: "webui"
+    }});
+
+    await bot.command("!add 001l001", "viewer");
+    await bot.command("!skip", "streamer");
+    await bot.command("!back", "streamer");
+    await bot.command("!add emp001", "viewer2");
+    await bot.command("!next", "streamer");
+
+    const creatorInfo = await this.getCreatorInfo();
+    expect(creatorInfo.levels[0].played).toBeTruthy();
+  });
+
   it("reduces 'won' count when restoring a won level", async function() {
     const bot = this.buildBotInstance({config: {httpPort: 8080}});
     await this.addLevels(bot, 3);
@@ -122,6 +139,23 @@ describe("the !back command", () => {
       won: 0,
       lost: 1
     });
+  });
+
+  it("when restoring a won level removes the 'beaten in session' interaction",
+     async function() {
+    const bot = this.buildBotInstance({ config: {
+      httpPort: 8080,
+      creatorCodeMode: "webui"
+    }});
+
+    await bot.command("!add 001l001", "viewer");
+    await bot.command("!win", "streamer");
+    await bot.command("!back", "streamer");
+    await bot.command("!add emp001", "viewer2");
+    await bot.command("!next", "streamer");
+
+    const creatorInfo = await this.getCreatorInfo();
+    expect(creatorInfo.levels[0].beaten).toBeFalsy();
   });
 
   it("reduces 'lost' count when restoring a lost level", async function() {
@@ -220,6 +254,24 @@ describe("the !back command", () => {
     this.resetDms();
     await bot.command("!next", "streamer");
     expect(Object.keys(this.getAllDms())).toEqual(["viewer1"]);
+  });
+
+  it(  "when pushing a level out of 'now plaing', removes the 'played in"
+     + "session' interaction from the creator level cache", async function() {
+    const bot = this.buildBotInstance({ config: {
+      httpPort: 8080,
+      creatorCodeMode: "webui"
+    }});
+
+    await bot.command("!add valid01", "viewer");
+    await bot.command("!add 001l001", "viewer");
+    await bot.command("!next", "streamer");
+    await bot.command("!back", "streamer");
+    await bot.command("!add emp001", "viewer2");
+    await bot.command("!play next from viewer2", "streamer");
+
+    const creatorInfo = await this.getCreatorInfo();
+    expect(creatorInfo.levels[0].played).toBeFalsy();
   });
 
   it("only works for the streamer", async function() {
