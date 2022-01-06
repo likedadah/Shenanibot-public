@@ -4,6 +4,7 @@ module.exports = {
     levelLimitType: 'none',
     levelLimit: 0,
     creatorCodeMode: 'manual',
+    players: 1,
     prefix: '!',
     chatThrottle: {
       limit: 20,

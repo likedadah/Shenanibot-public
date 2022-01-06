@@ -204,6 +204,18 @@ const questions = {
 
   queueConfig: [
     buildConfigQuestion(
+      'config.players', {
+        message: "Max Number of Players:",
+        default: a => fp.get('config.config.players', a) || 1,
+        // type: 'number' acts up when validation fails, so use this instead
+        filter: i => typeof i === 'string' && i.match(/^\s*[1-4]\s*$/) ? parseInt(i, 10) : i,
+        validate: i => (typeof i !== 'number') ? 'Please enter a valid number of players (1 - 4)' : true
+      },
+        'How many players can a level require and still be accepted into the queue?\n'
+      + '(You can use the !players command to change this value during a session;\n'
+      + 'it will revert to this default each time you restart the bot.)'
+    ),
+    buildConfigQuestion(
       'config.priority', {
         type: 'list',
         message: "Priority Mode:",

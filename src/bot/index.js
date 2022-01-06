@@ -19,6 +19,7 @@ class ShenaniBot {
     this.rce = new Rumpus.RumpusCE(botOptions.auth.delegationToken);
     this.profileCache = new ProfileCache();
     this.options = botOptions.config;
+    this.players = this.options.players;
     this.streamer = botOptions.auth.streamer;
     this.queue = [];
     this.queueOpen = true;
@@ -515,6 +516,10 @@ class ShenaniBot {
 
       if (!levelInfo.length) {
         return "Oops! That level does not exist!";
+      }
+
+      if (levelInfo[0].requiredPlayers > this.players) {
+        return `Sorry, ${this.streamer} is not accepting ${levelInfo[0].requiredPlayers}-player levels.`;
       }
 
       entry = new ViewerLevel(

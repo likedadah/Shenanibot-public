@@ -2,9 +2,9 @@ const Rumpus = require("@bscotch/rumpus-ce");
 
 const bookmarks = [];
 
-const makeLevel = (_id, levelId, title, userId) => {
+const makeLevel = (_id, levelId, title, userId, requiredPlayers = 1) => {
   return {
-    _id, levelId, title, userId,
+    _id, levelId, title, userId, requiredPlayers,
     avatarUrl: () => "http://localhost/avatar.png",
     stats: {}
   };
@@ -60,6 +60,14 @@ class MockRumpusCE {
             }
             return [beatenLevel];
           }
+          const coopMatch = levelIds && levelIds.match(/^([1-4])plevel$/);
+          if (coopMatch) {
+            return [{
+              title: `Co-oper's ${coopMatch[1]} Player Level`,
+              avatarUrl: () => '',
+              requiredPlayers: coopMatch[1]
+	    }];
+          }
 
           const empMatch = userIds && userIds.match(/^emp(\d\d\d)$/);
           if (empMatch) {
@@ -75,6 +83,18 @@ class MockRumpusCE {
             return levels;
           }
 
+          if (userIds && userIds === 'cooper') {
+            const levels = [];
+            const min = (tiebreakerItemId || 0) + 1
+            const max = Math.min(4, min + limit - 1);
+            for (let i = min; i <= max; i++) {
+              levels.push(makeLevel(i, `${i}plevel`,
+                                    `Co-oper's ${i} Player Level`,
+                                    userIds, i));
+            }
+            return levels;
+          }
+
           return [];
         }
       },
@@ -85,6 +105,13 @@ class MockRumpusCE {
             return [{
               alias: new Promise(r => r({
                 alias: `EmployEE ${validCreatorMatch[1]}`
+              }))
+            }]
+          }
+          if (userIds === 'cooper') {
+            return [{
+              alias: new Promise(r => r({
+                alias: 'Co-op Level Maker'
               }))
             }]
           }
