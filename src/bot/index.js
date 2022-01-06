@@ -89,6 +89,8 @@ class ShenaniBot {
           return this.openQueue();
         case "close":
           return this.closeQueue();
+        case "players":
+          return this.setPlayers(args[1]);
         case "permit":
           return args[1] ? this.permitUser(args[1].toLowerCase()) : "";
         case "giveboost":
@@ -159,6 +161,16 @@ class ShenaniBot {
     this.queueOpen = false;
     this.onStatus(false);
     return "The queue has been closed! No more levels :(";
+  }
+
+  setPlayers(arg) {
+    const n = parseInt(arg, 10);
+    if (n > 0 && n < 5) {
+      this.players = n;
+      return `The player count has been set to ${n}.`;
+    }
+
+    return `The player count is currently ${this.players}.`;
   }
 
   permitUser(username) {
