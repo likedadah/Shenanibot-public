@@ -88,4 +88,60 @@ describe("the players configuration option", () => {
     await bot.command("!add 4plevel", "viewer");
     expect(this.bookmarks).toEqual(['4plevel']);
   });
+
+  it("limits the results from checking a creator code", async function() {
+    jasmine.clock().install();
+    const bot = this.buildBotInstance({config: {
+      players: 1
+    }});
+
+    await bot.command("!add 1plevel", "viewer");
+    await bot.command("!win", "streamer");
+    this.resetChat();
+    await bot.command("!check cooper", "viewer");
+    jasmine.clock().tick(0);
+
+    expect(this.getChat().join('')).toContain("All levels from Co-op Level Maker's Profile (@cooper) have been beaten");
+
+    await bot.command("!players 2", "streamer");
+    this.resetChat();
+    await bot.command("!check cooper", "viewer");
+    jasmine.clock().tick(0);
+
+    expect(this.getChat().join('')).toContain("2plevel");
+
+    jasmine.clock().uninstall();
+  });
+
+  it("limits auto-selection of levels for a creator code", async function() {
+    jasmine.clock().install();
+    const bot = this.buildBotInstance({config: {
+      players: 1,
+      creatorCodeMode: "auto"
+    }});
+
+    this.setRandomizerToMin();
+
+    await bot.command("!add 1plevel", "viewer");
+    await bot.command("!win", "streamer");
+    await bot.command("!add cooper", "viewer");
+    jasmine.clock().tick(0);
+
+    expect(this.bookmarks).toEqual(['1plevel']);
+
+    await bot.command("!win", "streamer");
+    await bot.command("!players 2", "streamer");
+    await bot.command("!add cooper", "viewer");
+    jasmine.clock().tick(0);
+
+    expect(this.bookmarks).toEqual(['2plevel']);
+
+    await bot.command("!win", "streamer");
+    await bot.command("!add cooper", "viewer");
+    jasmine.clock().tick(0);
+
+    expect(this.bookmarks).toEqual(['1plevel']);
+
+    jasmine.clock().uninstall();
+  });
 });

@@ -1071,8 +1071,10 @@ class ShenaniBot {
 
   async _getLevelsForCreator(creatorId, levelsCb, doneCb = () => {}) {
     const cachedLevels = this.profileCache.getLevelsForCreator(creatorId);
+    const _levelsCb = levels => 
+                   levelsCb(levels.filter(l => ! (l.players > this.players)));
     if (cachedLevels) {
-      levelsCb(cachedLevels);
+      _levelsCb(cachedLevels);
       setTimeout(doneCb, 0);
       return;
     }
@@ -1098,7 +1100,7 @@ class ShenaniBot {
         played: !!(li.interactions && li.interactions.played),
         beaten: !!(li.interactions && li.interactions.completed),
       }));
-      levelsCb(this.profileCache.addLevelsForCreator(creatorId, loadedLevels));
+      _levelsCb(this.profileCache.addLevelsForCreator(creatorId, loadedLevels));
 
       gotMaxLevels = levelInfo.length === maxLevels;
       if (gotMaxLevels) {
