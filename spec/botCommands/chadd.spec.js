@@ -24,4 +24,12 @@ describe("the !chadd command", () => {
 
     expect(this.bookmarks).toEqual([]);
   });
+
+  it("should not warn twice for a level that requires too many players",
+     async function() {
+    const bot = this.buildBotInstance();
+
+    const response = await bot.command("!chadd 2plevel", "viewer");
+    expect(response.split("2-player").length).toEqual(2);
+  });
 });

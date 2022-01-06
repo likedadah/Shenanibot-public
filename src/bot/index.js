@@ -573,7 +573,7 @@ class ShenaniBot {
   async checkAndAddLevel(id, username) {
     const check = await this._checkLevel(id);
 
-    if (check.isUnplayedLevel) {
+    if (check.canAutoAdd) {
       return `${check.message} ${await this.addLevelToQueue(id, username)}`;
     }
     return check.message;
@@ -827,7 +827,7 @@ class ShenaniBot {
   async _checkLevel(levelId) {
     if (this._getIdType(levelId) !== "level") {
       return {
-        isUnplayedLevel: false,
+        canAutoAdd: false,
         message: "Please enter a valid level code to check."
       };
     }
@@ -836,7 +836,7 @@ class ShenaniBot {
 
     if (!levelInfo.length) {
       return {
-        isUnplayedLevel: false,
+        canAutoAdd: false,
         message: "Oops! That level does not exist!"
       };
     }
@@ -853,9 +853,14 @@ class ShenaniBot {
       }
     }
 
+    let warning = "";
+    if (verb !== "beaten" && levelInfo[0].requiredPlayers > this.players) {
+      warning = `  But ${this.streamer} is not accepting ${levelInfo[0].requiredPlayers}-player levels.`;
+    }
+
     return {
-      isUnplayedLevel: verb === "not played",
-      message: `${this.streamer} has ${verb} ${level.display}.`
+      canAutoAdd: verb === "not played" && !warning,
+      message: `${this.streamer} has ${verb} ${level.display}.${warning}`
     };
   }
 

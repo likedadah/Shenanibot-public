@@ -26,12 +26,31 @@ module.exports = itChecksALevel = cb => {
       expect(response).toContain("has played");
     });
 
+    it("warns if a played level requires too many players", async function() {
+      const bot = this.buildBotInstance({config: {players: 2}});
+
+      await bot.command("!add 2plevel", "viewer");
+      await bot.command("!next", "streamer");
+      await bot.command("!players 1", "streamer");
+
+      const response = await bot.command("!check 2plevel", "viewer");
+      expect(response).toContain('not accepting 2-player levels')
+    });
+
     it("sees if you've not played a level", async function() {
       const bot = this.buildBotInstance();
 
       const response = await cb(bot, "viewer", "valid01");
 
       expect(response).toContain("has not played");
+    });
+
+    it("warns if an unplayed level requires too many players",
+       async function() {
+      const bot = this.buildBotInstance();
+
+      const response = await bot.command("!check 2plevel", "viewer");
+      expect(response).toContain('not accepting 2-player levels')
     });
   });
 }
