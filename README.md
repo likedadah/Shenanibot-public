@@ -14,6 +14,7 @@ The bot stores a list of viewer-submitted levelcodes for you to play, and automa
 `!giveboost [user name]` : Allows a user to use the `!boost` command one time  
 `!reward [reward behavior]` : Sets up a channel points reward.  Unlike other commands, this must be sent as the message for a custom channel points reward; it assigns a behavior to that particular custom reward.  See [Channel Points Integration](#channel-points-integration) for details  
 `!noreward [reward behavior]` : Removes the assignment of a reward behavior from whatever custom reward currently has that behavior  
+`!players [n]` : change the maximum acceptable "required players" value for levels to be added to the queue.  This will revert to the default the next time you restart the bot (see [Queue Management Options](#queue-management-options))  
 
 **Advancing the Queue**  
 When you are done with the current "now playing" level, there are several commands you can use to advance the queue (depending on how you want the new "now playing" level chosen and/or how you want level counts updated).
@@ -59,7 +60,7 @@ Any `nospoil` messages for the previous level will have already been sent; so vi
 
 ### Viewer Commands
 
-`!check [level code]` : Checks if the streamer has played a level; note that very recent plays may not be reported  
+`!check [level code | creator code]` : Checks if the streamer has played a level (note that very recent plays may not be reported), or shows the most recent unplayed level for a creator (or most recent unbeaten if all have been played)  
 `!add [level code | creator code]` : Adds a level (or creator profile if support is enabled) to the level queue  
 `!chadd [level code]` : Checks if the streamer has played a level and, if not, tries to add it to the level queue  
 `!remove [level code | creator code]` : Removes a level from the queue, you can only remove your own levels  
@@ -158,6 +159,8 @@ The bot needs a token with the following permissions:
 
 ### Queue Management Options
 Here you can decide whether levels are taken into the queue in the order received, or whether viewers "take turns" in a rotation; configure limits on how many levels each viewer may submit; determine how to handle creator codes; and set the "default advance mode", which affects how commands like `!skip` advance the queue.
+
+You can also set a default for the maximum number of players that a level can require and be accepted into the queue.  This default will be in effect each time you restart the bot; at any time you can override it for the remainder of the session using the `!players` command.  Setting this to 4 restores the behavior of older versions of the bot (allowing all levels).
 
 ### Chat Options
 Options that control the bot's interaction with chat are found here. You can change the prefix used to recognize bot cmmands. (By default this is !, and it is recommended to use this if possible.) You can also configure message throttling. (As of version 2.2.0, it is not possible to disable throttling entirely; but you can specify the per-message delay and the 30-second message count limit.)
