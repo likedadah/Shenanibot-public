@@ -9,6 +9,8 @@ const creatorCodeUi = require("../web/creatorCodeUi");
 const overlay = require("../web/overlay");
 const httpServer = require("../web/server");
 
+const log = msg => console.log(new Date(), msg);
+
 class ShenaniBot {
   constructor(botOptions, sendAsync = _ => {}, dm = (_u, _m) => {},
               canDm = _ => true) {
@@ -75,6 +77,10 @@ class ShenaniBot {
   }
 
   async command(message, username, rewardId) {
+    const logRaw = () => {
+      const rid = rewardId ? ` (rid:${rewardId})` : "";
+      log(`${username}${rid}: ${message}`);
+    }
     const args = message.split(/\s+/);
     const command = args[0].startsWith(this.options.prefix)
                   ? args[0].substring(this.options.prefix.length).toLowerCase()
@@ -86,41 +92,58 @@ class ShenaniBot {
     if (username === this.streamer) {
       switch (command) {
         case "open":
+          logRaw();
           return this.openQueue();
         case "close":
+          logRaw();
           return this.closeQueue();
         case "players":
+          logRaw();
           return this.setPlayers(args[1]);
         case "permit":
+          logRaw();
           return args[1] ? this.permitUser(args[1].toLowerCase()) : "";
         case "giveboost":
+          logRaw();
           return args[1] ? this.giveBoostToUser(args[1].toLowerCase()) : "";
         case "next":
+          logRaw();
           return this.nextLevel();
         case "play":
+          logRaw();
           return this.playSpecificLevel(args.slice(1).join(" ").toLowerCase());
         case "random":
+          logRaw();
           return this.randomLevel();
         case "skip":
+          logRaw();
           return this.skipLevel(args);
         case "advance":
+          logRaw();
           return this.advance();
         case "win":
+          logRaw();
           return this.winLevel(args);
         case "lose":
+          logRaw();
           return this.loseLevel(args);
         case "back":
+          logRaw();
           return this.goBack();
         case "mark":
+          logRaw();
           return this.makeMarker(args.slice(1).join(" "));
         case "reward":
+          logRaw();
           return args[1] ? this.setReward(args[1].toLowerCase(), rewardId) : "";
         case "noreward":
+          logRaw();
           return args[1] ? this.unsetReward(args[1].toLowerCase()) : "";
       }
     }
 
     if (rewardId) {
+      logRaw();
       return this.processReward(rewardId, args, username);
     }
 
@@ -128,12 +151,16 @@ class ShenaniBot {
       case "check":
         return args[1] ? this.checkId(args[1]) : "";
       case "add":
+        logRaw();
         return args[1] ? this.addLevelToQueue(args[1], username) : "";
       case "chadd":
+        logRaw();
         return args[1] ? this.checkAndAddLevel(args[1], username) : "";
       case "remove":
+        logRaw();
         return args[1] ? this.removeLevelFromQueue(args[1], username) : "";
       case "boost":
+        logRaw();
         return args[1] ? this.boostLevel(args[1], username) : "";
       case "queue":
         return this.showQueue();
