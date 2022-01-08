@@ -50,6 +50,23 @@ module.exports = itAddsALevel = cb => {
                                   .toEqual(["valid01", "valid03", "valid02"]);
     });
 
+    it("respects rotation after a level was removed", async function() {
+      const bot = this.buildBotInstance({config: {
+        httpPort: 8080,
+        priority: "rotation"
+      }});
+
+      await bot.command("!add valid01", "viewer2");
+      await bot.command("!add valid02", "viewer2");
+      await bot.command("!remove valid02", "viewer2");
+      await bot.command("!add valid02", "viewer2");
+      await cb(bot, "viewer", "valid03");
+
+      const queue = await this.getQueue();
+      expect(queue.map(e => e.entry.id))
+                                  .toEqual(["valid01", "valid03", "valid02"]);
+    });
+
     it("does nothing if the queue is closed", async function() {
       const bot = this.buildBotInstance();
       await bot.command("!close", "streamer");

@@ -1062,7 +1062,7 @@ class ShenaniBot {
 
       if (this.options.priority === "rotation" && index) {
         let destRound = entry.round;
-        user.lastRound = 0;
+        user.lastRound = entry.round - 1;
         for (let i = index + 1; i < this.queue.length; i++) {
           const laterEntry = this.queue[i];
           if (laterEntry.submittedBy === username) {
