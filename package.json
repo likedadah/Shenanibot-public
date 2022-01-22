@@ -1,6 +1,6 @@
 {
   "name": "@madelsberger/shenanibot",
-  "version": "2.4.1",
+  "version": "2.5.0-prerelease",
   "description": "A Twitch bot that manages a queue of levels for Levelhead streamers",
   "bin": {
     "shenanibot": "./shenanibot.js",
@@ -32,7 +32,7 @@
     "configure": "node src/config/index.js",
     "test": "node src/test/test.js",
     "basictest": "node src/test/basictest.js",
-    "unittest": "./node_modules/.bin/jasmine"
+    "unittest": "npx jasmine"
   },
   "repository": {
     "type": "git",
