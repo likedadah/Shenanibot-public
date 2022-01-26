@@ -1,3 +1,5 @@
+const os = require('os');
+
 module.exports = {
   config: {
     priority: 'fifo',
@@ -6,6 +8,11 @@ module.exports = {
     creatorCodeMode: 'manual',
     players: 1,
     prefix: '!',
+    persistence: {
+      enabled: false,
+      path: os.homedir(),
+      interactions: false
+    },
     chatThrottle: {
       limit: 20,
       delay: 1500

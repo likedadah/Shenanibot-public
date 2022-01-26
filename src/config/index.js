@@ -2,6 +2,7 @@
 
 const inquirer = require("inquirer")
 const fp = require("lodash/fp");
+const os = require("os");
 const Rx = require("rxjs");
 const configLoader = require("./loader");
 
@@ -18,7 +19,7 @@ function buildMenuQuestion(menuName, q) {
       console.log('');
       return true;
     },
-    pageSize: 10,
+    pageSize: 11,
     ...q,
     choices: a => q.choices(a).map(o => ({
       ...o,
@@ -97,6 +98,9 @@ const questions = {
       }, {
         name: 'Chat Options',
         value: {q: 'chatConfig'}
+      }, {
+        name: 'Persistence Options',
+        value: {q: 'persistenceConfig'}
       }, {
         name: 'Web Server Options',
         value: {q: 'webServerConfig'}
@@ -434,6 +438,54 @@ const questions = {
       + 'go through.  The chat message delay value sets a minimum time between the\n'
       + "bot's chat messages.  If the bot account is a moderator, this may not be\n"
       + 'necessary.'
+    ),
+  ],
+
+  persistenceConfig: [
+    buildConfigQuestion(
+      'config.persistence.enabled', {
+        type: 'confirm',
+        message: 'Enable persistence?',
+        askAnswered: true
+      },
+        'If you enable persistence, then you can configure certain types of data to\n'
+      + 'be preserved between ShenaniBot sessions.  If you disable persistence, then\n'
+      + 'data is not preserved between sessions; so e.g. all stats are reset to 0\n'
+      + 'whenever you restart the bot.'
+    ),
+    buildConfigQuestion(
+      'config.persistence.path', {
+        message: 'Data Path:',
+        when: a => {
+          return a.config.config.persistence.enabled;
+        },
+        default: a =>    fp.get('config.config.persistence.path', a)
+                      || os.homedir(),
+        filter: p => p || os.homedir()
+      },
+        'The data you choose to preserve between sessions will be stored in a file\n'
+      + '(named shenanibot-data.json); you can choose where this file will be stored.\n'
+      + 'If you leave this blank, your home directory will be used.'
+    ),
+    buildConfigQuestion(
+      'config.persistence.interactions', {
+        type: 'confirm',
+        message: 'Persist Interactions?',
+        askAnswered: true
+      },
+        'Your "interactions" with a level (whether you have played and/or beaten it)\n'
+      + 'may be used when a viewer submits a level or uses the !check command.  This\n'
+      + 'data is usually provided by the API, but since the data from the API can be\n'
+      + 'incomplete in some situations, ShenaniBot also infers interactions for\n'
+      + 'levels as they move through the queue.  (As soon as a level reaches the\n'
+      + '"now playing" position, it is treated as "played" unless/until you either\n'
+      + '!skip it or !back it out of "now playing"; if you !win a level, it is then\n'
+      + 'treated as "beaten".)\n'
+      + '\n'
+      + 'If you persist interactions, then for example ShenaniBot will remember that\n'
+      + 'you have beaten a level even in the situation where the API stops reporting\n'
+      + 'it as "cleared" (which it eventually can do unless you have a top-3 time or\n'
+      + 'score on the level).'
     ),
   ],
 
