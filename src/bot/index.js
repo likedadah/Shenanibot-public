@@ -3,7 +3,7 @@ const clipboard = require("clipboardy");
 
 const version = require('../../package.json').version;
 const { ViewerLevel, Creator, Marker } = require("./lib/queueEntry");
-const { ProfileCache } = require("./lib/profileCache");
+const { LevelCache } = require("./lib/levelCache");
 const { rewardHelper } = require("../config/loader");
 const creatorCodeUi = require("../web/creatorCodeUi");
 const overlay = require("../web/overlay");
@@ -19,7 +19,7 @@ class ShenaniBot {
     this.dm = dm;
     this.canDm = canDm;
     this.rce = new Rumpus.RumpusCE(botOptions.auth.delegationToken);
-    this.profileCache = new ProfileCache();
+    this.levelCache = new LevelCache();
     this.options = botOptions.config;
     this.players = this.options.players;
     this.streamer = botOptions.auth.streamer;
@@ -231,7 +231,7 @@ class ShenaniBot {
       return "There is no current level to skip!";
     }
     this.queue[0].counted = false;
-    this.profileCache.updateSessionInteractions(
+    this.levelCache.updateSessionInteractions(
                                  {id: this.queue[0].id, played: false});
     return this.advance(args);
   }
@@ -242,7 +242,7 @@ class ShenaniBot {
     }
     this.queue[0].countedWon = true;
     this.counts.won += 1;
-    this.profileCache.updateSessionInteractions(
+    this.levelCache.updateSessionInteractions(
                                          {id: this.queue[0].id, beaten: true});
     return this.advance(args);
   }
@@ -375,7 +375,7 @@ class ShenaniBot {
     this.noSpoilUsers = new Set();
     if (this.queue.length) {
       this._stopPlayingLevel();
-      this.profileCache.updateSessionInteractions(
+      this.levelCache.updateSessionInteractions(
                                         {id: this.queue[0].id, played: false});
     }
     this.queue.unshift(this.prevLevel);
@@ -384,7 +384,7 @@ class ShenaniBot {
     }
     if (this.prevLevel.countedWon) {
       this.counts.won -= 1;
-      this.profileCache.updateSessionInteractions(
+      this.levelCache.updateSessionInteractions(
                                        {id: this.prevLevel.id, beaten: false});
     }
     if (this.prevLevel.countedLost) {
@@ -981,7 +981,7 @@ class ShenaniBot {
   _playLevel() {
     if (this.queue[0].type === "level") {
       this.rce.levelhead.bookmarks.add(this.queue[0].id);
-      this.profileCache.updateSessionInteractions(
+      this.levelCache.updateSessionInteractions(
                                          {id: this.queue[0].id, played: true});
       return `Now playing ${this.queue[0].display} submitted by ${this.queue[0].submittedBy}`;
     }
@@ -1097,7 +1097,7 @@ class ShenaniBot {
   }
 
   async _getLevelsForCreator(creatorId, levelsCb, doneCb = () => {}) {
-    const cachedLevels = this.profileCache.getLevelsForCreator(creatorId);
+    const cachedLevels = this.levelCache.getLevelsForCreator(creatorId);
     const _levelsCb = levels => 
                    levelsCb(levels.filter(l => ! (l.players > this.players)));
     if (cachedLevels) {
@@ -1127,7 +1127,7 @@ class ShenaniBot {
         played: !!(li.interactions && li.interactions.played),
         beaten: !!(li.interactions && li.interactions.completed),
       }));
-      _levelsCb(this.profileCache.addLevelsForCreator(creatorId, loadedLevels));
+      _levelsCb(this.levelCache.addLevelsForCreator(creatorId, loadedLevels));
 
       gotMaxLevels = levelInfo.length === maxLevels;
       if (gotMaxLevels) {
