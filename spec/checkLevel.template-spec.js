@@ -10,7 +10,7 @@
 
 module.exports = itChecksALevel = cb => {
   describe("checks a level, so it", () => {
-    it("sees if you've beaten a level", async function() {
+    it("sees if the API says you've beaten a level", async function() {
       const bot = this.buildBotInstance();
 
       const response = await cb(bot, "viewer", "beaten1");
@@ -18,10 +18,31 @@ module.exports = itChecksALevel = cb => {
       expect(response).toContain("has beaten");
     });
 
-    it("sees if you've played a level", async function() {
+    it("sees if session interactions say you've beaten a level",
+       async function() {
+      const bot = this.buildBotInstance();
+
+      await bot.command("!add valid01", "viewer");
+      await bot.command("!win", "streamer");
+      const response = await bot.command("!check valid01", "viewer2");
+
+      expect(response).toContain("has beaten");
+    });
+
+    it("sees if the API says you've played a level", async function() {
       const bot = this.buildBotInstance();
 
       const response = await cb(bot, "viewer", "played1");
+
+      expect(response).toContain("has played");
+    });
+
+    it("sees if session interactions say you've played a level",
+       async function() {
+      const bot = this.buildBotInstance();
+
+      await bot.command("!add valid01", "viewer");
+      const response = await bot.command("!check valid01", "viewer2");
 
       expect(response).toContain("has played");
     });

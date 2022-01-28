@@ -1,3 +1,5 @@
+const fp = require('lodash/fp');
+
 let levels = {};
 let creators = {};
 
@@ -5,6 +7,22 @@ class LevelCache {
   constructor() {
     levels = {};
     creators = {};
+  }
+
+  addLevel(level) {
+    levels[level.id] = {
+      ...levels[level.id],
+      level
+    };
+
+    return mapLevel(level);
+  }
+
+  getLevel(levelId) {
+    if (levels[levelId]?.level) {
+      return mapLevel(levels[levelId].level);
+    }
+    return null;
   }
 
   addLevelsForCreator(creatorId, newLevels) {
@@ -54,8 +72,7 @@ class LevelCache {
   }
 }
 
-const mapLevel = level => ({
-  ...level,
+const mapLevel = level => Object.assign(fp.clone(level), {
   played: levels[level.id].interactions?.played || level.played,
   beaten: levels[level.id].interactions?.beaten || level.beaten
 })

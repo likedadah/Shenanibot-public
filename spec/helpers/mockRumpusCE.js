@@ -27,6 +27,7 @@ class MockRumpusCE {
           const validLevelMatch = levelIds && levelIds.match(/^valid(\d\d)$/);
           if (validLevelMatch) {
             return [{
+              levelId: `valid${validLevelMatch[1]}`,
               title: `Valid Level ${validLevelMatch[1]}`,
               avatarUrl: () => ''
             }]
@@ -34,6 +35,7 @@ class MockRumpusCE {
           const eLvlMatch = levelIds && levelIds.match(/^(\d\d\d)l(\d\d\d)$/);
           if (eLvlMatch && eLvlMatch[1] >= eLvlMatch[2]) {
             return [{
+              levelId: `${eLvlMatch[1]}l${eLvlMatch[2]}`,
               title: `Employee ${eLvlMatch[1]} Level ${eLvlMatch[2]}`,
               avatarUrl: () => ''
             }];
@@ -41,6 +43,7 @@ class MockRumpusCE {
           const playedMatch = levelIds && levelIds.match(/^played(\d)$/);
           if (playedMatch) {
             const playedLevel = {
+              levelId: `played${playedMatch[1]}`,
               title: `Played Level ${playedMatch[1]}`,
               avatarUrl: () => ''
             };
@@ -52,6 +55,7 @@ class MockRumpusCE {
           const beatenMatch = levelIds && levelIds.match(/^beaten(\d)$/);
           if (beatenMatch) {
             const beatenLevel = {
+              levelId: `beaten${beatenMatch[1]}`,
               title: `Cleared Level ${beatenMatch[1]}`,
               avatarUrl: () => ''
             };
@@ -63,6 +67,7 @@ class MockRumpusCE {
           const coopMatch = levelIds && levelIds.match(/^([1-4])plevel$/);
           if (coopMatch) {
             return [{
+              levelId: `${coopMatch[1]}plevel`,
               title: `Co-oper's ${coopMatch[1]} Player Level`,
               avatarUrl: () => '',
               requiredPlayers: coopMatch[1]

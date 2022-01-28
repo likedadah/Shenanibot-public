@@ -598,6 +598,10 @@ class ShenaniBot {
   }
 
   async checkAndAddLevel(id, username) {
+    if (this._getIdType(id) !== "level") {
+      return "Please enter a valid level code to check."
+    }
+
     const check = await this._checkLevel(id);
 
     if (check.canAutoAdd) {
@@ -852,37 +856,27 @@ class ShenaniBot {
   }
 
   async _checkLevel(levelId) {
-    if (this._getIdType(levelId) !== "level") {
-      return {
-        canAutoAdd: false,
-        message: "Please enter a valid level code to check."
-      };
-    }
+    let level = this.levelCache.getLevel(levelId);
+    if (!level) {
+      let levelInfo = await this.rce.levelhead.levels.search({ levelIds: levelId, includeMyInteractions: true } );
 
-    let levelInfo = await this.rce.levelhead.levels.search({ levelIds: levelId, includeMyInteractions: true } );
-
-    if (!levelInfo.length) {
-      return {
-        canAutoAdd: false,
-        message: "Oops! That level does not exist!"
-      };
-    }
-
-    const level = new ViewerLevel(levelInfo[0].levelId, levelInfo[0].title, "");
-    const interactions = levelInfo[0].interactions;
-    let verb = "not played";
-    if (interactions) {
-      if (interactions.played) {
-        verb = "played";
+      if (!levelInfo.length) {
+        return {
+          canAutoAdd: false,
+          message: "Oops! That level does not exist!"
+        };
       }
-      if (interactions.completed) {
-        verb = "beaten";
-      }
+
+      level = this.levelCache.addLevel(
+                                     this._mapLevelInfoForCache(levelInfo[0]));
     }
+
+    const verb = level.beaten ? "beaten"
+               : (level.played ? "played" : "not played");
 
     let warning = "";
-    if (verb !== "beaten" && levelInfo[0].requiredPlayers > this.players) {
-      warning = `  But ${this.streamer} is not accepting ${levelInfo[0].requiredPlayers}-player levels.`;
+    if (verb !== "beaten" && level.players > this.players) {
+      warning = `  But ${this.streamer} is not accepting ${level.players}-player levels.`;
     }
 
     return {
@@ -1097,9 +1091,10 @@ class ShenaniBot {
   }
 
   async _getLevelsForCreator(creatorId, levelsCb, doneCb = () => {}) {
-    const cachedLevels = this.levelCache.getLevelsForCreator(creatorId);
-    const _levelsCb = levels => 
+    const _levelsCb = levels =>
                    levelsCb(levels.filter(l => ! (l.players > this.players)));
+
+    const cachedLevels = this.levelCache.getLevelsForCreator(creatorId);
     if (cachedLevels) {
       _levelsCb(cachedLevels);
       setTimeout(doneCb, 0);
@@ -1118,15 +1113,7 @@ class ShenaniBot {
 
     do {
       const levelInfo = await this.rce.levelhead.levels.search(query);
-      const loadedLevels = levelInfo.map(li => ({
-        ...new ViewerLevel(li.levelId, li.title, "", li.avatarUrl()),
-        date: li.createdAt,
-        players: li.requiredPlayers,
-        tags: li.tagNames,
-        difficulty: li.stats.Players > 10 ? li.stats.Diamonds : null,
-        played: !!(li.interactions && li.interactions.played),
-        beaten: !!(li.interactions && li.interactions.completed),
-      }));
+      const loadedLevels = levelInfo.map(this._mapLevelInfoForCache);
       _levelsCb(this.levelCache.addLevelsForCreator(creatorId, loadedLevels));
 
       gotMaxLevels = levelInfo.length === maxLevels;
@@ -1138,6 +1125,22 @@ class ShenaniBot {
     } while( gotMaxLevels );
 
     doneCb();
+  }
+
+  _mapLevelInfoForCache(li) {
+    return Object.assign(
+      new ViewerLevel(li.levelId, li.title, "", li.avatarUrl()),
+      {
+        date: li.createdAt,
+        players: li.requiredPlayers,
+        tags: li.tagNames,
+        difficulty: li.stats ? (li.stats.Players > 10 ? li.stats.Diamonds
+                                                      : null)
+                             : undefined,
+        played: !!(li.interactions && li.interactions.played),
+        beaten: !!(li.interactions && li.interactions.completed),
+      },
+    );
   }
 
   _specifyLevelForCreator(creatorId, level) {
