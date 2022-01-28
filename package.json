@@ -1,6 +1,6 @@
 {
   "name": "@madelsberger/shenanibot",
-  "version": "2.4.1",
+  "version": "2.4.2",
   "description": "A Twitch bot that manages a queue of levels for Levelhead streamers",
   "bin": {
     "shenanibot": "./shenanibot.js",
