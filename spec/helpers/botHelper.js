@@ -42,11 +42,11 @@ beforeAll(function() {
     "reward-id-expedite": "expedite"
   }
 
-  this.addLevels = (bot, count, first = 1, username = undefined) => {
+  this.addLevels = async (bot, count, first = 1, username = undefined) => {
     for(let i = 0; i < count; i++) {
       const n = first + i;
       const id = (n < 10 ? "0" : "") + n;
-      bot.command(`!add valid${id}`, username || `viewer${id}`);
+      await bot.command(`!add valid${id}`, username || `viewer${id}`);
     }
   }
 

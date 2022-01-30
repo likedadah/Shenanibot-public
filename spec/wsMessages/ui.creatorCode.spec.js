@@ -10,7 +10,9 @@ describe("ws://.../ui/creatorCode", () => {
 
     await this.sendWsMessage(token, {creatorId: "emp001", level: {
       id: "001l001",
-      name: "test"
+      name: "test",
+      type: "level",
+      avatar: "x"
     }});
 
     const queue = await this.getQueue();
@@ -20,7 +22,8 @@ describe("ws://.../ui/creatorCode", () => {
         type: "level",
         id: "001l001",
         name: "test",
-        submittedBy: "viewer"
+        submittedBy: "viewer",
+        avatar: "x"
       }
     }]);
   });
@@ -37,6 +40,9 @@ describe("ws://.../ui/creatorCode", () => {
 
     await this.sendWsMessage(token, {creatorId: "emp002", level: {
       id: "002l001",
+      name: "test",
+      type: "level",
+      avatar: "x"
     }});
     let queue = await this.getSimpleQueue();
     expect(queue).toEqual([
@@ -47,6 +53,9 @@ describe("ws://.../ui/creatorCode", () => {
 
     await this.sendWsMessage(token, {creatorId: "emp001", level: {
       id: "001l001",
+      name: "test",
+      type: "level",
+      avatar: "x"
     }});
     queue = await this.getSimpleQueue();
     expect(queue).toEqual([
@@ -68,7 +77,9 @@ describe("ws://.../ui/creatorCode", () => {
     const message = (await Promise.all([
       this.sendWsMessage(uiToken, {creatorId: "emp001", level: {
         id: "001l001",
-        name: "test"
+        name: "test",
+        type: "level",
+        avatar: "x"
       }}),
       this.waitForNextWsMessage(overlayToken)
     ]))[1];
@@ -79,7 +90,8 @@ describe("ws://.../ui/creatorCode", () => {
         id: "001l001",
         name: "test",
         type: "level",
-        submittedBy: "viewer"
+        submittedBy: "viewer",
+        avatar: "x"
       }
     }]);
   });

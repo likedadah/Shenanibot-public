@@ -35,7 +35,7 @@ module.exports = async (cb, nextPosition = 2, nextRequired = false,
     }
 
     if (withNext || nextRequired) {
-      addLevels(bot, nextPosition - 2, 2);
+      await addLevels(bot, nextPosition - 2, 2);
       await bot.command("!add valid00", "viewer0");
     }
   };

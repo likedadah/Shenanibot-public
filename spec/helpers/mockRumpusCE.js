@@ -109,6 +109,7 @@ class MockRumpusCE {
           if (validCreatorMatch) {
             return [{
               alias: new Promise(r => r({
+                userId: `emp${validCreatorMatch[1]}`,
                 alias: `EmployEE ${validCreatorMatch[1]}`
               }))
             }]
@@ -116,6 +117,7 @@ class MockRumpusCE {
           if (userIds === 'cooper') {
             return [{
               alias: new Promise(r => r({
+                userId: 'cooper',
                 alias: 'Co-op Level Maker'
               }))
             }]

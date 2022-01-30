@@ -496,9 +496,9 @@ class ShenaniBot {
     {
       return (await this._checkLevel(id)).message;
     } else {
-      const {creator, error} = await this._getCreatorEntry(id);
-      if (error) {
-        return error;
+      const creator = await this._getCreatorEntry(id);
+      if (!creator) {
+        return "Oops! That creator does not exist!";
       }
 
       let levels = [];
@@ -509,14 +509,12 @@ class ShenaniBot {
         }
         const unplayed = levels.find(l => !l.played);
         if (unplayed) {
-          const levelEntry = new ViewerLevel(unplayed.id, unplayed.name);
-          this.sendAsync(`The most recent unplayed level from ${creator.display} is ${levelEntry.display}`);
+          this.sendAsync(`The most recent unplayed level from ${creator.display} is ${unplayed.display}`);
           return;
         }
         const unbeaten = levels.find(l => !l.beaten);
         if (unbeaten) {
-          const levelEntry = new ViewerLevel(unbeaten.id, unbeaten.name);
-          this.sendAsync(`All levels from ${creator.display} have been played; the most recent unbeaten level is ${levelEntry.display}`);
+          this.sendAsync(`All levels from ${creator.display} have been played; the most recent unbeaten level is ${unbeaten.display}`);
           return;
         }
         this.sendAsync(`All levels from ${creator.display} have been beaten`);
@@ -558,31 +556,23 @@ class ShenaniBot {
         return `That level ${reason}!`;
       }
 
-      const levelInfo = await this.rce.levelhead.levels.search({ levelIds: id }, { doNotUseKey: true });
-
-      if (!levelInfo.length) {
+      entry = await this._getLevel(id);
+      if (!entry) {
         return "Oops! That level does not exist!";
       }
 
-      if (levelInfo[0].requiredPlayers > this.players) {
-        return `Sorry, ${this.streamer} is not accepting ${levelInfo[0].requiredPlayers}-player levels.`;
+      if (entry.players > this.players) {
+        return `Sorry, ${this.streamer} is not accepting ${entry.players}-player levels.`;
       }
 
-      entry = new ViewerLevel(
-        id,
-        levelInfo[0].title,
-        username,
-        levelInfo[0].avatarUrl()
-      );
+      entry.played = entry.beaten = undefined;
     }
 
     if (type === "creator") {
-
-      const {creator, error} = await this._getCreatorEntry(id, username);
-      if (error) {
-        return error;
+      entry = await this._getCreatorEntry(id, username);
+      if (!entry) {
+        return "Oops! That creator does not exist!";
       }
-      entry = creator;
     }
 
     const pos = this._enqueue(entry, user);
@@ -843,6 +833,7 @@ class ShenaniBot {
   _getUser(username) {
     if (!this.users[username]) {
       this.users[username] = {
+        name: username,
         levelsSubmitted: 0,
         permit: username === this.streamer
       };
@@ -863,19 +854,12 @@ class ShenaniBot {
   }
 
   async _checkLevel(levelId) {
-    let level = this.levelCache.getLevel(levelId);
+    const level = await this._getLevel(levelId);
     if (!level) {
-      let levelInfo = await this.rce.levelhead.levels.search({ levelIds: levelId, includeMyInteractions: true } );
-
-      if (!levelInfo.length) {
-        return {
-          canAutoAdd: false,
-          message: "Oops! That level does not exist!"
-        };
-      }
-
-      level = this.levelCache.addLevel(
-                                     this._mapLevelInfoForCache(levelInfo[0]));
+      return {
+        canAutoAdd: false,
+        message: "Oops! That level does not exist!"
+      };
     }
 
     const verb = level.beaten ? "beaten"
@@ -903,6 +887,8 @@ class ShenaniBot {
 
   _enqueue(entry, user) {
     let laterEntries = [];
+
+    entry.submittedBy = user.name;
     if (this.options.priority === "rotation") {
       entry.round = Math.max((user.lastRound || 0) + 1, this.minOpenRound);
       user.lastRound = entry.round;
@@ -1081,20 +1067,28 @@ class ShenaniBot {
   }
 
   async _getCreatorEntry(id, username) {
+    const cachedEntry = this.levelCache.getCreator(id);
+    if (cachedEntry) {
+      return cachedEntry;
+    }
+ 
     const creatorInfo = await this.rce.levelhead.players.search({ userIds: id, includeAliases: true }, { doNotUseKey: true });
 
-    if (!creatorInfo.length) {
-      return {
-        error: "Oops! That creator does not exist!"
-      };
+    return creatorInfo.length
+         ? this.levelCache.addCreator(await this._mapCreator(creatorInfo[0]))
+         : null;
+  }
+
+  async _getLevel(levelId) {
+    const cachedLevel = this.levelCache.getLevel(levelId);
+    if (cachedLevel) {
+      return cachedLevel;
     }
-    const aliasInfo = await creatorInfo[0].alias;
-    return {creator: new Creator(
-      id,
-      aliasInfo.alias,
-      username,
-      aliasInfo.avatarId
-    )};
+
+    const levelInfo = await this.rce.levelhead.levels.search({ levelIds: levelId, includeMyInteractions: true } );
+
+    return levelInfo.length
+               ? this.levelCache.addLevel(this._mapLevel(levelInfo[0])) : null;
   }
 
   async _getLevelsForCreator(creatorId, levelsCb, doneCb = () => {}) {
@@ -1120,7 +1114,7 @@ class ShenaniBot {
 
     do {
       const levelInfo = await this.rce.levelhead.levels.search(query);
-      const loadedLevels = levelInfo.map(this._mapLevelInfoForCache);
+      const loadedLevels = levelInfo.map(this._mapLevel);
       _levelsCb(this.levelCache.addLevelsForCreator(creatorId, loadedLevels));
 
       gotMaxLevels = levelInfo.length === maxLevels;
@@ -1134,9 +1128,9 @@ class ShenaniBot {
     doneCb();
   }
 
-  _mapLevelInfoForCache(li) {
+  _mapLevel(li) {
     return Object.assign(
-      new ViewerLevel(li.levelId, li.title, "", li.avatarUrl()),
+      new ViewerLevel(li.levelId, li.title, li.avatarUrl()),
       {
         date: li.createdAt,
         players: li.requiredPlayers,
@@ -1150,18 +1144,21 @@ class ShenaniBot {
     );
   }
 
+  async _mapCreator(creatorInfo) {
+    const ai = await creatorInfo.alias;
+    return new Creator(ai.userId, ai.alias, ai.avatarId);
+  }
+
   _specifyLevelForCreator(creatorId, level) {
     const oldEntry = this.queue[0];
     if (!oldEntry || oldEntry.type !== "creator"
                   || oldEntry.id !== creatorId) {
       return false;
     }
-    const entry = new ViewerLevel(
-                    level.id, level.name, oldEntry.submittedBy, level.avatar);
-    for (const key of Object.keys(oldEntry).filter(k => !(k in entry))) {
-      entry[key] = oldEntry[key];
+    for (const key of Object.keys(oldEntry).filter(k => !(k in level))) {
+      level[key] = oldEntry[key];
     }
-    this.queue[0] = entry;
+    this.queue[0] = level;
     this.sendAsync( this._playLevel() );
 
     this.onQueue();

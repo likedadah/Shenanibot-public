@@ -1,16 +1,15 @@
 class QueueEntry {
-  constructor(id, name, type, submittedBy, avatar) {
+  constructor(id, name, type, avatar) {
     this.id = id;
     this.name = name;
     this.type = type
-    this.submittedBy = submittedBy;
     this.avatar = avatar;
   }
 }
 
 class ViewerLevel extends QueueEntry {
-  constructor(levelId, levelName, submittedBy, avatar = undefined) {
-    super(levelId, levelName, "level", submittedBy, avatar);
+  constructor(levelId, levelName, avatar = undefined) {
+    super(levelId, levelName, "level", avatar);
   }
 
   get display() {
@@ -19,8 +18,8 @@ class ViewerLevel extends QueueEntry {
 }
 
 class Creator extends QueueEntry {
-  constructor(creatorId, creatorName, submittedBy, avatar = undefined) {
-    super(creatorId, creatorName, "creator", submittedBy, 
+  constructor(creatorId, creatorName, avatar = undefined) {
+    super(creatorId, creatorName, "creator",
           `https://img.bscotch.net/fit-in/64x64/avatars/${avatar}.png`);
   }
 
@@ -31,7 +30,7 @@ class Creator extends QueueEntry {
 
 class Marker extends QueueEntry {
   constructor(markerName) {
-    super(undefined, markerName, "mark", undefined, undefined);
+    super(undefined, markerName, "mark", undefined);
   }
 
   get display() {
