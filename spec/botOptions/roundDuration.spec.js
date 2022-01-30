@@ -1,7 +1,7 @@
 describe("the 'roundDuration' configuration option", () => {
-  beforeEach(function() {
+  beforeEach(async function() {
     jasmine.clock().install();
-    this.bot = this.buildBotInstance({ config: {
+    this.bot = await this.buildBotInstance({ config: {
       httpPort: 8080,
       priority: "rotation",
       roundDuration: 1

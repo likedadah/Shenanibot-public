@@ -24,7 +24,7 @@ module.exports = itPicksALevel = (cmd, incrementPlayed = true) => {
       itPlaysALevel(3, cb);
 
       it("only works for the streamer", async function() {
-        const bot = this.buildBotInstance({ config: {httpPort: 8080 }});
+        const bot = await this.buildBotInstance({ config: {httpPort: 8080 }});
         await this.addLevels(bot, 5);
   
         await bot.command(`${cmd} 3`, "viewer");
@@ -36,7 +36,7 @@ module.exports = itPicksALevel = (cmd, incrementPlayed = true) => {
       });
 
       it("updates the overlay", async function() {
-        const bot = this.buildBotInstance({ config: {httpPort: 8080 }});
+        const bot = await this.buildBotInstance({ config: {httpPort: 8080 }});
         await this.addLevels(bot, 5);
         const token = await this.openWebSocket("overlay/levels");
 
@@ -57,7 +57,7 @@ module.exports = itPicksALevel = (cmd, incrementPlayed = true) => {
       itPlaysALevel(5, cb);
 
       it("picks the earliest match if there are multiple", async function() {
-        const bot = this.buildBotInstance();
+        const bot = await this.buildBotInstance();
         await this.addLevels(bot, 3);
         await this.addLevels(bot, 2, 4, "targetviewer");
         await this.addLevels(bot, 3, 6);
@@ -68,7 +68,7 @@ module.exports = itPicksALevel = (cmd, incrementPlayed = true) => {
       });
 
       it("assumes 'next' if it's omitted", async function() {
-        const bot = this.buildBotInstance();
+        const bot = await this.buildBotInstance();
         await this.addLevels(bot, 2);
         await this.addLevels(bot, 2, 3, "targetviewer");
         await this.addLevels(bot, 1, 5);
@@ -79,7 +79,7 @@ module.exports = itPicksALevel = (cmd, incrementPlayed = true) => {
       });
 
       it("does not require the @", async function() {
-        const bot = this.buildBotInstance();
+        const bot = await this.buildBotInstance();
         await this.addLevels(bot, 4);
         await this.addLevels(bot, 2, 5, "targetviewer");
         await this.addLevels(bot, 3, 7);
@@ -90,7 +90,7 @@ module.exports = itPicksALevel = (cmd, incrementPlayed = true) => {
       });
 
       it("updates the overlay", async function() {
-        const bot = this.buildBotInstance({ config: {httpPort: 8080 }});
+        const bot = await this.buildBotInstance({ config: {httpPort: 8080 }});
         await this.addLevels(bot, 5);
         const token = await this.openWebSocket("overlay/levels");
 
@@ -111,7 +111,7 @@ module.exports = itPicksALevel = (cmd, incrementPlayed = true) => {
       itPlaysALevel(5, cb);
 
       it("picks the latest match if there are multiple", async function() {
-        const bot = this.buildBotInstance();
+        const bot = await this.buildBotInstance();
         await this.addLevels(bot, 3);
         await this.addLevels(bot, 2, 4, "targetviewer");
         await this.addLevels(bot, 3, 6);
@@ -122,7 +122,7 @@ module.exports = itPicksALevel = (cmd, incrementPlayed = true) => {
       });
 
       it("does not require the @", async function() {
-        const bot = this.buildBotInstance();
+        const bot = await this.buildBotInstance();
         await this.addLevels(bot, 4);
         await this.addLevels(bot, 2, 5, "targetviewer");
         await this.addLevels(bot, 3, 7);
@@ -133,7 +133,7 @@ module.exports = itPicksALevel = (cmd, incrementPlayed = true) => {
       });
 
       it("updates the overlay", async function() {
-        const bot = this.buildBotInstance({ config: {httpPort: 8080 }});
+        const bot = await this.buildBotInstance({ config: {httpPort: 8080 }});
         await this.addLevels(bot, 5);
         const token = await this.openWebSocket("overlay/levels");
 

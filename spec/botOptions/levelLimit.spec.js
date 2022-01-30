@@ -1,7 +1,7 @@
 describe("the levelLimit configuration option", () => {
   it("applies a session limit to the number of entries a viewer can submit",
      async function() {
-    const bot = this.buildBotInstance({config: {
+    const bot = await this.buildBotInstance({config: {
       levelLimit: 1,
       levelLimitType: "session"
     }});
@@ -21,7 +21,7 @@ describe("the levelLimit configuration option", () => {
     // note - various dequeue methods of removing a level are tested in the
     // dequeue template spec to make sure they decrease the viewer's level
     // count for active limits
-    const bot = this.buildBotInstance({config: {
+    const bot = await this.buildBotInstance({config: {
       levelLimit: 1,
       levelLimitType: "active"
     }});
@@ -43,7 +43,7 @@ describe("the levelLimit configuration option", () => {
   });
 
   it("does not affect the streamer", async function() {
-    const bot = this.buildBotInstance({config: {
+    const bot = await this.buildBotInstance({config: {
       levelLimit: 1,
       levelLimitType: "session"
     }});

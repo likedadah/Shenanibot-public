@@ -21,7 +21,7 @@ describe("the !random command", () => {
     });
 
     it("returns the last eligible level", async function() {
-      const bot = this.buildBotInstance();
+      const bot = await this.buildBotInstance();
       await this.addLevels(bot, 10);
 
       await bot.command("!random", "streamer");
@@ -30,7 +30,7 @@ describe("the !random command", () => {
     });
 
     it("does not read past a marker in position 2", async function() {
-      const bot = this.buildBotInstance();
+      const bot = await this.buildBotInstance();
       await this.addLevels(bot, 1);
       await bot.command("!mark", "streamer");
       await this.addLevels(bot, 5, 6);
@@ -41,7 +41,7 @@ describe("the !random command", () => {
     });
 
     it("does not read past a marker mid-queue", async function() {
-      const bot = this.buildBotInstance();
+      const bot = await this.buildBotInstance();
       await this.addLevels(bot, 5);
       await bot.command("!mark", "streamer");
       await this.addLevels(bot, 5, 6);
@@ -52,7 +52,7 @@ describe("the !random command", () => {
     });
 
     it("does not read past a marker for a priority level", async function() {
-      const bot = this.buildBotInstance();
+      const bot = await this.buildBotInstance();
       await this.addLevels(bot, 2);
       await bot.command("valid02", "viewer", "reward-id-priority");
       await bot.command("!mark", "streamer");
@@ -65,7 +65,7 @@ describe("the !random command", () => {
     });
 
     it("works even if the 'now playing' entry was a marker", async function() {
-      const bot = this.buildBotInstance();
+      const bot = await this.buildBotInstance();
       await bot.command("!mark", "streamer");
       await this.addLevels(bot, 10);
 
@@ -76,7 +76,7 @@ describe("the !random command", () => {
 
     it("does not read past priority levels to choose a non-priority level",
        async function() {
-      const bot = this.buildBotInstance({
+      const bot = await this.buildBotInstance({
         twitch: {rewardBehaviors: this.optionQueueJumpRewards}
       });
       await this.addLevels(bot, 10);
@@ -90,7 +90,7 @@ describe("the !random command", () => {
 
     it("does not read past priority levels to find a marker",
        async function() {
-      const bot = this.buildBotInstance({
+      const bot = await this.buildBotInstance({
         twitch: {rewardBehaviors: this.optionQueueJumpRewards}
       });
       await this.addLevels(bot, 5);
@@ -105,7 +105,7 @@ describe("the !random command", () => {
     });
 
     it("doesn't care about priority levels after markers", async function() {
-      const bot = this.buildBotInstance();
+      const bot = await this.buildBotInstance();
       await this.addLevels(bot, 5);
       await bot.command("!mark", "streamer");
       await this.addLevels(bot, 5, 6);
@@ -117,7 +117,8 @@ describe("the !random command", () => {
     });
 
     it("only takes levels from the earliest possible round", async function() {
-      const bot = this.buildBotInstance({config: { priority: "rotation" }});
+      const bot = await this.buildBotInstance(
+                                          {config: { priority: "rotation" }});
       for (let i = 0; i < 10; i++) {
         await this.addLevels(bot, 2, (i * 2) + 1, `viewer0${i}`);
       }
@@ -133,7 +134,8 @@ describe("the !random command", () => {
 
     it("doesn't read past markers to find the end of the round",
        async function() {
-      const bot = this.buildBotInstance({config: { priority: "rotation" }});
+      const bot = await this.buildBotInstance(
+                                           {config: { priority: "rotation" }});
       for (let i = 0; i < 5; i++) {
         await bot.command(`!add valid0${i}`, `viewer0${i}`);
       }
@@ -152,7 +154,7 @@ describe("the !random command", () => {
 
     it("doesn't skip priority levels to non-priority levels in the same round",
        async function() {
-      const bot = this.buildBotInstance({
+      const bot = await this.buildBotInstance({
         config: { priority: "rotation" },
         twitch: { rewardBehaviors: this.optionQueueJumpRewards }
       });
@@ -177,7 +179,7 @@ describe("the !random command", () => {
      async function() {
     this.setRandomizerToMin();
 
-    const bot = this.buildBotInstance();
+    const bot = await this.buildBotInstance();
     await this.addLevels(bot, 10);
 
     await bot.command("!random", "streamer");
@@ -186,7 +188,7 @@ describe("the !random command", () => {
   });
 
   it("updates the overlay", async function() {
-    const bot = this.buildBotInstance({ config: {httpPort: 8080 }});
+    const bot = await this.buildBotInstance({ config: {httpPort: 8080 }});
     await this.addLevels(bot, 2);
     const token = await this.openWebSocket("overlay/levels");
 
@@ -207,7 +209,7 @@ describe("the !random command", () => {
   });
 
   it("only works for the streamer", async function() {
-    const bot = this.buildBotInstance({ config: {httpPort: 8080 }});
+    const bot = await this.buildBotInstance({ config: {httpPort: 8080 }});
     await this.addLevels(bot, 2);
 
     await bot.command("!random", "viewer");

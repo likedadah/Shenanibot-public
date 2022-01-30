@@ -1,6 +1,6 @@
 describe("the players configuration option", () => {
   it("excludes multi-player levels when set to 1", async function() {
-    const bot = this.buildBotInstance({config: {
+    const bot = await this.buildBotInstance({config: {
       players: 1
     }});
 
@@ -24,7 +24,7 @@ describe("the players configuration option", () => {
   });
 
   it("excludes 3- and 4-player levels when set to 2", async function() {
-    const bot = this.buildBotInstance({config: {
+    const bot = await this.buildBotInstance({config: {
       players: 2
     }});
 
@@ -47,7 +47,7 @@ describe("the players configuration option", () => {
   });
 
   it("excludes 4-player levels when set to 3", async function() {
-    const bot = this.buildBotInstance({config: {
+    const bot = await this.buildBotInstance({config: {
       players: 3
     }});
 
@@ -69,7 +69,7 @@ describe("the players configuration option", () => {
   });
 
   it("allows all levels when set to 4", async function() {
-    const bot = this.buildBotInstance({config: {
+    const bot = await this.buildBotInstance({config: {
       players: 4
     }});
 
@@ -91,7 +91,7 @@ describe("the players configuration option", () => {
 
   it("limits the results from checking a creator code", async function() {
     jasmine.clock().install();
-    const bot = this.buildBotInstance({config: {
+    const bot = await this.buildBotInstance({config: {
       players: 1
     }});
 
@@ -115,7 +115,7 @@ describe("the players configuration option", () => {
 
   it("limits auto-selection of levels for a creator code", async function() {
     jasmine.clock().install();
-    const bot = this.buildBotInstance({config: {
+    const bot = await this.buildBotInstance({config: {
       players: 1,
       creatorCodeMode: "auto"
     }});

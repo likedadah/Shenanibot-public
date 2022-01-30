@@ -2,8 +2,9 @@ const Rumpus = require("@bscotch/rumpus-ce");
 const clipboard = require("clipboardy");
 
 const version = require('../../package.json').version;
-const { ViewerLevel, Creator, Marker } = require("./lib/queueEntry");
 const { LevelCache } = require("./lib/levelCache");
+const { PersistenceManager } = require("./lib/persistence");
+const { ViewerLevel, Creator, Marker } = require("./lib/queueEntry");
 const { rewardHelper } = require("../config/loader");
 const creatorCodeUi = require("../web/creatorCodeUi");
 const overlay = require("../web/overlay");
@@ -19,7 +20,9 @@ class ShenaniBot {
     this.dm = dm;
     this.canDm = canDm;
     this.rce = new Rumpus.RumpusCE(botOptions.auth.delegationToken);
-    this.levelCache = new LevelCache();
+    this.persistenceManager = new PersistenceManager(
+                                                botOptions.config.persistence);
+    this.levelCache = new LevelCache(this.persistenceManager);
     this.options = botOptions.config;
     this.players = this.options.players;
     this.streamer = botOptions.auth.streamer;
@@ -74,6 +77,10 @@ class ShenaniBot {
     if (Object.keys(behaviors).find(k => behaviors[k] === "add")) {
       this.twitch.usePointsToAdd = true;
     }
+  }
+
+  async init() {
+    await this.persistenceManager.init(this.levelCache);
   }
 
   async command(message, username, rewardId) {

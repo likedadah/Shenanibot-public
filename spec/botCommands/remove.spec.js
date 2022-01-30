@@ -1,6 +1,6 @@
 describe("the !remove command", () => {
   it("removes a level from the queue", async function() {
-    const bot = this.buildBotInstance();
+    const bot = await this.buildBotInstance();
     await bot.command("!add valid01", "viewer");
     await bot.command("!add valid02", "viewer");
 
@@ -11,7 +11,7 @@ describe("the !remove command", () => {
   });
 
   it("won't remove the 'now playing' level", async function() {
-    const bot = this.buildBotInstance();
+    const bot = await this.buildBotInstance();
     await bot.command("!add valid01", "viewer");
 
     await bot.command("!remove valid01", "viewer");
@@ -20,7 +20,7 @@ describe("the !remove command", () => {
   });
 
   it("won't let one viewer remove another viewer's level", async function() {
-    const bot = this.buildBotInstance();
+    const bot = await this.buildBotInstance();
     await bot.command("!add valid01", "viewer");
     await bot.command("!add valid02", "viewer");
 
@@ -31,7 +31,7 @@ describe("the !remove command", () => {
   });
 
   it("allows the streamer to remove any level", async function() {
-    const bot = this.buildBotInstance();
+    const bot = await this.buildBotInstance();
     await bot.command("!add valid01", "viewer");
     await bot.command("!add valid02", "viewer");
 
@@ -42,7 +42,7 @@ describe("the !remove command", () => {
   });
 
   it("decreases the subbitter's level count", async function() {
-    const bot = this.buildBotInstance({config: {
+    const bot = await this.buildBotInstance({config: {
       levelLimitType: "session",
       levelLimit: 1
     }});
@@ -57,7 +57,7 @@ describe("the !remove command", () => {
   });
 
   it("advances the viewer's other levels to fill rounds", async function() {
-    const bot = this.buildBotInstance({config: {
+    const bot = await this.buildBotInstance({config: {
       httpPort: 8080,
       priority: "rotation"
     }});
@@ -85,7 +85,7 @@ describe("the !remove command", () => {
   });
 
   it("updates the overlay", async function () {
-    const bot = this.buildBotInstance({config: { httpPort: 8080 }});
+    const bot = await this.buildBotInstance({config: { httpPort: 8080 }});
     await bot.command("!add valid01", "viewer");
     await bot.command("!add valid02", "viewer");
     const token = await this.openWebSocket("overlay/levels");

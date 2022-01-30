@@ -24,7 +24,9 @@
     "ws": "^7.5.5"
   },
   "devDependencies": {
+    "fs-monkey": "^1.0.3",
     "jasmine": "^3.9.0",
+    "memfs": "^3.4.1",
     "pkg": "^5.3.3"
   },
   "scripts": {

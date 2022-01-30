@@ -13,7 +13,7 @@ module.exports = itHandlesLevelAsUrgent = cb => {
   describe("needs a level from the queue; so it", () => {
     it("does nothing for the 1st entry, or invalid or missing codes",
                                                            async function() {
-      const bot = this.buildBotInstance({
+      const bot = await this.buildBotInstance({
         config: { httpPort: 8080 },
         twitch: { rewardBehaviors: this.optionQueueJumpRewards }
       });

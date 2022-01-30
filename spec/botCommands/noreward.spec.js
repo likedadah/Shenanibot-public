@@ -1,6 +1,6 @@
 describe("the !noreward command", () => {
   it("removes a reward behavior", async function() {
-    const bot = this.buildBotInstance({twitch: {rewardBehaviors: {
+    const bot = await this.buildBotInstance({twitch: {rewardBehaviors: {
       "other-reward-id": "priority"
     }}});
     bot.command("!reward urgent", "streamer", "my-reward-id");
@@ -14,7 +14,7 @@ describe("the !noreward command", () => {
   });
 
   it("only works for the streamer", async function() {
-    const bot = this.buildBotInstance({twitch: {rewardBehaviors: {
+    const bot = await this.buildBotInstance({twitch: {rewardBehaviors: {
       "other-reward-id": "priority"
     }}});
     bot.command("!reward urgent", "streamer", "my-reward-id");

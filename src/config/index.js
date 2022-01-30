@@ -464,7 +464,7 @@ const questions = {
         filter: p => p || os.homedir()
       },
         'The data you choose to preserve between sessions will be stored in a file\n'
-      + '(named shenanibot-data.json); you can choose where this file will be stored.\n'
+      + '(named shenanibot-data.txt); you can choose where this file will be stored.\n'
       + 'If you leave this blank, your home directory will be used.'
     ),
     buildConfigQuestion(

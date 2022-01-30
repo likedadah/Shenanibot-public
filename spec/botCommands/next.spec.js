@@ -7,7 +7,7 @@ describe("the !next command", () => {
   itPlaysALevel(2, cb);
 
   it("updates the overlay", async function() {
-    const bot = this.buildBotInstance({ config: {httpPort: 8080 }});
+    const bot = await this.buildBotInstance({ config: {httpPort: 8080 }});
     await this.addLevels(bot, 2);
     const token = await this.openWebSocket("overlay/levels");
 
@@ -28,7 +28,7 @@ describe("the !next command", () => {
   });
 
   it("only works for the streamer", async function() {
-    const bot = this.buildBotInstance({ config: {httpPort: 8080 }});
+    const bot = await this.buildBotInstance({ config: {httpPort: 8080 }});
     await this.addLevels(bot, 2);
 
     await bot.command("!next", "viewer");

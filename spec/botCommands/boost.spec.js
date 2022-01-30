@@ -8,7 +8,7 @@ describe("the !boost command", () => {
 
   describe("", () => {
     beforeEach(async function() {
-      this.bot = this.buildBotInstance({
+      this.bot = await this.buildBotInstance({
         config: { httpPort: 8080 },
         twitch: { rewardBehaviors: this.optionQueueJumpRewards }
       });

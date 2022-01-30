@@ -16,8 +16,8 @@ module.exports = itHandlesLevelAsUrgent = cb => {
 
   describe("handles the level as urgent; so it", () => {
     describe("", () => {
-      beforeEach(function() {
-        this.bot = this.buildBotInstance({
+      beforeEach(async function() {
+        this.bot = await this.buildBotInstance({
           config: { httpPort: 8080 },
           twitch: { rewardBehaviors: this.optionQueueJumpRewards }
         });
@@ -106,7 +106,7 @@ module.exports = itHandlesLevelAsUrgent = cb => {
       });
 
       it("moves past priority levels in later rounds", async function() {
-        const bot = this.buildBotInstance({
+        const bot = await this.buildBotInstance({
           config: {
             httpPort: 8080,
             priority: "rotation"
@@ -167,8 +167,8 @@ module.exports = itHandlesLevelAsUrgent = cb => {
     });
 
     describe("updates the level round", function() {
-      beforeEach(function() {
-        this.bot = this.buildBotInstance({
+      beforeEach(async function() {
+        this.bot = await this.buildBotInstance({
           config: {
             httpPort: 8080,
             priority: "rotation",

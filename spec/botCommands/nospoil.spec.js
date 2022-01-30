@@ -1,6 +1,6 @@
 describe("the !nospoil command", () => {
   it("puts the user in the 'nospoil' list", async function() {
-    const bot = this.buildBotInstance();
+    const bot = await this.buildBotInstance();
 
     await bot.command("!add valid01", "viewer2")
     const response = await bot.command("!nospoil", "viewer");
@@ -14,14 +14,14 @@ describe("the !nospoil command", () => {
   });
 
   it("gives an error if the queue is empty", async function() {
-    const bot = this.buildBotInstance();
+    const bot = await this.buildBotInstance();
 
     const response = await bot.command("!nospoil", "viewer");
     expect(response).toEqual("There is no current level!");
   });
 
   it("gives an error if a marker is first in the queue", async function() {
-    const bot = this.buildBotInstance();
+    const bot = await this.buildBotInstance();
 
     await bot.command("!mark", "streamer");
     const response = await bot.command("!nospoil", "viewer");
@@ -29,7 +29,7 @@ describe("the !nospoil command", () => {
   });
 
   it("gives an error if the whisper won't be sendable", async function() {
-    const bot = this.buildBotInstance();
+    const bot = await this.buildBotInstance();
 
     await bot.command("!add valid01", "viewer2")
     const response = await bot.command("!nospoil", "nodm");

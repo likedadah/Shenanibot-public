@@ -4,14 +4,14 @@ describe("the !check command", () => {
   itChecksALevel((bot, user, id) => bot.command(`!check ${id}`, user));
 
   it("responds to unknown creator id", async function() {
-    const bot = this.buildBotInstance();
+    const bot = await this.buildBotInstance();
     const response = await bot.command("!check unk001", "viewer");
 
     expect(response).toEqual("Oops! That creator does not exist!");
   });
 
   it("responds to creator id with no levels", async function() {
-    const bot = this.buildBotInstance();
+    const bot = await this.buildBotInstance();
     await bot.command("!check emp000", "viewer");
 
     expect(this.getChat().join("\t")).toContain("Unable to find levels for EmployEE 000's Profile");
@@ -25,7 +25,7 @@ describe("the !check command", () => {
     };
 
     jasmine.clock().install();
-    const bot = this.buildBotInstance();
+    const bot = await this.buildBotInstance();
 
     await bot.command("!check emp010", "viewer");
     jasmine.clock().tick(0);
@@ -61,7 +61,7 @@ describe("the !check command", () => {
     };
 
     jasmine.clock().install();
-    const bot = this.buildBotInstance();
+    const bot = await this.buildBotInstance();
 
     for (let i = 9; i > 0; i--) {
       await bot.command(`!add 009l00${i}`, `viewer${i}`);
@@ -86,7 +86,7 @@ describe("the !check command", () => {
   it("responds if all levels have been beaten",
      async function() {
     jasmine.clock().install();
-    const bot = this.buildBotInstance();
+    const bot = await this.buildBotInstance();
 
     for (let i = 1; i < 10; i++) {
       await bot.command(`!add 009l00${i}`, `viewer${i}`);

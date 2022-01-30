@@ -4,7 +4,8 @@ let levels = {};
 let creators = {};
 
 class LevelCache {
-  constructor() {
+  constructor(persistenceManager) {
+    this.persistenceManager = persistenceManager;
     levels = {};
     creators = {};
   }
@@ -58,6 +59,7 @@ class LevelCache {
     if (typeof level.beaten === 'boolean') {
       levels[level.id].interactions.beaten = level.beaten;
     }
+    this.persistenceManager.interactionsChanged(level);
   }
 
   removeLevel(levelId) {

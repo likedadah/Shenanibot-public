@@ -11,7 +11,7 @@ module.exports = itUsesDefaultAdvance = cb => {
   describe("advances the queue per the defaultAdvance setting, so it", () => {
     beforeEach(function () {
       this.buildBot = async opts => {
-        const bot = this.buildBotInstance(opts);
+        const bot = await this.buildBotInstance(opts);
         await this.addLevels(bot, 10);
         return bot;
       };
@@ -56,7 +56,7 @@ module.exports = itUsesDefaultAdvance = cb => {
     });
 
     it("updates the overlay", async function() {
-      const bot = this.buildBotInstance({ config: {httpPort: 8080 }});
+      const bot = await this.buildBotInstance({ config: {httpPort: 8080 }});
       await this.addLevels(bot, 2);
       const token = await this.openWebSocket("overlay/levels");
 

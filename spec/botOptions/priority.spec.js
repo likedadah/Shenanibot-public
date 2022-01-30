@@ -1,7 +1,7 @@
 describe("the 'priority' configuration option", () => {
   describe("when set to 'fifo'", () => {
     it("adds new levels to the end of the qeuue", async function() {
-      const bot = this.buildBotInstance({config: {
+      const bot = await this.buildBotInstance({config: {
         httpPort: 8080,
         priority: "fifo"
       }});
@@ -16,7 +16,7 @@ describe("the 'priority' configuration option", () => {
 
   describe("when set to 'rotation'", () => {
     it("adds new levels in rounds", async function() {
-      const bot = this.buildBotInstance({config: {
+      const bot = await this.buildBotInstance({config: {
         httpPort: 8080,
         priority: "rotation"
       }});
@@ -39,7 +39,7 @@ describe("the 'priority' configuration option", () => {
     });
 
     it("leaves markers in their previous positions", async function() {
-      const bot = this.buildBotInstance({config: {
+      const bot = await this.buildBotInstance({config: {
         httpPort: 8080,
         priority: "rotation"
       }});

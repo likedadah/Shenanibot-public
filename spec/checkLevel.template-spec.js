@@ -11,7 +11,7 @@
 module.exports = itChecksALevel = cb => {
   describe("checks a level, so it", () => {
     it("sees if the API says you've beaten a level", async function() {
-      const bot = this.buildBotInstance();
+      const bot = await this.buildBotInstance();
 
       const response = await cb(bot, "viewer", "beaten1");
 
@@ -20,7 +20,7 @@ module.exports = itChecksALevel = cb => {
 
     it("sees if session interactions say you've beaten a level",
        async function() {
-      const bot = this.buildBotInstance();
+      const bot = await this.buildBotInstance();
 
       await bot.command("!add valid01", "viewer");
       await bot.command("!win", "streamer");
@@ -30,7 +30,7 @@ module.exports = itChecksALevel = cb => {
     });
 
     it("sees if the API says you've played a level", async function() {
-      const bot = this.buildBotInstance();
+      const bot = await this.buildBotInstance();
 
       const response = await cb(bot, "viewer", "played1");
 
@@ -39,7 +39,7 @@ module.exports = itChecksALevel = cb => {
 
     it("sees if session interactions say you've played a level",
        async function() {
-      const bot = this.buildBotInstance();
+      const bot = await this.buildBotInstance();
 
       await bot.command("!add valid01", "viewer");
       const response = await bot.command("!check valid01", "viewer2");
@@ -48,7 +48,7 @@ module.exports = itChecksALevel = cb => {
     });
 
     it("warns if a played level requires too many players", async function() {
-      const bot = this.buildBotInstance({config: {players: 2}});
+      const bot = await this.buildBotInstance({config: {players: 2}});
 
       await bot.command("!add 2plevel", "viewer");
       await bot.command("!next", "streamer");
@@ -59,7 +59,7 @@ module.exports = itChecksALevel = cb => {
     });
 
     it("sees if you've not played a level", async function() {
-      const bot = this.buildBotInstance();
+      const bot = await this.buildBotInstance();
 
       const response = await cb(bot, "viewer", "valid01");
 
@@ -68,7 +68,7 @@ module.exports = itChecksALevel = cb => {
 
     it("warns if an unplayed level requires too many players",
        async function() {
-      const bot = this.buildBotInstance();
+      const bot = await this.buildBotInstance();
 
       const response = await bot.command("!check 2plevel", "viewer");
       expect(response).toContain('not accepting 2-player levels')

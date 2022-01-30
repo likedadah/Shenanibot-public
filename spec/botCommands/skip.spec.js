@@ -11,7 +11,7 @@ describe("the !skip command", () => {
   itPicksALevel("!skip and play", false);
 
   it("leaves the played level count unchanged", async function() {
-    const bot = this.buildBotInstance({config: {
+    const bot = await this.buildBotInstance({config: {
       httpPort: 8080,
       defaultAdvance: "alternate"
     }});
@@ -25,7 +25,7 @@ describe("the !skip command", () => {
   });
 
   it("un-marks the level as 'played' in the creator cache", async function() {
-    const bot = this.buildBotInstance({ config: {
+    const bot = await this.buildBotInstance({ config: {
       httpPort: 8080,
       creatorCodeMode: "webui"
     }});
@@ -39,7 +39,7 @@ describe("the !skip command", () => {
   });
 
   it("only works for the streamer", async function() {
-    const bot = this.buildBotInstance({ config: {httpPort: 8080 }});
+    const bot = await this.buildBotInstance({ config: {httpPort: 8080 }});
     await this.addLevels(bot, 2);
 
     await bot.command("!skip", "viewer");

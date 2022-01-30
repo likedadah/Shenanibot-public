@@ -14,14 +14,14 @@
 module.exports = itAddsALevel = cb => {
   describe("adds a level, so it", () => {
     it("adds a level to the queue", async function() {
-      const bot = this.buildBotInstance();
+      const bot = await this.buildBotInstance();
       await cb(bot, "viewer", "valid01");
 
       expect(this.bookmarks).toEqual(["valid01"]);
     });
 
     it("respects fifo ordering", async function() {
-      const bot = this.buildBotInstance({config: {
+      const bot = await this.buildBotInstance({config: {
         httpPort: 8080,
         priority: "fifo"
       }});
@@ -36,7 +36,7 @@ module.exports = itAddsALevel = cb => {
     });
 
     it("respects rotation ordering", async function() {
-      const bot = this.buildBotInstance({config: {
+      const bot = await this.buildBotInstance({config: {
         httpPort: 8080,
         priority: "rotation"
       }});
@@ -51,7 +51,7 @@ module.exports = itAddsALevel = cb => {
     });
 
     it("respects rotation after a level was removed", async function() {
-      const bot = this.buildBotInstance({config: {
+      const bot = await this.buildBotInstance({config: {
         httpPort: 8080,
         priority: "rotation"
       }});
@@ -68,7 +68,7 @@ module.exports = itAddsALevel = cb => {
     });
 
     it("does nothing if the queue is closed", async function() {
-      const bot = this.buildBotInstance();
+      const bot = await this.buildBotInstance();
       await bot.command("!close", "streamer");
 
       await cb(bot, "viewer", "valid01");
@@ -76,7 +76,7 @@ module.exports = itAddsALevel = cb => {
     });
 
     it("can be used when permitted", async function() {
-      const bot = this.buildBotInstance();
+      const bot = await this.buildBotInstance();
       await bot.command("!close", "streamer");
 
       await bot.command("!permit viewer", "streamer");
@@ -85,7 +85,7 @@ module.exports = itAddsALevel = cb => {
     });
 
     it("affects the level limit", async function() {
-      const bot = this.buildBotInstance({config: {
+      const bot = await this.buildBotInstance({config: {
         levelLimit: 1,
         levelLimitType: "session",
         httpPort: 8080
@@ -106,7 +106,7 @@ module.exports = itAddsALevel = cb => {
     });
 
     it("does not bypass the add reward", async function() {
-      const bot = this.buildBotInstance({twitch: {
+      const bot = await this.buildBotInstance({twitch: {
         rewardBehaviors: {"reward-id-add": "add"}
       }});
 
@@ -115,7 +115,7 @@ module.exports = itAddsALevel = cb => {
     });
 
     it("rejects levels that are already in the queue", async function() {
-      const bot = this.buildBotInstance({config: { httpPort: 8080 }});
+      const bot = await this.buildBotInstance({config: { httpPort: 8080 }});
 
       await bot.command("!add valid01", "viewer1");
       await cb(bot, "viewer2", "valid01");
@@ -129,7 +129,7 @@ module.exports = itAddsALevel = cb => {
 
     it("rejects levels that were already played this session",
                                                             async function() {
-      const bot = this.buildBotInstance();
+      const bot = await this.buildBotInstance();
 
       await bot.command("!add valid01", "viewer1");
       await bot.command("!next", "streamer");
@@ -139,7 +139,7 @@ module.exports = itAddsALevel = cb => {
     });
 
     it("rejects levels that were removed by the streamer", async function() {
-      const bot = this.buildBotInstance();
+      const bot = await this.buildBotInstance();
 
       await bot.command("!add valid01", "viewer1");
       await bot.command("!add valid02", "viewer1");
@@ -156,7 +156,7 @@ module.exports = itAddsALevel = cb => {
     });
 
     it("updates the overlay", async function() {
-      const bot = this.buildBotInstance({config: { httpPort: 8080 }});
+      const bot = await this.buildBotInstance({config: { httpPort: 8080 }});
       const token = await this.openWebSocket("overlay/levels");
 
       const msg = (await Promise.all([
@@ -178,7 +178,7 @@ module.exports = itAddsALevel = cb => {
 
     it("closes prior rounds if the new entry is in the 'now playing' position",
        async function() {
-      const bot = this.buildBotInstance({config: {
+      const bot = await this.buildBotInstance({config: {
         httpPort: 8080,
         priority: "rotation"
       }});
@@ -197,7 +197,7 @@ module.exports = itAddsALevel = cb => {
 
     it("clears the previous round's timer if the new entry is 'now playing'",
        async function() {
-      const bot = this.buildBotInstance({config: {
+      const bot = await this.buildBotInstance({config: {
         httpPort: 8080,
         priority: "rotation",
         roundDuration: 1

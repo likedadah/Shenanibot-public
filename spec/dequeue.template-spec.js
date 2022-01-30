@@ -44,7 +44,7 @@ module.exports = async (cb, nextPosition = 2, nextRequired = false,
 
   describe("dequeues an entry, so it", () => {
     it("clears the bookmark if dequeueing a level", async function() {
-      const bot = this.buildBotInstance();
+      const bot = await this.buildBotInstance();
       await buildQueue(bot);
       expect(this.bookmarks).toContain("valid01");
 
@@ -54,7 +54,7 @@ module.exports = async (cb, nextPosition = 2, nextRequired = false,
     });
 
     it("decreases viewer level count for active limits", async function() {
-      const bot = this.buildBotInstance({ config: {
+      const bot = await this.buildBotInstance({ config: {
         httpPort: 8080,
         levelLimit: nextRequired ? 2 : 1,
         levelLimitType: "active"
@@ -69,7 +69,7 @@ module.exports = async (cb, nextPosition = 2, nextRequired = false,
     });
 
     it("keeps the round consistent", async function() {
-      const bot = this.buildBotInstance({
+      const bot = await this.buildBotInstance({
         config: {
           creatorCodeMode: "webui",
           httpPort: 8080,
@@ -93,7 +93,7 @@ module.exports = async (cb, nextPosition = 2, nextRequired = false,
 
     if(updateCurrentRound) {
       it("clears the previous round's timer", async function() {
-        const bot = this.buildBotInstance({
+        const bot = await this.buildBotInstance({
           config: {
             creatorCodeMode: "webui",
             httpPort: 8080,
@@ -123,7 +123,7 @@ module.exports = async (cb, nextPosition = 2, nextRequired = false,
     }
 
     it("notifies any nospoil users for this level", async function() {
-      const bot = this.buildBotInstance();
+      const bot = await this.buildBotInstance();
       await buildQueue(bot);
       await bot.command("!nospoil", "viewer1");
       await bot.command("!nospoil", "viewer2");
@@ -138,7 +138,7 @@ module.exports = async (cb, nextPosition = 2, nextRequired = false,
     });
 
     it("notifies only the current level's nospoil users", async function() {
-      const bot = this.buildBotInstance();
+      const bot = await this.buildBotInstance();
 
       await bot.command("!add 001l001", "viewer1");
       await buildQueue(bot);
@@ -153,7 +153,7 @@ module.exports = async (cb, nextPosition = 2, nextRequired = false,
     });
 
     it("clears the creator code UI", async function() {
-      const bot = this.buildBotInstance({
+      const bot = await this.buildBotInstance({
         config: {
           creatorCodeMode: "webui",
           httpPort: 8080
@@ -177,7 +177,7 @@ module.exports = async (cb, nextPosition = 2, nextRequired = false,
 
     if (incrementPlayed) {
       it("increases the played level count", async function() {
-        const bot = this.buildBotInstance({config: { httpPort: 8080 }});
+        const bot = await this.buildBotInstance({config: { httpPort: 8080 }});
         await buildQueue(bot);
 
         const preCounts = await this.getCounts();
@@ -191,7 +191,7 @@ module.exports = async (cb, nextPosition = 2, nextRequired = false,
 
       it("counts the level even if it had perviously been skipped",
           async function() {
-        const bot = this.buildBotInstance({config: { httpPort: 8080 }});
+        const bot = await this.buildBotInstance({config: { httpPort: 8080 }});
         await buildQueue(bot);
         await bot.command("!skip", "streamer");
         await bot.command("!back", "streamer");
@@ -203,7 +203,7 @@ module.exports = async (cb, nextPosition = 2, nextRequired = false,
       });
 
       it("does not count a marker as a played level", async function() {
-        const bot = this.buildBotInstance({config: {
+        const bot = await this.buildBotInstance({config: {
           httpPort: 8080
         }});
         await buildQueue(bot, false, null);

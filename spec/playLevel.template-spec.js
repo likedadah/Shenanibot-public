@@ -26,7 +26,7 @@ module.exports = itPlaysALevel = (n, cb, supportsCreatorCode = true) => {
   describe("changes the 'now playing' entry, so", () => {
     describe("if the new 'now playing' entry is a level, it", () => {
       it("bookmarks the level", async function() {
-        const bot = this.buildBotInstance();
+        const bot = await this.buildBotInstance();
         if (n > 1) {
           await this.addLevels(bot, n - 1);
           await bot.command("!add valid00", "viewer0");
@@ -39,7 +39,7 @@ module.exports = itPlaysALevel = (n, cb, supportsCreatorCode = true) => {
       });
 
       it("updates the creator code cache", async function() {
-        const bot = this.buildBotInstance({config: {
+        const bot = await this.buildBotInstance({config: {
           httpPort: 8080,
           creatorCodeMode: "webui"
         }});
@@ -64,7 +64,7 @@ module.exports = itPlaysALevel = (n, cb, supportsCreatorCode = true) => {
     if (supportsCreatorCode) {
       describe("if the new 'now playing' entry is a creator code, it", () => {
         it("updates the clipboard if configured to do so", async function() {
-          const bot = this.buildBotInstance({config: {
+          const bot = await this.buildBotInstance({config: {
             creatorCodeMode: "clipboard"
           }});
           if (n > 1) {
@@ -83,7 +83,7 @@ module.exports = itPlaysALevel = (n, cb, supportsCreatorCode = true) => {
           let bot;
           let queue;
           const setup = async () => {
-            bot = this.buildBotInstance({config: {
+            bot = await this.buildBotInstance({config: {
               creatorCodeMode: "auto",
               httpPort: 8080
             }});
@@ -115,7 +115,7 @@ module.exports = itPlaysALevel = (n, cb, supportsCreatorCode = true) => {
           let bot;
           let queue;
           const setup = async () => {
-            bot = this.buildBotInstance({config: {
+            bot = await this.buildBotInstance({config: {
               creatorCodeMode: "auto",
               httpPort: 8080
             }});
@@ -164,7 +164,7 @@ module.exports = itPlaysALevel = (n, cb, supportsCreatorCode = true) => {
            + "message when choosing randomly, even if level info is cached",
            async function() {
           jasmine.clock().install();
-          const bot = this.buildBotInstance({config: {
+          const bot = await this.buildBotInstance({config: {
             creatorCodeMode: "auto",
             httpPort: 8080
           }});
@@ -200,7 +200,7 @@ module.exports = itPlaysALevel = (n, cb, supportsCreatorCode = true) => {
         });
 
         it("sends a websocket update if configured to do so", async function() {
-          const bot = this.buildBotInstance({config: {
+          const bot = await this.buildBotInstance({config: {
             httpPort: 8080,
             creatorCodeMode: "webui"
           }});
@@ -223,7 +223,7 @@ module.exports = itPlaysALevel = (n, cb, supportsCreatorCode = true) => {
         it("takes time to load all the level data for a new creator code",
            async function() {
           jasmine.clock().install();
-          const bot = this.buildBotInstance({config: {
+          const bot = await this.buildBotInstance({config: {
             httpPort: 8080,
             creatorCodeMode: "webui"
           }});
@@ -259,7 +259,7 @@ module.exports = itPlaysALevel = (n, cb, supportsCreatorCode = true) => {
           }
 
           jasmine.clock().install();
-          const bot = this.buildBotInstance({config: {
+          const bot = await this.buildBotInstance({config: {
             httpPort: 8080,
             creatorCodeMode: "webui"
           }});

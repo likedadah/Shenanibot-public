@@ -15,7 +15,7 @@ let dms;
 const chat = [];
 
 beforeAll(function() {
-  this.buildBotInstance = (configOverrides = {}) => {
+  this.buildBotInstance = async (configOverrides = {}) => {
     const config = fp.merge(defaultConfig, configOverrides);
     const bot = new ShenaniBot(config, m => {
       chat.push(m);
@@ -23,6 +23,7 @@ beforeAll(function() {
       dms[u] = dms[u] || [];
       dms[u].push(m);
     }, u => !u.includes("nodm"));
+    await bot.init();
 
     const command = bot.command;
     bot.command = async (m, u, r) => {

@@ -1,6 +1,6 @@
 describe("the !players command", () => {
   it("overrides the players config setting", async function() {
-    const bot = this.buildBotInstance();
+    const bot = await this.buildBotInstance();
 
     await bot.command("!players 2", "streamer");
 
@@ -12,7 +12,7 @@ describe("the !players command", () => {
   });
 
   it("only works for the streamer", async function() {
-    const bot = this.buildBotInstance();
+    const bot = await this.buildBotInstance();
 
     await bot.command("!players 2", "viewer");
 

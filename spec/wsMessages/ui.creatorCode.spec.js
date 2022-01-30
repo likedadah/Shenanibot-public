@@ -1,7 +1,7 @@
 describe("ws://.../ui/creatorCode", () => {
   it("replaces the 'now playing' creator code with a specific level",
      async function() {
-    const bot = this.buildBotInstance({config: {
+    const bot = await this.buildBotInstance({config: {
       creatorCodeMode: "webui",
       httpPort: 8080
     }});
@@ -26,7 +26,7 @@ describe("ws://.../ui/creatorCode", () => {
   });
 
   it("only works on the 'now playing' entry", async function() {
-    const bot = this.buildBotInstance({config: {
+    const bot = await this.buildBotInstance({config: {
       creatorCodeMode: "webui",
       httpPort: 8080
     }});
@@ -57,7 +57,7 @@ describe("ws://.../ui/creatorCode", () => {
   });
 
   it("updates the overlay", async function() {
-    const bot = this.buildBotInstance({config: {
+    const bot = await this.buildBotInstance({config: {
       creatorCodeMode: "webui",
       httpPort: 8080
     }});

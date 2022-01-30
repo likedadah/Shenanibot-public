@@ -11,7 +11,7 @@ describe("the !lose command", () => {
   itPicksALevel("!lose and play");
 
   it("increases the 'lost' count", async function() {
-    const bot = this.buildBotInstance({ config: {httpPort: 8080 }});
+    const bot = await this.buildBotInstance({ config: {httpPort: 8080 }});
     await bot.command("!add valid01", "viewer");
 
     const preCounts = await this.getCounts();
@@ -24,7 +24,7 @@ describe("the !lose command", () => {
   });
 
   it("does not work on markers", async function() {
-    const bot = this.buildBotInstance({ config: {httpPort: 8080 }});
+    const bot = await this.buildBotInstance({ config: {httpPort: 8080 }});
     await bot.command("!mark", "streamer");
     await bot.command("!add valid01", "viewer");
 
@@ -36,7 +36,7 @@ describe("the !lose command", () => {
   });
 
   it("does nothing when the queue is empty", async function() {
-    const bot = this.buildBotInstance({ config: {httpPort: 8080 }});
+    const bot = await this.buildBotInstance({ config: {httpPort: 8080 }});
 
     await bot.command("!lose", "streamer");
 
@@ -45,7 +45,7 @@ describe("the !lose command", () => {
   });
 
   it("only works for the streamer", async function() {
-    const bot = this.buildBotInstance({ config: {httpPort: 8080 }});
+    const bot = await this.buildBotInstance({ config: {httpPort: 8080 }});
     await this.addLevels(bot, 2);
 
     await bot.command("!lose", "viewer");

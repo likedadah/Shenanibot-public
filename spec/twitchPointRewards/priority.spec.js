@@ -6,8 +6,8 @@ describe("the 'priority' channel point reward", () => {
   });
 
   describe("", () => {
-    beforeEach(function() {
-      this.bot = this.buildBotInstance({
+    beforeEach(async function() {
+      this.bot = await this.buildBotInstance({
         config: { httpPort: 8080 },
         twitch: { rewardBehaviors: this.optionQueueJumpRewards }
       });
@@ -120,7 +120,7 @@ describe("the 'priority' channel point reward", () => {
   });
 
   it("does not move a level into a previous round", async function() {
-    this.bot = this.buildBotInstance({
+    this.bot = await this.buildBotInstance({
       config: {
         httpPort: 8080,
         priority: "rotation"

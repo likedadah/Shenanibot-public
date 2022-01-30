@@ -1,6 +1,6 @@
 describe("the !open command", () => {
   it("allows !add commands", async function() {
-    const bot = this.buildBotInstance();
+    const bot = await this.buildBotInstance();
     await bot.command("!close", "streamer");
 
     const response = await bot.command("!open", "streamer");
@@ -12,7 +12,7 @@ describe("the !open command", () => {
   });
 
   it("only works for the streamer", async function() {
-    const bot = this.buildBotInstance();
+    const bot = await this.buildBotInstance();
     await bot.command("!close", "streamer");
 
     const response = await bot.command("!open", "viewer");
@@ -22,7 +22,7 @@ describe("the !open command", () => {
   });
 
   it("sends status to the overlay module", async function() {
-    const bot = this.buildBotInstance({config: {httpPort: 8080}});
+    const bot = await this.buildBotInstance({config: {httpPort: 8080}});
     const statusToken = await this.openWebSocket("overlay/status");
 
     const statusMsg = (await Promise.all([

@@ -1,6 +1,6 @@
 describe("the !back command", () => {
   it("restores the previous 'now playing' entry", async function() {
-    const bot = this.buildBotInstance();
+    const bot = await this.buildBotInstance();
     await bot.command("!add valid01", "viewer");
     await bot.command("!next", "streamer");
 
@@ -10,7 +10,7 @@ describe("the !back command", () => {
   });
 
   it("can only remember one previous entry", async function() {
-    const bot = this.buildBotInstance();
+    const bot = await this.buildBotInstance();
     await this.addLevels(bot, 2);
     await bot.command("!next", "streamer");
     await bot.command("!next", "streamer");
@@ -22,7 +22,7 @@ describe("the !back command", () => {
   });
 
   it("can be used multiple times - just not back to back", async function() {
-    const bot = this.buildBotInstance();
+    const bot = await this.buildBotInstance();
     await this.addLevels(bot, 3);
     await bot.command("!next", "streamer");
     await bot.command("!back", "streamer");
@@ -35,7 +35,7 @@ describe("the !back command", () => {
   });
 
   it("keeps the current order of other queued levels", async function() {
-    const bot = this.buildBotInstance({config: {httpPort: 8080}});
+    const bot = await this.buildBotInstance({config: {httpPort: 8080}});
     await this.addLevels(bot, 5);
     await bot.command("!play from viewer04", "streamer");
 
@@ -52,7 +52,7 @@ describe("the !back command", () => {
 
   it("when pushing a level out of 'now playing' removes the bookmark",
       async function() {
-    const bot = this.buildBotInstance();
+    const bot = await this.buildBotInstance();
     await this.addLevels(bot, 2);
     await bot.command("!next", "streamer");
 
@@ -63,7 +63,7 @@ describe("the !back command", () => {
 
   it("when pushing a creator out of 'now playing' resets the ui",
       async function() {
-    const bot = this.buildBotInstance({config: {
+    const bot = await this.buildBotInstance({config: {
       httpPort: 8080,
       creatorCodeMode: "webui",
     }});
@@ -77,7 +77,7 @@ describe("the !back command", () => {
   });
 
   it("reduces 'played' count when restoring a played level", async function() {
-    const bot = this.buildBotInstance({config: {httpPort: 8080}});
+    const bot = await this.buildBotInstance({config: {httpPort: 8080}});
     await this.addLevels(bot, 3);
     await bot.command("!win", "streamer");
     await bot.command("!lose", "streamer");
@@ -93,7 +93,7 @@ describe("the !back command", () => {
   });
 
   it("leaves 'played' count when restoring a skipped level", async function() {
-    const bot = this.buildBotInstance({config: {httpPort: 8080}});
+    const bot = await this.buildBotInstance({config: {httpPort: 8080}});
     await this.addLevels(bot, 3);
     await bot.command("!win", "streamer");
     await bot.command("!lose", "streamer");
@@ -110,7 +110,7 @@ describe("the !back command", () => {
 
   it("when restoring a skipped level re-adds 'played in session' interaction",
      async function() {
-    const bot = this.buildBotInstance({ config: {
+    const bot = await this.buildBotInstance({ config: {
       httpPort: 8080,
       creatorCodeMode: "webui"
     }});
@@ -126,7 +126,7 @@ describe("the !back command", () => {
   });
 
   it("reduces 'won' count when restoring a won level", async function() {
-    const bot = this.buildBotInstance({config: {httpPort: 8080}});
+    const bot = await this.buildBotInstance({config: {httpPort: 8080}});
     await this.addLevels(bot, 3);
     await bot.command("!lose", "streamer");
     await bot.command("!skip", "streamer");
@@ -143,7 +143,7 @@ describe("the !back command", () => {
 
   it("when restoring a won level removes the 'beaten in session' interaction",
      async function() {
-    const bot = this.buildBotInstance({ config: {
+    const bot = await this.buildBotInstance({ config: {
       httpPort: 8080,
       creatorCodeMode: "webui"
     }});
@@ -159,7 +159,7 @@ describe("the !back command", () => {
   });
 
   it("reduces 'lost' count when restoring a lost level", async function() {
-    const bot = this.buildBotInstance({config: {httpPort: 8080}});
+    const bot = await this.buildBotInstance({config: {httpPort: 8080}});
     await this.addLevels(bot, 3);
     await bot.command("!skip", "streamer");
     await bot.command("!win", "streamer");
@@ -175,7 +175,7 @@ describe("the !back command", () => {
   });
 
   it("reduces counts only based on the last dequeue", async function() {
-    const bot = this.buildBotInstance({config: {httpPort: 8080}});
+    const bot = await this.buildBotInstance({config: {httpPort: 8080}});
     await this.addLevels(bot, 3);
     await bot.command("!win", "streamer");
     await bot.command("!lose", "streamer");
@@ -195,7 +195,7 @@ describe("the !back command", () => {
   });
 
   it("leaves counts alone when restoring a marker", async function () {
-    const bot = this.buildBotInstance({config: {httpPort: 8080}});
+    const bot = await this.buildBotInstance({config: {httpPort: 8080}});
     await this.addLevels(bot, 3);
     await bot.command("!mark", "streamer");
 
@@ -214,7 +214,7 @@ describe("the !back command", () => {
   });
 
   it("does not affect the original submitter's limit", async function() {
-    const bot = this.buildBotInstance({config: {
+    const bot = await this.buildBotInstance({config: {
       httpPort: 8080,
       levelLimitType: "active",
       levelLimit: 1
@@ -240,7 +240,7 @@ describe("the !back command", () => {
 
   it("creates a separate nospoil list for the restored level",
       async function() {
-    const bot = this.buildBotInstance();
+    const bot = await this.buildBotInstance();
     await this.addLevels(bot, 2);
     await bot.command("!next", "streamer");
 
@@ -258,7 +258,7 @@ describe("the !back command", () => {
 
   it(  "when pushing a level out of 'now plaing', removes the 'played in"
      + "session' interaction from the creator level cache", async function() {
-    const bot = this.buildBotInstance({ config: {
+    const bot = await this.buildBotInstance({ config: {
       httpPort: 8080,
       creatorCodeMode: "webui"
     }});
@@ -275,7 +275,7 @@ describe("the !back command", () => {
   });
 
   it("only works for the streamer", async function() {
-    const bot = this.buildBotInstance();
+    const bot = await this.buildBotInstance();
     await bot.command("!add valid01", "viewer");
     await bot.command("!next", "streamer");
 

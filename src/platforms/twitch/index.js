@@ -41,6 +41,7 @@ function connectAs(username, password) {
                                     m => botClient.say(params.auth.channel, m),
                                     (u, m) => dmClient.whisper(u, m),
                                     u => dmClient.canWhisperTo(u));
+  await shenanibot.init();
   console.log('Don\'t worry if it says \'Error: No response from twitch\', it should still work!');
   
   botClient.on('connected', (address, port) => {

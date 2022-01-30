@@ -11,7 +11,7 @@ describe("the !win command", () => {
   itPicksALevel("!win and play");
 
   it("increases the 'won' count", async function() {
-    const bot = this.buildBotInstance({ config: {httpPort: 8080 }});
+    const bot = await this.buildBotInstance({ config: {httpPort: 8080 }});
     await bot.command("!add valid01", "viewer");
 
     const preCounts = await this.getCounts();
@@ -24,7 +24,7 @@ describe("the !win command", () => {
   });
 
   it("does not work on markers", async function() {
-    const bot = this.buildBotInstance({ config: {httpPort: 8080 }});
+    const bot = await this.buildBotInstance({ config: {httpPort: 8080 }});
     await bot.command("!mark", "streamer");
     await bot.command("!add valid01", "viewer");
 
@@ -36,7 +36,7 @@ describe("the !win command", () => {
   });
 
   it("does nothing when the queue is empty", async function() {
-    const bot = this.buildBotInstance({ config: {httpPort: 8080 }});
+    const bot = await this.buildBotInstance({ config: {httpPort: 8080 }});
 
     await bot.command("!win", "streamer");
 
@@ -45,7 +45,7 @@ describe("the !win command", () => {
   });
 
   it("marks the level 'beaten' in the creator cache", async function() {
-    const bot = this.buildBotInstance({ config: {
+    const bot = await this.buildBotInstance({ config: {
       httpPort: 8080,
       creatorCodeMode: "webui"
     }});
@@ -59,7 +59,7 @@ describe("the !win command", () => {
   });
 
   it("only works for the streamer", async function() {
-    const bot = this.buildBotInstance({ config: {httpPort: 8080 }});
+    const bot = await this.buildBotInstance({ config: {httpPort: 8080 }});
     await this.addLevels(bot, 2);
 
     await bot.command("!win", "viewer");

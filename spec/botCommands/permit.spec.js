@@ -1,6 +1,6 @@
 describe("the !permit command", () => {
-  beforeEach(function() {
-    this.bot = this.buildBotInstance({config: {
+  beforeEach(async function() {
+    this.bot = await this.buildBotInstance({config: {
       httpPort: 8080,
       levelLimitType: "active",
       levelLimit: 1

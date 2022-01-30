@@ -1,13 +1,13 @@
 describe("the !queue command", () => {
   it("tells you when there are no entries", async function() {
-    const bot = this.buildBotInstance();
+    const bot = await this.buildBotInstance();
 
     const response = await bot.command("!queue", "viewer");
     expect(response).toEqual("Total entries: 0");
   });
 
   it("tells you what is currently being played", async function() {
-    const bot = this.buildBotInstance();
+    const bot = await this.buildBotInstance();
     await bot.command("!add valid01", "viewer");
 
     const response = await bot.command("!queue", "viewer");
@@ -15,7 +15,7 @@ describe("the !queue command", () => {
   });
 
   it("lists additional entries in the queue", async function() {
-    const bot = this.buildBotInstance();
+    const bot = await this.buildBotInstance();
     await bot.command("!add valid01", "viewer");
     await bot.command("!mark testing", "streamer");
     await bot.command("!add emp001", "viewer");
@@ -25,7 +25,7 @@ describe("the !queue command", () => {
   });
 
   it("lists up to 10 total entries", async function() {
-    const bot = this.buildBotInstance();
+    const bot = await this.buildBotInstance();
     await bot.command("!add valid01", "viewer");
     await bot.command("!mark testing", "streamer");
     await bot.command("!add emp001", "viewer");
@@ -43,7 +43,7 @@ describe("the !queue command", () => {
   });
 
   it("indicates the rounds of upcoming levels", async function() {
-    const bot = this.buildBotInstance({config: {priority: "rotation"}});
+    const bot = await this.buildBotInstance({config: {priority: "rotation"}});
     await bot.command("!add valid01", "viewer1");
     await bot.command("!add valid02", "viewer2");
     await bot.command("!add valid03", "viewer3");

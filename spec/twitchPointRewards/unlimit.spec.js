@@ -1,6 +1,6 @@
 describe("the 'unlimit' channel point reward", () => {
   it("allows a submission beyond a session level limit", async function() {
-    const bot = this.buildBotInstance({
+    const bot = await this.buildBotInstance({
       config: {
         levelLimitType: "session",
         levelLimit: 1
@@ -17,7 +17,7 @@ describe("the 'unlimit' channel point reward", () => {
   });
 
   it("allows a submission beyond an active level limit", async function() {
-    const bot = this.buildBotInstance({
+    const bot = await this.buildBotInstance({
       config: {
         levelLimitType: "active",
         levelLimit: 1
@@ -34,7 +34,7 @@ describe("the 'unlimit' channel point reward", () => {
   });
 
   it("works when there is an add reward", async function() {
-    const bot = this.buildBotInstance({
+    const bot = await this.buildBotInstance({
       config: {
         levelLimitType: "active",
         levelLimit: 1

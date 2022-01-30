@@ -7,7 +7,7 @@ describe("the !add command", () => {
   itPlaysALevel(1, cb);
 
   it("adds a creator code to the queue", async function() {
-    const bot = this.buildBotInstance({config: { httpPort: 8080 }});
+    const bot = await this.buildBotInstance({config: { httpPort: 8080 }});
 
     await bot.command("!add emp001", "viewer");
 

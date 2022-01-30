@@ -1,6 +1,6 @@
 describe("the 'add' channel point reward", () => {
   it("prevents adding levels without using the reward", async function() {
-    const bot = this.buildBotInstance({twitch: {
+    const bot = await this.buildBotInstance({twitch: {
       rewardBehaviors: {"reward-id-add": "add"}
     }});
 
@@ -12,7 +12,7 @@ describe("the 'add' channel point reward", () => {
   });
 
   it("does not require the !add keyword", async function() {
-    const bot = this.buildBotInstance({twitch: {
+    const bot = await this.buildBotInstance({twitch: {
       rewardBehaviors: {"reward-id-add": "add"}
     }});
 
@@ -21,7 +21,7 @@ describe("the 'add' channel point reward", () => {
   });
 
   it("works with creator codes", async function() {
-    const bot = this.buildBotInstance({config: {
+    const bot = await this.buildBotInstance({config: {
       httpPort: 8080
     }, twitch: {
       rewardBehaviors: {"reward-id-add": "add"}
@@ -33,7 +33,7 @@ describe("the 'add' channel point reward", () => {
   });
 
   it("does not affect the streamer", async function() {
-    const bot = this.buildBotInstance({twitch: {
+    const bot = await this.buildBotInstance({twitch: {
       rewardBehaviors: {"reward-id-add": "add"}
     }});
 

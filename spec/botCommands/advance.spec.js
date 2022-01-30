@@ -9,7 +9,7 @@ describe("the !advance command", () => {
   itUsesDefaultAdvance(cb);
 
   it("only works for the streamer", async function() {
-    const bot = this.buildBotInstance({ config: {httpPort: 8080 }});
+    const bot = await this.buildBotInstance({ config: {httpPort: 8080 }});
     await this.addLevels(bot, 2);
 
     await bot.command("!advance", "viewer");

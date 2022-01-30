@@ -10,7 +10,7 @@ describe("the !chadd command", () => {
   itPlaysALevel(1, cb, false);
 
   it("should not add a level that has already been beaten", async function() {
-    const bot = this.buildBotInstance();
+    const bot = await this.buildBotInstance();
 
     const response = await bot.command("!chadd beaten1", "viewer");
 
@@ -18,7 +18,7 @@ describe("the !chadd command", () => {
   });
 
   it("should not add a level that has already been played", async function() {
-    const bot = this.buildBotInstance();
+    const bot = await this.buildBotInstance();
 
     const response = await bot.command("!chadd played1", "viewer");
 
@@ -27,7 +27,7 @@ describe("the !chadd command", () => {
 
   it("should not warn twice for a level that requires too many players",
      async function() {
-    const bot = this.buildBotInstance();
+    const bot = await this.buildBotInstance();
 
     const response = await bot.command("!chadd 2plevel", "viewer");
     expect(response.split("2-player").length).toEqual(2);
