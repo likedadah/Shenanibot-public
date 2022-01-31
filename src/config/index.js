@@ -38,6 +38,9 @@ function buildConfigQuestion(aPath, q, longPrompt) {
     default: a => fp.get(`config.${aPath}`, a),
     ...q,
     when: longPrompt ? a => {
+      if (typeof longPrompt === 'function') {
+        longPrompt = longPrompt();
+      }
       if (!q.when || q.when(a)) {
         console.log(`\n${longPrompt}\n`);
         return true;
@@ -151,7 +154,7 @@ const questions = {
       'auth.streamerToken', {
         message: "Streamer Account OAuth Token:",
         filter: a => ((!a || a.slice(0,6) === 'oauth:') ? '' : 'oauth:') + a
-      },
+      }, () =>
         'If you want the bot to send whispers from your account instaed of the bot\n'
       + `account, enter an OAuth token for ${answers.config.auth.streamer}.\n`
       + '\n'
@@ -181,7 +184,7 @@ const questions = {
       'auth.oauthToken', {
         message: "Twitch Bot OAuth Token:",
         filter: a => (a.slice(0,6) === 'oauth:' ? '' : 'oauth:') + a
-      },
+      }, () =>
         'An OAuth token works like a password for the bot account.  To create an OAuth\n'
       + 'token:\n'
       + '\n'
@@ -546,7 +549,7 @@ const questions = {
           return true;
         },
         message: 'Overlay Path:'
-      },
+      }, () =>
         "If you want to supply custom overlay views, then you need to specify the\n"
       + "directory where they will be found.  When the web server is running, a file\n"
       + "placed in this directory can be accessed at the URL\n\n"
