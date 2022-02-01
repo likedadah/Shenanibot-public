@@ -165,6 +165,9 @@ You can also set a default for the maximum number of players that a level can re
 ### Chat Options
 Options that control the bot's interaction with chat are found here. You can change the prefix used to recognize bot cmmands. (By default this is !, and it is recommended to use this if possible.) You can also configure message throttling. (As of version 2.2.0, it is not possible to disable throttling entirely; but you can specify the per-message delay and the 30-second message count limit.)
 
+### Persistence Options
+By default ShenaniBot does not "remember" anything from one session to the next. This means that any information the bot creates, beyond what is reported by the API, is lost each time you restart.  You can configure the bot to preserve certain information from session to session.
+
 ### Web Server Options
 You can enable or diable the embedded web server. This allows you to use overlays to include information about the queue in your stream layout (provided your streaming software can be set up to display a web view, such as with OBS Browser Sources) and can be used to provide an interactive UI for choosing levels for submitted creator codes.
 
@@ -172,7 +175,7 @@ Once you've configured this feature, the bot will provide a URL with setup instr
 
 
 # Running the Bot
-To run the bot from an `npm`-based install open a terminal (`cmd` or `PowerShell`) and type the command
+To run the bot from an `npm`-based install open a terminal (`cmd` or `PowerShell`) or the Windows "Run" window and type the command
 
 `shenanibot`
 
