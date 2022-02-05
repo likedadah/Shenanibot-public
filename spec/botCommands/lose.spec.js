@@ -15,12 +15,12 @@ describe("the !lose command", () => {
     await bot.command("!add valid01", "viewer");
 
     const preCounts = await this.getCounts();
-    expect(preCounts.lost).toEqual(0);
+    expect(preCounts.session.lost).toEqual(0);
 
     await bot.command("!lose", "streamer");
 
     const postCounts = await this.getCounts();
-    expect(postCounts.lost).toEqual(1);
+    expect(postCounts.session.lost).toEqual(1);
   });
 
   it("does not work on markers", async function() {
@@ -31,7 +31,7 @@ describe("the !lose command", () => {
     await bot.command("!lose", "streamer");
 
     const postCounts = await this.getCounts();
-    expect(postCounts.lost).toEqual(0);
+    expect(postCounts.session.lost).toEqual(0);
     expect(this.bookmarks).toEqual([]);
   });
 
@@ -41,7 +41,7 @@ describe("the !lose command", () => {
     await bot.command("!lose", "streamer");
 
     const postCounts = await this.getCounts();
-    expect(postCounts.lost).toEqual(0);
+    expect(postCounts.session.lost).toEqual(0);
   });
 
   it("only works for the streamer", async function() {

@@ -35,9 +35,11 @@ class ShenaniBot {
     this.noSpoilUsers = new Set();
     this.nextNoSpoilUsers = null;
     this.counts = {
-      played: 0,
-      won: 0,
-      lost: 0
+      session: {
+        played: 0,
+        won: 0,
+        lost: 0
+      }
     }
     this.defaultAdvanceCallCount = 0;
     this.onStatus = _ => {};
@@ -47,19 +49,6 @@ class ShenaniBot {
     if (this.options.priority === "rotation") {
       this.playingRound = 1;
       this.minOpenRound = 1;
-    }
-    if (this.options.httpPort) {
-      httpServer.start(this.options);
-      overlay.init();
-      overlay.sendCounts(this.counts);
-      this.onStatus = isOpen => overlay.sendStatus(isOpen);
-      this.onQueue = () => overlay.sendLevels(this.queue);
-      this.onCounts = () => {
-        overlay.sendCounts(this.counts);
-      }
-      if (this.options.creatorCodeMode === "webui") {
-        creatorCodeUi.init((c, l) => this._specifyLevelForCreator(c, l));
-      }
     }
     this.twitch = {
       rewards: {
@@ -80,7 +69,21 @@ class ShenaniBot {
   }
 
   async init() {
-    await this.persistenceManager.init(this.levelCache);
+    await this.persistenceManager.init(this, this.levelCache);
+
+    if (this.options.httpPort) {
+      httpServer.start(this.options);
+      overlay.init();
+      overlay.sendCounts(this.counts);
+      this.onStatus = isOpen => overlay.sendStatus(isOpen);
+      this.onQueue = () => overlay.sendLevels(this.queue);
+      this.onCounts = () => {
+        overlay.sendCounts(this.counts);
+      }
+      if (this.options.creatorCodeMode === "webui") {
+        creatorCodeUi.init((c, l) => this._specifyLevelForCreator(c, l));
+      }
+    }
   }
 
   async command(message, username, rewardId) {
@@ -248,7 +251,8 @@ class ShenaniBot {
       return "There is no current level to win!";
     }
     this.queue[0].countedWon = true;
-    this.counts.won += 1;
+    this.counts.session.won += 1;
+    this.persistenceManager.statIncremented('won');
     this.levelCache.updateSessionInteractions(
                                          {id: this.queue[0].id, beaten: true});
     return this.advance(args);
@@ -259,7 +263,8 @@ class ShenaniBot {
       return "There is no current level to lose!";
     }
     this.queue[0].countedLost = true;
-    this.counts.lost += 1;
+    this.counts.session.lost += 1;
+    this.persistenceManager.statIncremented('lost');
     return this.advance(args);
   }
 
@@ -387,15 +392,19 @@ class ShenaniBot {
     }
     this.queue.unshift(this.prevLevel);
     if (this.prevLevel.counted) {
-      this.counts.played -= 1;
+      this.prevLevel.counted = undefined;
+      this.counts.session.played -= 1;
+      this.persistenceManager.statDecremented('played');
     }
     if (this.prevLevel.countedWon) {
-      this.counts.won -= 1;
+      this.counts.session.won -= 1;
+      this.persistenceManager.statDecremented('won');
       this.levelCache.updateSessionInteractions(
                                        {id: this.prevLevel.id, beaten: false});
     }
     if (this.prevLevel.countedLost) {
-      this.counts.lost -= 1;
+      this.counts.session.lost -= 1;
+      this.persistenceManager.statDecremented('lost');
     }
 
     delete this.prevLevel.counted;
@@ -692,13 +701,13 @@ class ShenaniBot {
 
   showStats() {
     const stats = [];
-    if (this.counts.won) {
-      stats.push(`Wins: ${this.counts.won}`);
+    if (this.counts.session.won) {
+      stats.push(`Wins: ${this.counts.session.won}`);
     }
-    if (this.counts.lost) {
-      stats.push(`Losses: ${this.counts.lost}`);
+    if (this.counts.session.lost) {
+      stats.push(`Losses: ${this.counts.session.lost}`);
     }
-    stats.push(`Total Played: ${this.counts.played}`);
+    stats.push(`Total Played: ${this.counts.session.played}`);
     return stats.join(" ; ");
   }
 
@@ -936,7 +945,8 @@ class ShenaniBot {
     if (this.queue[0].type !== "mark") {
       if (this.queue[0].counted === undefined) {
         this.queue[0].counted = true;
-        this.counts.played += 1;
+        this.counts.session.played += 1;
+        this.persistenceManager.statIncremented('played');
       }
       this.onCounts();
     }

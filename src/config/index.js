@@ -490,6 +490,18 @@ const questions = {
       + 'it as "cleared" (which it eventually can do unless you have a top-3 time or\n'
       + 'score on the level).'
     ),
+    buildConfigQuestion(
+      'config.persistence.stats', {
+        type: 'confirm',
+        message: 'Persist Stats?',
+        askAnswered: true
+      },
+        'ShenaniBot counts the levels you play, as well as the number of wins and\n'
+      + 'losses if you use the !win and !lose commands.  If you persist these stats\n'
+      + 'then the !stats command will show historical totals along with the counts\n'
+      + 'for the current session.  If you do not persist stats, only session counts\n'
+      + 'are available.'
+    ),
   ],
 
   webServerConfig: [

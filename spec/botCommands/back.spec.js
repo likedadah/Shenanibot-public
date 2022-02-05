@@ -85,7 +85,7 @@ describe("the !back command", () => {
 
     await bot.command("!back", "streamer");
     const counts = await this.getCounts();
-    expect(counts).toEqual({
+    expect(counts.session).toEqual({
       played: 2,
       won: 1,
       lost: 1
@@ -101,7 +101,7 @@ describe("the !back command", () => {
 
     await bot.command("!back", "streamer");
     const counts = await this.getCounts();
-    expect(counts).toEqual({
+    expect(counts.session).toEqual({
       played: 2,
       won: 1,
       lost: 1
@@ -134,7 +134,7 @@ describe("the !back command", () => {
 
     await bot.command("!back", "streamer");
     const counts = await this.getCounts();
-    expect(counts).toEqual({
+    expect(counts.session).toEqual({
       played: 1,
       won: 0,
       lost: 1
@@ -167,7 +167,7 @@ describe("the !back command", () => {
 
     await bot.command("!back", "streamer");
     const counts = await this.getCounts();
-    expect(counts).toEqual({
+    expect(counts.session).toEqual({
       played: 1,
       won: 1,
       lost: 0
@@ -187,7 +187,7 @@ describe("the !back command", () => {
     await bot.command("!back", "streamer");
 
     const counts = await this.getCounts();
-    expect(counts).toEqual({
+    expect(counts.session).toEqual({
       played: 2,
       won: 1,
       lost: 1
@@ -206,7 +206,7 @@ describe("the !back command", () => {
 
     await bot.command("!back", "streamer");
     const counts = await this.getCounts();
-    expect(counts).toEqual({
+    expect(counts.session).toEqual({
       played: 2,
       won: 1,
       lost: 1

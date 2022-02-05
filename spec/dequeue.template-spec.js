@@ -181,12 +181,12 @@ module.exports = async (cb, nextPosition = 2, nextRequired = false,
         await buildQueue(bot);
 
         const preCounts = await this.getCounts();
-        expect(preCounts.played).toEqual(0);
+        expect(preCounts.session.played).toEqual(0);
 
         await cb(bot);
 
         const postCounts = await this.getCounts();
-        expect(postCounts.played).toEqual(1);
+        expect(postCounts.session.played).toEqual(1);
       });
 
       it("counts the level even if it had perviously been skipped",
@@ -199,7 +199,7 @@ module.exports = async (cb, nextPosition = 2, nextRequired = false,
         await cb(bot);
 
         const postCounts = await this.getCounts();
-        expect(postCounts.played).toEqual(1);
+        expect(postCounts.session.played).toEqual(1);
       });
 
       it("does not count a marker as a played level", async function() {
@@ -211,7 +211,7 @@ module.exports = async (cb, nextPosition = 2, nextRequired = false,
         await cb(bot);
 
         const postCounts = await this.getCounts();
-        expect(postCounts.played).toEqual(0);
+        expect(postCounts.session.played).toEqual(0);
       });
     }
   });

@@ -21,7 +21,7 @@ describe("the !skip command", () => {
     await bot.command("!skip", "streamer");
 
     const postCounts = await this.getCounts();
-    expect(postCounts.played).toEqual(0);
+    expect(postCounts.session.played).toEqual(0);
   });
 
   it("un-marks the level as 'played' in the creator cache", async function() {

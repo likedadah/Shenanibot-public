@@ -2,6 +2,13 @@ const fs = require('fs');
 const path = require('path');
 const readline = require('readline');
 
+let stats;
+const statNames = {
+  'p': 'played',
+  'w': 'won',
+  'l': 'lost'
+}
+
 let levels;
 
 class PersistenceManager {
@@ -10,15 +17,43 @@ class PersistenceManager {
     this.options = persistenceOptions;
   }
 
-  async init(levelCache) {
+  async init(bot, levelCache) {
     if (this.options.enabled) {
       await this._loadData(this.file);
       const fd = fs.openSync(this.file, "w");
 
+      this._processStats(fd, bot);
       this._processLevels(fd, levelCache);
 
       fs.closeSync(fd);
       this._clearData();
+    }
+  }
+
+  statIncremented(statName) {
+    if (this.options.enabled && this.options.stats) {
+      const code = Object.keys(statNames).find(k => statNames[k] === statName);
+      fs.appendFileSync(this.file,
+        `:${code}+\n`,
+        "utf8");
+    }
+  }
+
+  statDecremented(statName) {
+    if (this.options.enabled && this.options.stats) {
+      const code = Object.keys(statNames).find(k => statNames[k] === statName);
+      fs.appendFileSync(this.file,
+        `:${code}-\n`,
+        "utf8");
+    }
+  }
+
+  statSetTo(statName, value) {
+    if (this.options.enabled && this.options.stats) {
+      const code = Object.keys(statNames).find(k => statNames[k] === statName);
+      fs.appendFileSync(this.file,
+        `:${code}${value}\n`,
+        "utf8");
     }
   }
 
@@ -44,13 +79,38 @@ class PersistenceManager {
   }
 
   _clearData() {
+    stats = {
+      played: 0,
+      won: 0,
+      lost: 0
+    };
     levels = {};
   }
 
   _parse(line) {
+    const statMatch = line.match(/^:([wlp])([+-]|\d+)$/);
+    if (statMatch) {
+      this._parseStat(statMatch[1], statMatch[2]);
+      return;
+    }
+
     const levelMatch = line.match(/^([a-z0-9]{7}):(.*)$/)
     if (levelMatch) {
       this._parseLevel(levelMatch[1], levelMatch[2]);
+      return;
+    }
+  }
+
+  _parseStat(statId, op) {
+    switch(op) {
+      case '+':
+        stats[statNames[statId]]++;
+        break;
+      case '-':
+        stats[statNames[statId]]--;
+        break;
+      default:
+        stats[statNames[statId]] = +op;
     }
   }
 
@@ -71,6 +131,15 @@ class PersistenceManager {
           level.beaten = false;
           break;
       }
+    }
+  }
+
+  _processStats(fd, bot) {
+    for (const id of Object.keys(statNames)) {
+      fs.writeSync(fd, `:${id}${stats[statNames[id]]}\n`, "utf8");
+    }
+    if (this.options.stats) {
+      bot.counts.history = stats;
     }
   }
 

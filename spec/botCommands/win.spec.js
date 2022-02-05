@@ -15,12 +15,12 @@ describe("the !win command", () => {
     await bot.command("!add valid01", "viewer");
 
     const preCounts = await this.getCounts();
-    expect(preCounts.won).toEqual(0);
+    expect(preCounts.session.won).toEqual(0);
 
     await bot.command("!win", "streamer");
 
     const postCounts = await this.getCounts();
-    expect(postCounts.won).toEqual(1);
+    expect(postCounts.session.won).toEqual(1);
   });
 
   it("does not work on markers", async function() {
@@ -31,7 +31,7 @@ describe("the !win command", () => {
     await bot.command("!win", "streamer");
 
     const postCounts = await this.getCounts();
-    expect(postCounts.won).toEqual(0);
+    expect(postCounts.session.won).toEqual(0);
     expect(this.bookmarks).toEqual([]);
   });
 
@@ -41,7 +41,7 @@ describe("the !win command", () => {
     await bot.command("!win", "streamer");
 
     const postCounts = await this.getCounts();
-    expect(postCounts.won).toEqual(0);
+    expect(postCounts.session.won).toEqual(0);
   });
 
   it("marks the level 'beaten' in the creator cache", async function() {
