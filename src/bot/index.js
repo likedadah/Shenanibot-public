@@ -700,15 +700,32 @@ class ShenaniBot {
   }
 
   showStats() {
-    const stats = [];
-    if (this.counts.session.won) {
-      stats.push(`Wins: ${this.counts.session.won}`);
+    const buildStats = statSet => {
+      const stats = [];
+      if (statSet.won) {
+        stats.push(`Wins: ${statSet.won}`);
+      }
+      if (statSet.lost) {
+        stats.push(`Losses: ${statSet.lost}`);
+      }
+      stats.push(`Total Played: ${statSet.played}`);
+      return stats.join(" ; ");
     }
-    if (this.counts.session.lost) {
-      stats.push(`Losses: ${this.counts.session.lost}`);
+
+    const session = buildStats(this.counts.session);
+
+    if (this.counts.history?.played + this.counts.history?.won
+                                    + this.counts.history?.lost) {
+      const totalStatSet = {
+        played: this.counts.history.played + this.counts.session.played,
+        won: this.counts.history.won + this.counts.session.won,
+        lost: this.counts.history.lost + this.counts.session.lost,
+      };
+      const totals = buildStats(totalStatSet);
+      return `** This Session ** ${session} / ** Running Totals ** ${totals}`;
     }
-    stats.push(`Total Played: ${this.counts.session.played}`);
-    return stats.join(" ; ");
+
+    return session;
   }
 
   showBotCommands() {
@@ -1081,7 +1098,7 @@ class ShenaniBot {
     if (cachedEntry) {
       return cachedEntry;
     }
- 
+
     const creatorInfo = await this.rce.levelhead.players.search({ userIds: id, includeAliases: true }, { doNotUseKey: true });
 
     return creatorInfo.length
