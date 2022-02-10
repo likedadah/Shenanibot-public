@@ -307,7 +307,7 @@ const questions = {
       },
         'You can limit the number of levels each viewer is allowed to submit. This\n'
       + 'limit can apply to the number of levels they have in the queue at one time,\n'
-      + 'or it can apply to their total nubmer of submissions until you reset the\n'
+      + 'or it can apply to their total number of submissions until you reset the\n'
       + 'bot.'
     ),
     buildConfigQuestion(
