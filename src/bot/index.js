@@ -140,6 +140,9 @@ class ShenaniBot {
         case "back":
           logRaw();
           return this.goBack();
+        case "reset":
+          logRaw();
+          return this.reset(args[1]);
         case "mark":
           logRaw();
           return this.makeMarker(args.slice(1).join(" "));
@@ -418,6 +421,20 @@ class ShenaniBot {
     this.onCounts();
     this.onQueue();
     return `Restoring previous queue entry... ${this._playLevel()}}`;
+  }
+
+  async reset(target) {
+    switch(target) {
+      case "stats":
+        this.counts = {session: {played: 0, won: 0, lost: 0}};
+        this.persistenceManager.statSetTo('played', 0);
+        this.persistenceManager.statSetTo('won', 0);
+        this.persistenceManager.statSetTo('lost', 0);
+        this.onCounts();
+        return "All stats reset to 0.";
+      default:
+        return "";
+    }
   }
 
   async makeMarker(markerName) {
