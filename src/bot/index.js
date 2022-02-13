@@ -1124,15 +1124,34 @@ class ShenaniBot {
   }
 
   async _getLevel(levelId) {
-    const cachedLevel = this.levelCache.getLevel(levelId);
-    if (cachedLevel) {
-      return cachedLevel;
+    return (await this._getLevels([levelId]))[levelId];
+  }
+
+  async _getLevels(levelIds) {
+    const levels = {};
+    const cacheMisses = [];
+
+    for (const levelId of levelIds) {
+      const cachedLevel = this.levelCache.getLevel(levelId);
+      if (cachedLevel) {
+        levels[levelId] = cachedLevel;
+      } else {
+        levels[levelId] = null;
+        cacheMisses.push(levelId);
+      }
     }
 
-    const levelInfo = await this.rce.levelhead.levels.search({ levelIds: levelId, includeMyInteractions: true } );
+    if (cacheMisses.length > 0) {
+      for (const levelInfo of await this.rce.levelhead.levels.search({
+        levelIds: cacheMisses,
+        includeMyInteractions: true 
+      })) {
+        levels[levelInfo.levelId] = this.levelCache.addLevel(
+                                                   this._mapLevel(levelInfo));
+      }
+    }
 
-    return levelInfo.length
-               ? this.levelCache.addLevel(this._mapLevel(levelInfo[0])) : null;
+    return levels;
   }
 
   async _getLevelsForCreator(creatorId, levelsCb, doneCb = () => {}) {

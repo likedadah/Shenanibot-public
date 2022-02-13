@@ -24,59 +24,76 @@ class MockRumpusCE {
       levels: {
         search: ({levelIds, userIds, includeMyInteractions,
                   limit, tiebreakerItemId}) => {
-          const validLevelMatch = levelIds && levelIds.match(/^valid(\d\d)$/);
-          if (validLevelMatch) {
-            return [{
-              levelId: `valid${validLevelMatch[1]}`,
-              title: `Valid Level ${validLevelMatch[1]}`,
-              avatarUrl: () => ''
-            }]
-          }
-          const eLvlMatch = levelIds && levelIds.match(/^(\d\d\d)l(\d\d\d)$/);
-          if (eLvlMatch && eLvlMatch[1] >= eLvlMatch[2]) {
-            return [{
-              levelId: `${eLvlMatch[1]}l${eLvlMatch[2]}`,
-              title: `Employee ${eLvlMatch[1]} Level ${eLvlMatch[2]}`,
-              avatarUrl: () => ''
-            }];
-          }
-          const playedMatch = levelIds && levelIds.match(/^played(\d)$/);
-          if (playedMatch) {
-            const playedLevel = {
-              levelId: `played${playedMatch[1]}`,
-              title: `Played Level ${playedMatch[1]}`,
-              avatarUrl: () => ''
-            };
-            if (includeMyInteractions) {
-              playedLevel.interactions = {played: true};
+          const levels = [];
+          if (levelIds) {
+            if (typeof levelIds === 'string') {
+              levelIds = [levelIds];
             }
-            return [playedLevel];
-          }
-          const beatenMatch = levelIds && levelIds.match(/^beaten(\d)$/);
-          if (beatenMatch) {
-            const beatenLevel = {
-              levelId: `beaten${beatenMatch[1]}`,
-              title: `Cleared Level ${beatenMatch[1]}`,
-              avatarUrl: () => ''
-            };
-            if (includeMyInteractions) {
-              beatenLevel.interactions = {played: true, completed: true};
+            for (const levelId of levelIds) {
+              const validLevelMatch = levelId.match(/^valid(\d\d)$/);
+              if (validLevelMatch) {
+                levels.push({
+                  levelId: `valid${validLevelMatch[1]}`,
+                  title: `Valid Level ${validLevelMatch[1]}`,
+                  avatarUrl: () => ''
+                });
+                continue;
+              }
+
+              const eLvlMatch = levelId.match(/^(\d\d\d)l(\d\d\d)$/);
+              if (eLvlMatch && eLvlMatch[1] >= eLvlMatch[2]) {
+                levels.push({
+                  levelId: `${eLvlMatch[1]}l${eLvlMatch[2]}`,
+                  title: `Employee ${eLvlMatch[1]} Level ${eLvlMatch[2]}`,
+                  avatarUrl: () => ''
+                });
+                continue;
+              }
+
+              const playedMatch = levelId.match(/^played(\d)$/);
+              if (playedMatch) {
+                const playedLevel = {
+                  levelId: `played${playedMatch[1]}`,
+                  title: `Played Level ${playedMatch[1]}`,
+                  avatarUrl: () => ''
+                };
+                if (includeMyInteractions) {
+                  playedLevel.interactions = {played: true};
+                }
+                levels.push(playedLevel);
+                continue;
+              }
+
+              const beatenMatch = levelId.match(/^beaten(\d)$/);
+              if (beatenMatch) {
+                const beatenLevel = {
+                  levelId: `beaten${beatenMatch[1]}`,
+                  title: `Cleared Level ${beatenMatch[1]}`,
+                  avatarUrl: () => ''
+                };
+                if (includeMyInteractions) {
+                  beatenLevel.interactions = {played: true, completed: true};
+                }
+                levels.push(beatenLevel);
+                continue;
+              }
+
+              const coopMatch = levelId.match(/^([1-4])plevel$/);
+              if (coopMatch) {
+                levels.push({
+                  levelId: `${coopMatch[1]}plevel`,
+                  title: `Co-oper's ${coopMatch[1]} Player Level`,
+                  avatarUrl: () => '',
+                  requiredPlayers: coopMatch[1]
+                });
+                continue;
+              }
             }
-            return [beatenLevel];
-          }
-          const coopMatch = levelIds && levelIds.match(/^([1-4])plevel$/);
-          if (coopMatch) {
-            return [{
-              levelId: `${coopMatch[1]}plevel`,
-              title: `Co-oper's ${coopMatch[1]} Player Level`,
-              avatarUrl: () => '',
-              requiredPlayers: coopMatch[1]
-	    }];
+            return levels;
           }
 
           const empMatch = userIds && userIds.match(/^emp(\d\d\d)$/);
           if (empMatch) {
-            const levels = [];
             const min = (tiebreakerItemId || 0) + 1
             const max = Math.min(empMatch[1], min + limit - 1);
             for (let i = min; i <= max; i++) {
