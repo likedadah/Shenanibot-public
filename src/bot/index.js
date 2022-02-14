@@ -128,6 +128,9 @@ class ShenaniBot {
         case "skip":
           logRaw();
           return this.skipLevel(args);
+        case "postpone":
+          logRaw();
+          return this.postponeLevel(args);
         case "advance":
           logRaw();
           return this.advance();
@@ -168,7 +171,7 @@ class ShenaniBot {
         return args[1] ? this.checkId(args[1]) : "";
       case "add":
         logRaw();
-        return args[1] ? this.addLevelToQueue(args[1], username) : "";
+        return args[1] ? this.addEntryToQueue(args[1], username) : "";
       case "chadd":
         logRaw();
         return args[1] ? this.checkAndAddLevel(args[1], username) : "";
@@ -250,6 +253,27 @@ class ShenaniBot {
     this.levelCache.updateSessionInteractions(
                                  {id: this.queue[0].id, played: false});
     return this.advance(args);
+  }
+
+  postponeLevel(args) {
+    if (!this.options.persistence.enabled) {
+      return "To postpone levels you need to enable persistence; check your configuration.";
+    }
+
+    const entry = this.queue[0];
+    if (!entry || entry.type === 'mark') {
+      return "There is no current level to postpone!"
+    }
+    
+    this.persistenceManager.entryPostponed(this.queue[0]);
+    const response = this.skipLevel(args);
+    entry.postponed = true;
+
+    if (entry.type === 'level') {
+      this.levels[entry.id] = "has been postponed";
+    }
+
+    return response;
   }
 
   winLevel(args) {
@@ -412,6 +436,10 @@ class ShenaniBot {
       this.counts.session.lost -= 1;
       this.persistenceManager.statDecremented('lost');
     }
+    if (this.prevLevel.postponed) {
+      this.prevLevel.postponed = undefined;
+      this.persistenceManager.postponeReversed(this.prevLevel);
+    }
 
     delete this.prevLevel.counted;
     delete this.prevLevel.countedWon;
@@ -555,7 +583,7 @@ class ShenaniBot {
     {
       return (await this._checkLevel(id)).message;
     } else {
-      const creator = await this._getCreatorEntry(id);
+      const creator = await this._getCreator(id);
       if (!creator) {
         return "Oops! That creator does not exist!";
       }
@@ -582,7 +610,7 @@ class ShenaniBot {
     }
   }
 
-  async addLevelToQueue(id, username, rewardType) {
+  async addEntryToQueue(id, username, rewardType) {
     const user = this._getUser(username);
     let response;
 
@@ -628,7 +656,7 @@ class ShenaniBot {
     }
 
     if (type === "creator") {
-      entry = await this._getCreatorEntry(id, username);
+      entry = await this._getCreator(id);
       if (!entry) {
         return "Oops! That creator does not exist!";
       }
@@ -653,6 +681,47 @@ class ShenaniBot {
     return response;
   }
 
+  async addInitialEntriesToQueue(ids) {
+    if (ids.length === 0) {
+      return;
+    }
+
+    const levels = await this._getLevels(ids.filter(id => id.length === 7));
+    const creators = await this._getCreators(ids.filter(id => id.length === 6));
+
+    for (const id of ids) {
+      const type = (id.length === 7) ? "level" : "creator";
+      const entry = levels[id] || creators[id];
+      if (!entry) {
+        console.log(`WARNING: failed to reload ${type} ${id}!`);
+        continue;
+      }
+      if (entry.players > this.players) {
+        console.log(`WARNING: ${type} ${id} requires ${entry.players} players;`
+                  + " leaving it for a future session.");
+        this.persistenceManager.entryPostponed(entry);
+        continue;
+      }
+      if (this.options.priority === "rotation") {
+        entry.round = 1;
+      }
+      entry.played = entry.beaten = undefined;
+      entry.submittedBy = this.streamer;
+      this.queue.push(entry);
+      if (type === "level") {
+        this.levels[id] = "is already in the queue";
+      }
+    }
+    if (this.options.priority === "rotation") {
+      this.minOpenRound = 2;
+    }
+
+    this.onQueue();
+    if (this.queue.length) {
+      this.sendAsync(this._playLevel());
+    }
+  }
+
   async checkAndAddLevel(id, username) {
     if (this._getIdType(id) !== "level") {
       return "Please enter a valid level code to check."
@@ -661,7 +730,7 @@ class ShenaniBot {
     const check = await this._checkLevel(id);
 
     if (check.canAutoAdd) {
-      return `${check.message} ${await this.addLevelToQueue(id, username)}`;
+      return `${check.message} ${await this.addEntryToQueue(id, username)}`;
     }
     return check.message;
   }
@@ -802,7 +871,7 @@ class ShenaniBot {
         const id = message[
           (message[0] === `${this.options.prefix}add`) ? 1 : 0
         ];
-        return this.addLevelToQueue(id, username, behavior);
+        return this.addEntryToQueue(id, username, behavior);
     }
     return "";
   }
@@ -1143,17 +1212,36 @@ class ShenaniBot {
     this.queue.splice(index, 1);
   }
 
-  async _getCreatorEntry(id, username) {
-    const cachedEntry = this.levelCache.getCreator(id);
-    if (cachedEntry) {
-      return cachedEntry;
+  async _getCreator(id) {
+    return (await this._getCreators([id]))[id];
+  }
+
+  async _getCreators(ids) {
+    const creators = {};
+    const cacheMisses = [];
+
+    for (const id of ids) {
+      const cachedCreator = this.levelCache.getCreator(id);
+      if (cachedCreator) {
+        creators[id] = cachedCreator;
+      } else {
+        creators[id] = null;
+        cacheMisses.push(id);
+      }
     }
 
-    const creatorInfo = await this.rce.levelhead.players.search({ userIds: id, includeAliases: true }, { doNotUseKey: true });
+    if (cacheMisses.length > 0) {
+      for (const creatorInfo of await this.rce.levelhead.players.search({
+        userIds: cacheMisses,
+        includeAliases: true
+      }, { doNotUseKey: true })) {
+        const aliasInfo = await creatorInfo.alias;
+        creators[aliasInfo.userId] = this.levelCache.addCreator(
+                                                    this._mapAlias(aliasInfo));
+      }
+    }
 
-    return creatorInfo.length
-         ? this.levelCache.addCreator(await this._mapCreator(creatorInfo[0]))
-         : null;
+    return creators;
   }
 
   async _getLevel(levelId) {
@@ -1240,9 +1328,8 @@ class ShenaniBot {
     );
   }
 
-  async _mapCreator(creatorInfo) {
-    const ai = await creatorInfo.alias;
-    return new Creator(ai.userId, ai.alias, ai.avatarId);
+  _mapAlias(aliasInfo) {
+    return new Creator(aliasInfo.userId, aliasInfo.alias, aliasInfo.avatarId);
   }
 
   _specifyLevelForCreator(creatorId, level) {

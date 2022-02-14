@@ -274,6 +274,47 @@ describe("the !back command", () => {
     expect(creatorInfo.levels[0].played).toBeFalsy();
   });
 
+  it("can 'un-postpone' a level", async function() {
+    const bot = await this.buildBotInstance({config: {persistence: {
+      enabled: true
+    }}});
+    await bot.command("!add valid01", "viewer");
+    await bot.command("!postpone", "streamer");
+
+    await bot.command("!back", "streamer");
+    expect(this.bookmarks).toEqual(['valid01']);
+
+    await bot.command("!skip", "streamer");
+    const bot2 = await this.buildBotInstance({config: {persistence: {
+      enabled: true
+    }}});
+    expect(this.bookmarks).toEqual([]);
+  });
+
+  it("doesn't accidentally 'un-postpone' multiple instances of a creator",
+     async function() {
+    const bot = await this.buildBotInstance({config: {persistence: {
+      enabled: true
+    }}});
+    await bot.command("!add emp001", "viewer");
+    await bot.command("!postpone", "streamer");
+    await bot.command("!add emp001", "viewer");
+    await bot.command("!postpone", "streamer");
+    await bot.command("!back", "streamer");
+
+    // ... even if we try to confuse it
+    await bot.command("!skip", "streamer");
+    await bot.command("!back", "streamer");
+
+    const bot2 = await this.buildBotInstance({config: {
+      persistence: {enabled: true},
+      httpPort: 8080
+    }});
+    expect(await this.getSimpleQueue()).toEqual([
+      {type: 'creator', id: 'emp001'}
+    ]);
+  });
+
   it("only works for the streamer", async function() {
     const bot = await this.buildBotInstance();
     await bot.command("!add valid01", "viewer");

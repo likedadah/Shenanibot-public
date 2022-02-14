@@ -5,10 +5,10 @@ const itPicksALevel = require("../pickLevel.template-spec");
 
 describe("the !skip command", () => {
   const cb = async bot => await bot.command("!skip", "streamer");
-  itDequeues(cb, 2, false, true, false);
+  itDequeues(cb, {incrementPlayed: false});
   itPlaysALevel(2, cb);
   itUsesDefaultAdvance(cb);
-  itPicksALevel("!skip and play", false);
+  itPicksALevel("!skip and play", { incrementPlayed: false });
 
   it("leaves the played level count unchanged", async function() {
     const bot = await this.buildBotInstance({config: {

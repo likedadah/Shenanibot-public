@@ -18,15 +18,37 @@
 //     triggered by cb() should move the level from the nth position in the
 //     queue to the "now playing" position.  (The now playing position itself
 //     is postiion 1.)
-// - supportsCreatorCode (default true) : a boolean indicating whether the
-//   bot command or function being tested works with creator codes.  If false,
-//   omits any test that would pass a creator code as the 3rd parameter to cb
+// - options : an object which may icnlude the following values:
+//   - botConfig : an ojbect that will be merged into the config for each
+//     test's bot.  This allows for callbacks that only play a level with
+//     those settings.  However, note that some test scenarios require
+//     specific options; so if a callback needs to set any of the following,
+//     it may be unable to use this template:
+//     - creatorCodeMode
+//     - httpPort (to anything other than 8080)
+//     (default is {})
+//   - supportsCreatorCode (default true) : a boolean indicating whether the
+//     bot command or function being tested works with creator codes.  If
+//     false, omits any test that would pass a creator code as the 3rd
+//     parameter to cb
 
-module.exports = itPlaysALevel = (n, cb, supportsCreatorCode = true) => {
+const fp = require("lodash/fp");
+
+module.exports = itPlaysALevel = (n, cb, {
+  botConfig = {},
+  supportsCreatorCode = true
+} = {}) => {
+  let buildBot;
+
+  beforeAll(function() {
+    buildBot = async (opts = {}) =>
+                    this.buildBotInstance(fp.merge(opts, {config: botConfig}));
+  });
+
   describe("changes the 'now playing' entry, so", () => {
     describe("if the new 'now playing' entry is a level, it", () => {
       it("bookmarks the level", async function() {
-        const bot = await this.buildBotInstance();
+        const bot = await buildBot();
         if (n > 1) {
           await this.addLevels(bot, n - 1);
           await bot.command("!add valid00", "viewer0");
@@ -39,7 +61,7 @@ module.exports = itPlaysALevel = (n, cb, supportsCreatorCode = true) => {
       });
 
       it("updates the creator code cache", async function() {
-        const bot = await this.buildBotInstance({config: {
+        const bot = await buildBot({config: {
           httpPort: 8080,
           creatorCodeMode: "webui"
         }});
@@ -64,7 +86,7 @@ module.exports = itPlaysALevel = (n, cb, supportsCreatorCode = true) => {
     if (supportsCreatorCode) {
       describe("if the new 'now playing' entry is a creator code, it", () => {
         it("updates the clipboard if configured to do so", async function() {
-          const bot = await this.buildBotInstance({config: {
+          const bot = await buildBot({config: {
             creatorCodeMode: "clipboard"
           }});
           if (n > 1) {
@@ -83,10 +105,11 @@ module.exports = itPlaysALevel = (n, cb, supportsCreatorCode = true) => {
           let bot;
           let queue;
           const setup = async () => {
-            bot = await this.buildBotInstance({config: {
+            bot = await buildBot({config: {
               creatorCodeMode: "auto",
               httpPort: 8080
             }});
+            await bot.command("!clear", "streamer");
             if (n > 1) {
               await this.addLevels(bot, n - 2);
               await bot.command("!add emp001", "viewer");
@@ -115,10 +138,11 @@ module.exports = itPlaysALevel = (n, cb, supportsCreatorCode = true) => {
           let bot;
           let queue;
           const setup = async () => {
-            bot = await this.buildBotInstance({config: {
+            bot = await buildBot({config: {
               creatorCodeMode: "auto",
               httpPort: 8080
             }});
+            await bot.command("!clear", "streamer");
 
             // not easy for the mocks to let us control which levels are played,
             // so we'll populate the cache and update played status there
@@ -164,7 +188,7 @@ module.exports = itPlaysALevel = (n, cb, supportsCreatorCode = true) => {
            + "message when choosing randomly, even if level info is cached",
            async function() {
           jasmine.clock().install();
-          const bot = await this.buildBotInstance({config: {
+          const bot = await buildBot({config: {
             creatorCodeMode: "auto",
             httpPort: 8080
           }});
@@ -200,7 +224,7 @@ module.exports = itPlaysALevel = (n, cb, supportsCreatorCode = true) => {
         });
 
         it("sends a websocket update if configured to do so", async function() {
-          const bot = await this.buildBotInstance({config: {
+          const bot = await buildBot({config: {
             httpPort: 8080,
             creatorCodeMode: "webui"
           }});
@@ -223,7 +247,7 @@ module.exports = itPlaysALevel = (n, cb, supportsCreatorCode = true) => {
         it("takes time to load all the level data for a new creator code",
            async function() {
           jasmine.clock().install();
-          const bot = await this.buildBotInstance({config: {
+          const bot = await buildBot({config: {
             httpPort: 8080,
             creatorCodeMode: "webui"
           }});
@@ -259,7 +283,7 @@ module.exports = itPlaysALevel = (n, cb, supportsCreatorCode = true) => {
           }
 
           jasmine.clock().install();
-          const bot = await this.buildBotInstance({config: {
+          const bot = await buildBot({config: {
             httpPort: 8080,
             creatorCodeMode: "webui"
           }});

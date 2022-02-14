@@ -106,7 +106,6 @@ class MockRumpusCE {
           }
 
           if (userIds && userIds === 'cooper') {
-            const levels = [];
             const min = (tiebreakerItemId || 0) + 1
             const max = Math.min(4, min + limit - 1);
             for (let i = min; i <= max; i++) {
@@ -122,24 +121,32 @@ class MockRumpusCE {
       },
       players: {
         search: ({userIds, includeAliases}) => {
-          const validCreatorMatch = userIds.match(/^emp(\d\d\d)$/);
-          if (validCreatorMatch) {
-            return [{
-              alias: new Promise(r => r({
-                userId: `emp${validCreatorMatch[1]}`,
-                alias: `EmployEE ${validCreatorMatch[1]}`
-              }))
-            }]
+          const creators = [];
+          if (typeof userIds === 'string') {
+            userIds = [userIds];
           }
-          if (userIds === 'cooper') {
-            return [{
-              alias: new Promise(r => r({
-                userId: 'cooper',
-                alias: 'Co-op Level Maker'
-              }))
-            }]
+          for (const userId of userIds) {
+            const validCreatorMatch = userId.match(/^emp(\d\d\d)$/);
+            if (validCreatorMatch) {
+              creators.push({
+                alias: new Promise(r => r({
+                  userId,
+                  alias: `EmployEE ${validCreatorMatch[1]}`
+                }))
+              });
+              continue;
+            }
+            if (userId === 'cooper') {
+              creators.push({
+                alias: new Promise(r => r({
+                  userId,
+                  alias: 'Co-op Level Maker'
+                }))
+              });
+              continue;
+            }
           }
-          return [];
+          return creators;
         }
       },
       bookmarks: {

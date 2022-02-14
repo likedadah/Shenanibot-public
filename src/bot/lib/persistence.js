@@ -10,6 +10,8 @@ const statNames = {
 }
 
 let levels;
+let creators;
+let initialEntries;
 
 class PersistenceManager {
   constructor(persistenceOptions) {
@@ -23,9 +25,11 @@ class PersistenceManager {
       const fd = fs.openSync(this.file, "w");
 
       this._processStats(fd, bot);
-      this._processLevels(fd, levelCache);
+      this._processLevels(fd, bot, levelCache);
 
       fs.closeSync(fd);
+
+      bot.addInitialEntriesToQueue(initialEntries);
       this._clearData();
     }
   }
@@ -65,6 +69,18 @@ class PersistenceManager {
     }
   }
 
+  entryPostponed(entry) {
+    if (this.options.enabled) {
+      fs.appendFileSync(this.file, `${entry.id}:Q\n`, "utf8");
+    }
+  }
+
+  postponeReversed(entry) {
+    if (this.options.enabled) {
+      fs.appendFileSync(this.file, `${entry.id}:q\n`, "utf8");
+    }
+  }
+
   async _loadData() {
     this._clearData();
 
@@ -85,6 +101,8 @@ class PersistenceManager {
       lost: 0
     };
     levels = {};
+    creators = {};
+    initialEntries = [];
   }
 
   _parse(line) {
@@ -94,9 +112,15 @@ class PersistenceManager {
       return;
     }
 
-    const levelMatch = line.match(/^([a-z0-9]{7}):(.*)$/)
+    const levelMatch = line.match(/^([a-z0-9]{7}):(.*)$/);
     if (levelMatch) {
       this._parseLevel(levelMatch[1], levelMatch[2]);
+      return;
+    }
+
+    const creatorMatch = line.match(/^([a-z0-9]{6}):(.*)$/);
+    if (creatorMatch) {
+      this._parseCreator(creatorMatch[1], creatorMatch[2]);
       return;
     }
   }
@@ -116,19 +140,39 @@ class PersistenceManager {
 
   _parseLevel(id, info) {
     const level = levels[id] = levels[id] || {id};
+    this._parseEntryInfo(level, info);
+  }
+
+  _parseCreator(id, info) {
+    const creator = creators[id] = creators[id] || {id};
+    this._parseEntryInfo(creator, info);
+  }
+
+  _parseEntryInfo(entry, info) {
     for (const op of info) {
       switch(op) {
+        // may be used with any entry
+        case 'Q':
+          initialEntries.push(entry.id);
+          break;
+        case 'q':
+          if (initialEntries.at(-1) === entry.id) {
+            initialEntries.pop();
+	  }
+          break;
+
+        // used only for levels
         case 'P':
-          level.played = true;
+          entry.played = true;
           break;
         case 'p':
-          level.played = false;
+          entry.played = false;
           break;
         case 'B':
-          level.beaten = true;
+          entry.beaten = true;
           break;
         case 'b':
-          level.beaten = false;
+          entry.beaten = false;
           break;
       }
     }
@@ -143,10 +187,10 @@ class PersistenceManager {
     }
   }
 
-  _processLevels(fd, levelCache) {
+  _processLevels(fd, bot, levelCache) {
     for (const levelId of Object.keys(levels)) {
       const level = levels[levelId];
-      const info = (level.played ? 'P' : '')  + (level.beaten ? 'B' : '');
+      const info = (level.played ? 'P' : '') + (level.beaten ? 'B' : '');
       if (this.options.interactions) {
         levelCache.updateSessionInteractions(level);
       }
