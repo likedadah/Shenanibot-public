@@ -140,6 +140,9 @@ class ShenaniBot {
         case "back":
           logRaw();
           return this.goBack();
+        case "clear":
+          logRaw();
+          return this.clearQueue();
         case "reset":
           logRaw();
           return this.reset(args[1]);
@@ -421,6 +424,36 @@ class ShenaniBot {
     this.onCounts();
     this.onQueue();
     return `Restoring previous queue entry... ${this._playLevel()}}`;
+  }
+
+  async clearQueue() {
+    const removedLevels = this.queue.filter(e => e.type === "level");
+
+    if (this.queue[0] && this.queue[0].type !== "mark") {
+      this.queue = [this.queue[0]];
+      this.skipLevel();
+    } else {
+      this.queue = [];
+    }
+    this.prevLevel = undefined;
+
+    for (const entry of removedLevels) {
+      this.levels[entry.id] = undefined;
+    }
+
+    if (this.options.levelLimitType === "active") {
+      for (const user of Object.values(this.users)) {
+        user.levelsSubmitted = 0;
+      }
+    }
+    if (this.options.priority === "rotation") {
+      for (const user of Object.values(this.users)) {
+        user.lastRound = 0;
+      }
+    }
+
+    this.onQueue();
+    return "All entries have been removed from the queue.";
   }
 
   async reset(target) {
@@ -1144,7 +1177,7 @@ class ShenaniBot {
     if (cacheMisses.length > 0) {
       for (const levelInfo of await this.rce.levelhead.levels.search({
         levelIds: cacheMisses,
-        includeMyInteractions: true 
+        includeMyInteractions: true
       })) {
         levels[levelInfo.levelId] = this.levelCache.addLevel(
                                                    this._mapLevel(levelInfo));
