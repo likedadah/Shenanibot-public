@@ -11,9 +11,11 @@ The bot stores a list of viewer-submitted levelcodes for you to play, and automa
 `!close` : Closes the queue  
 `!permit [user name]` : Allows a user to add one level to the queue even if it is closed or they have reached the submission limit  
 `!mark [name]` : Place a marker in the queue.  You can optionally proivde a name for the marker, which will show up when displaying the queue.  See [Using Markers](#using-markers) for details  
+`!clear` : remove all levels from the queue  
 `!giveboost [user name]` : Allows a user to use the `!boost` command one time  
 `!reward [reward behavior]` : Sets up a channel points reward.  Unlike other commands, this must be sent as the message for a custom channel points reward; it assigns a behavior to that particular custom reward.  See [Channel Points Integration](#channel-points-integration) for details  
 `!noreward [reward behavior]` : Removes the assignment of a reward behavior from whatever custom reward currently has that behavior  
+`!reset stats` : reset the counts of levels played, won, and lost.  If stat persistence is enabled, then the historical counts are reset along with the current-session counts  
 `!players [n]` : change the maximum acceptable "required players" value for levels to be added to the queue.  This will revert to the default the next time you restart the bot (see [Queue Management Options](#queue-management-options))  
 
 **Advancing the Queue**  
@@ -38,6 +40,12 @@ Whether or not you are counting wins and losses, you might want to move past a l
 
 Like `!win` and `!lose`, `!skip` will use the "default advance mode" if the "and play" option is omitted.
 
+If persistence is enabled, you can also use
+
+`!postpone [and play ...]` : Saves the level to be played in the next session 
+
+The `!postpone` command works just like `!skip`, except the level will automatically be reloaded into the queue the next time the bot starts up (assuming persistence is still enabled).  Reloaded level(s) are not counted against any player's limit, and in "rotation" mode they are placed in a round before any newly-submitted levels.
+
 Finally, if you have set the "default advance mode" to alternate, there may be situations where you want to take advantage of this ability to automatically alternate between `!next` and `!random` even though none of the above commands that do that are applicable.  For example, you may not be counting wins and losses; or you may want to count the level as a draw.  In those cases, you can use
 
 `!advance`: Moves the queue forward.  The "default advance mode" determines which level is moved up to the "now playing" position.  The "played levels" count is incraesed, but the "win" or "loss" counts are not  
@@ -49,6 +57,8 @@ If you accidentally advance the queue and then realize you're not really done wi
 `!back`: put the most-recently dequeued level back in the "now playing" position
 
 If dequeuing the level increased the played and/or win/loss counts, they are returned to their previous values.
+
+If the previous level had been postponed, this is also undone; so the level will not be reloaded when the bot restarts.
 
 Only the most recently dequeued level is remembered; so although you can use the command as many times as you want, you can't use it "twice in a row" to go back two levels.
 
