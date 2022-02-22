@@ -6,7 +6,7 @@
 //   The callback should trigger the bot command or function being tested,
 //   which is expected to remove the "now playing" level.  The bot will
 //   already have its queue initialized in a manner consistent with the
-//   other parameters.
+//   specified options (below).
 // - options : an object which may include the follwoing values:
 //   - botConfig : an ojbect that will be merged into the config for each
 //     test's bot.  This allows for callbacks that only dequeue levels with

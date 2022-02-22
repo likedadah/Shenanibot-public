@@ -37,9 +37,9 @@ describe("the !permit command", () => {
   });
 
   it("has no effect if the viewer could already submit", async function() {
-    console.log(await this.bot.command("!permit viewer", "streamer"));
-    console.log(await this.bot.command("!close", "streamer"));
-    console.log(await this.bot.command("!add valid01", "viewer"));
+    await this.bot.command("!permit viewer", "streamer");
+    await this.bot.command("!close", "streamer");
+    await this.bot.command("!add valid01", "viewer");
 
     const queue = await this.getSimpleQueue();
     expect(queue).toEqual([]);

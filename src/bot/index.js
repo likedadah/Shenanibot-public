@@ -107,6 +107,9 @@ class ShenaniBot {
         case "close":
           logRaw();
           return this.closeQueue();
+        case "suspend":
+          logRaw();
+          return this.suspendQueue();
         case "players":
           logRaw();
           return this.setPlayers(args[1]);
@@ -209,6 +212,31 @@ class ShenaniBot {
     return "The queue has been closed! No more levels :(";
   }
 
+  suspendQueue() {
+    if (!this.options.persistence.enabled) {
+      return "To suspend the queue you need to enable persistence; check your configuration.";
+    }
+
+    const ids = this.queue.filter(e => e.type === "level").map(l => l.id);
+    let lastRound;
+    for (const entry of this.queue) {
+      if (entry.round > lastRound) {
+        this.persistenceManager.roundBoundaryPostponed();
+      }
+      this.persistenceManager.entryPostponed(entry);
+      lastRound = entry.round;
+    }
+
+    this.closeQueue();
+    this.clearQueue();
+
+    for (const id of ids) {
+      this.levels[id] = "has been postponed";
+    }
+
+    return "The queue is closed and all levels have been postponed.";
+  }
+
   setPlayers(arg) {
     const n = parseInt(arg, 10);
     if (n > 0 && n < 5) {
@@ -264,7 +292,7 @@ class ShenaniBot {
     if (!entry || entry.type === 'mark') {
       return "There is no current level to postpone!"
     }
-    
+
     this.persistenceManager.entryPostponed(this.queue[0]);
     const response = this.skipLevel(args);
     entry.postponed = true;
@@ -681,17 +709,39 @@ class ShenaniBot {
     return response;
   }
 
-  async addInitialEntriesToQueue(ids) {
-    if (ids.length === 0) {
+  async addInitialEntriesToQueue(entries) {
+    if (entries.length === 0) {
       return;
     }
 
-    const levels = await this._getLevels(ids.filter(id => id.length === 7));
-    const creators = await this._getCreators(ids.filter(id => id.length === 6));
+    const levels = await this._getLevels(entries
+      .filter(e => e.type === "level")
+      .map(e => e.id)
+    );
+    const creators = await this._getCreators(entries
+      .filter(e => e.type === "creator")
+      .map(e => e.id)
+    );
+    const getEntry = (type, id, name) => {
+      switch (type) {
+        case "level":
+          return levels[id];
+        case "creator":
+          return creators[id];
+        case "mark":
+          return new Marker(name);
+      }
+    }
 
-    for (const id of ids) {
-      const type = (id.length === 7) ? "level" : "creator";
-      const entry = levels[id] || creators[id];
+    let round = 1;
+    for (const {type, id, name} of entries) {
+      if (type === "round") {
+        round++;
+        continue;
+      }
+
+      const entry = getEntry(type, id, name);
+
       if (!entry) {
         console.log(`WARNING: failed to reload ${type} ${id}!`);
         continue;
@@ -702,18 +752,20 @@ class ShenaniBot {
         this.persistenceManager.entryPostponed(entry);
         continue;
       }
-      if (this.options.priority === "rotation") {
-        entry.round = 1;
+      if (type !== "mark") {
+        if (this.options.priority === "rotation") {
+          entry.round = round;
+        }
+        entry.played = entry.beaten = undefined;
+        entry.submittedBy = this.streamer;
+        if (type === "level") {
+          this.levels[id] = "is already in the queue";
+        }
       }
-      entry.played = entry.beaten = undefined;
-      entry.submittedBy = this.streamer;
       this.queue.push(entry);
-      if (type === "level") {
-        this.levels[id] = "is already in the queue";
-      }
     }
     if (this.options.priority === "rotation") {
-      this.minOpenRound = 2;
+      this.minOpenRound = round + 1;
     }
 
     this.onQueue();

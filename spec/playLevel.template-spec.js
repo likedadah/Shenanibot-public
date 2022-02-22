@@ -153,7 +153,7 @@ module.exports = itPlaysALevel = (n, cb, {
             await bot.command("!add 010l005", "viewer");
             await bot.command("!add 010l006", "viewer");
             await bot.command("!add 010l008", "viewer");
-            console.log(await bot.command("!add 010l009", "viewer"));
+            await bot.command("!add 010l009", "viewer");
             await bot.command("!add 010l010", "viewer");
             for(let i = 0; i < 8; i++) {
               await bot.command("!next", "streamer");

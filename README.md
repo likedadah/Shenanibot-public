@@ -12,6 +12,7 @@ The bot stores a list of viewer-submitted levelcodes for you to play, and automa
 `!permit [user name]` : Allows a user to add one level to the queue even if it is closed or they have reached the submission limit  
 `!mark [name]` : Place a marker in the queue.  You can optionally proivde a name for the marker, which will show up when displaying the queue.  See [Using Markers](#using-markers) for details  
 `!clear` : remove all levels from the queue  
+`!suspend` : close the queue and postpone all levels to the next session.  This command only works if persistence is enabled.  The expected use case is to record the current state of the queue just before shutting down, so that you can pick up where you left off next time.  When levels are reloaded, however, they will not be counted against any viewer's level limit  
 `!giveboost [user name]` : Allows a user to use the `!boost` command one time  
 `!reward [reward behavior]` : Sets up a channel points reward.  Unlike other commands, this must be sent as the message for a custom channel points reward; it assigns a behavior to that particular custom reward.  See [Channel Points Integration](#channel-points-integration) for details  
 `!noreward [reward behavior]` : Removes the assignment of a reward behavior from whatever custom reward currently has that behavior  

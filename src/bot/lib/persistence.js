@@ -71,13 +71,23 @@ class PersistenceManager {
 
   entryPostponed(entry) {
     if (this.options.enabled) {
-      fs.appendFileSync(this.file, `${entry.id}:Q\n`, "utf8");
+      if (entry.type === "mark") {
+        fs.appendFileSync(this.file, `M:${entry.name}\n`, "utf8");
+      } else {
+        fs.appendFileSync(this.file, `${entry.id}:Q\n`, "utf8");
+      }
     }
   }
 
   postponeReversed(entry) {
     if (this.options.enabled) {
       fs.appendFileSync(this.file, `${entry.id}:q\n`, "utf8");
+    }
+  }
+
+  roundBoundaryPostponed() {
+    if (this.options.enabled) {
+      fs.appendFileSync(this.file, `R\n`, "utf8");
     }
   }
 
@@ -123,6 +133,17 @@ class PersistenceManager {
       this._parseCreator(creatorMatch[1], creatorMatch[2]);
       return;
     }
+
+    const markerMatch = line.match(/^M:(.*)$/);
+    if (markerMatch) {
+      initialEntries.push({type: "mark", name: markerMatch[1]});
+      return;
+    }
+
+    if (line === "R") {
+      initialEntries.push({type: "round"});
+      return;
+    }
   }
 
   _parseStat(statId, op) {
@@ -139,12 +160,12 @@ class PersistenceManager {
   }
 
   _parseLevel(id, info) {
-    const level = levels[id] = levels[id] || {id};
+    const level = levels[id] = levels[id] || {id, type: "level"};
     this._parseEntryInfo(level, info);
   }
 
   _parseCreator(id, info) {
-    const creator = creators[id] = creators[id] || {id};
+    const creator = creators[id] = creators[id] || {id, type: "creator"};
     this._parseEntryInfo(creator, info);
   }
 
@@ -153,10 +174,10 @@ class PersistenceManager {
       switch(op) {
         // may be used with any entry
         case 'Q':
-          initialEntries.push(entry.id);
+          initialEntries.push(entry);
           break;
         case 'q':
-          if (initialEntries.at(-1) === entry.id) {
+          if (initialEntries.at(-1) === entry) {
             initialEntries.pop();
 	  }
           break;
