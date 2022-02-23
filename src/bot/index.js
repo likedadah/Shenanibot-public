@@ -450,7 +450,6 @@ class ShenaniBot {
     }
     this.queue.unshift(this.prevLevel);
     if (this.prevLevel.counted) {
-      this.prevLevel.counted = undefined;
       this.counts.session.played -= 1;
       this.persistenceManager.statDecremented('played');
     }
@@ -465,13 +464,14 @@ class ShenaniBot {
       this.persistenceManager.statDecremented('lost');
     }
     if (this.prevLevel.postponed) {
-      this.prevLevel.postponed = undefined;
       this.persistenceManager.postponeReversed(this.prevLevel);
     }
 
     delete this.prevLevel.counted;
     delete this.prevLevel.countedWon;
     delete this.prevLevel.countedLost;
+    delete this.prevLevel.postponed;
+
     this.prevLevel.wasPrev = true;
     this.levels[this.prevLevel.id] = "is already in the queue";
     this.prevLevel = null;
