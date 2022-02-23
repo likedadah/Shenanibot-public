@@ -1,3 +1,5 @@
+const itSkips = require("./skip.template-spec");
+
 // This template generates tests for behaviors associated with removal of
 // all levels from the queue.
 
@@ -31,6 +33,8 @@ module.exports = async (cb, { botConfig = {} } = {}) => {
   });
 
   describe("clears the queue, so it", () => {
+    itSkips(cb, {botConfig});
+
     it("removes all entries from the queue", async function() {
       const bot = await buildBot({config: {httpPort: 8080}});
 
@@ -100,35 +104,6 @@ module.exports = async (cb, { botConfig = {} } = {}) => {
         {type: "level", id: "valid03" },
         {type: "level", id: "valid04" }
       ]);
-    });
-
-    it("removes the 'played' session interaction from the current level",
-       async function() {
-      const bot = await buildBot();
-
-      await bot.command("!add 001l001", "viewer");
-      await cb(bot);
-
-      this.resetChat();
-      await bot.command("!check emp001");
-
-      expect(this.getChat().join('')).toContain('most recent unplayed');
-    });
-
-    it("does not change level counts", async function() {
-      const bot = await buildBot({config: {httpPort: 8080}});
-
-      await this.addLevels(bot, 3);
-      await bot.command("!mark", "streamer");
-      await bot.command("!add emp001", "viewer");
-
-      await cb(bot);
-
-      expect(await this.getCounts()).toEqual({session: {
-        played: 0,
-        won: 0,
-        lost: 0
-      }});
     });
 
     it("clears the 'previous' level", async function() {

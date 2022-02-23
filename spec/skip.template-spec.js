@@ -1,0 +1,54 @@
+// This template generates tests for behaviors associated with removal of a
+// level from the "now playing" position in the queue without counting the
+// level as "played".
+//
+// These tests do not examine the ordering of any remaining entries left in
+// the queue; they only deal with behaviors common to actions that "un-play"
+// the level that had been marked "now playing".  So e.g. if the command
+// also advances the queue, it may also want to use dequeue.template-spec.js;
+// or if it clears the queue, it may want to use clear.template-spec.js; etc.
+
+// Params:
+// - cb(bot) : a callback that accepts a bot instance as its 1st parameter
+//   The callback should trigger the bot command or function being tested,
+//   which is expected to remove the "now playing" level and treat it as not
+//   having been played.  The bot will already have its queue initialized in
+//   a manner consistent with the specified options (below).
+// - options : an object which may include the follwoing values:
+//   - botConfig : an ojbect that will be merged into the config for each
+//     test's bot.  This allows for callbacks that only dequeue levels with
+//     those settings.  (default is {})
+
+const fp = require('lodash/fp');
+
+module.exports = async (cb, { botConfig = {} } = {}) => {
+  let buildBot;
+
+  beforeAll(function() {
+    buildBot = async (opts = {}) =>
+                    this.buildBotInstance(fp.merge(opts, {config: botConfig}));
+  });
+
+  describe("skips the 'now playing' level, so it", () => {
+    it("leaves the played level count unchanged", async function() {
+      const bot = await buildBot();
+
+      console.log(await bot.command("!add valid01", "viewer"));
+      await cb(bot);
+
+      const counts = await bot.command("!stats");
+      expect(counts).toContain('Played: 0');
+    });
+
+    it("removes 'played' interaction from current session", async function() {
+      const bot = await buildBot();
+
+      await bot.command("!add 001l001", "viewer");
+      await cb(bot);
+
+      this.resetChat();
+      const response = await bot.command("!check emp001", "viewer");
+      expect(this.getChat().join('')).toContain('unplayed');
+    });
+  });
+};
