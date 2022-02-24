@@ -103,6 +103,8 @@ describe("the !remove command", () => {
         type: "level",
         submittedBy: "viewer",
         avatar: "",
+        previouslyPlayed: false,
+        previouslyBeaten: false,
       }
     }]);
   });

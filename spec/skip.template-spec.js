@@ -17,7 +17,13 @@
 // - options : an object which may include the follwoing values:
 //   - botConfig : an ojbect that will be merged into the config for each
 //     test's bot.  This allows for callbacks that only dequeue levels with
-//     those settings.  (default is {})
+//     those settings.  However, certain tests require certain settings; if
+//     the callback needs to set any of the following, it may be unable to
+//     use this tempalte:
+//     - persistence (to false)
+//     - interaction persistence (to false)
+//     - creatorCodeMode (to anything other than "auto")
+//     (default is {})
 
 const fp = require('lodash/fp');
 
@@ -40,15 +46,58 @@ module.exports = async (cb, { botConfig = {} } = {}) => {
       expect(counts).toContain('Played: 0');
     });
 
-    it("removes 'played' interaction from current session", async function() {
+    it("removes 'played' interaction", async function() {
       const bot = await buildBot();
 
       await bot.command("!add 001l001", "viewer");
       await cb(bot);
 
       this.resetChat();
-      const response = await bot.command("!check emp001", "viewer");
+      await bot.command("!check emp001", "viewer");
       expect(this.getChat().join('')).toContain('unplayed');
+    });
+
+    it("does not remove 'played' interactions from prior sessions",
+       async function() {
+      const bot = await buildBot({config: {persistence: {
+        enabled: true,
+        interactions: true
+      }}});
+      await bot.command("!add 001l001", "viewer");
+      await bot.command("!next", "streamer");
+
+      const bot2 = await buildBot({config: {persistence: {
+        enabled: true,
+        interactions: true
+      }}});
+      await bot2.command("!add 001l001", "viewer");
+      await cb(bot2);
+
+      this.resetChat();
+      await bot2.command("!check emp001", "viewer");
+      expect(this.getChat().join('')).not.toContain('unplayed');
+    });
+
+    it("does not remove 'played' interaction from earlier in the session",
+       async function() {
+      const bot = await buildBot({config: {
+        creatorCodeMode: 'auto'
+      }});
+      jasmine.clock().install();
+
+      await bot.command("!add valid01", "viewer");
+      await bot.command("!add emp001", "viewer");
+      await bot.command("!add 001l001", "viewer");
+      await bot.command("!next", "streamer");
+      await bot.command("!next", "streamer");
+      await cb(bot);
+
+      this.resetChat();
+      await bot.command("!check emp001", "viewer");
+      jasmine.clock().tick(0);
+      expect(this.getChat().join('')).not.toContain('unplayed');
+
+      jasmine.clock().uninstall();
     });
   });
 };

@@ -23,7 +23,9 @@ describe("ws://.../ui/creatorCode", () => {
         id: "001l001",
         name: "test",
         submittedBy: "viewer",
-        avatar: "x"
+        avatar: "x",
+        previouslyPlayed: false,
+        previouslyBeaten: false,
       }
     }]);
   });
@@ -91,7 +93,9 @@ describe("ws://.../ui/creatorCode", () => {
         name: "test",
         type: "level",
         submittedBy: "viewer",
-        avatar: "x"
+        avatar: "x",
+        previouslyPlayed: false,
+        previouslyBeaten: false,
       }
     }]);
   });

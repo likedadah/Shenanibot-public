@@ -203,7 +203,9 @@ describe("the !random command", () => {
         name: "Valid Level 02",
         type: "level",
         submittedBy: "viewer02",
-        avatar: ""
+        avatar: "",
+        previouslyPlayed: false,
+        previouslyBeaten: false,
       }
     }]);
   });

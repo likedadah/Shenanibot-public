@@ -279,7 +279,7 @@ class ShenaniBot {
     }
     this.queue[0].counted = false;
     this.levelCache.updateSessionInteractions(
-                                 {id: this.queue[0].id, played: false});
+             {id: this.queue[0].id, played: this.queue[0].previouslyPlayed} );
     return this.advance(args);
   }
 
@@ -679,7 +679,6 @@ class ShenaniBot {
       if (entry.players > this.players) {
         return `Sorry, ${this.streamer} is not accepting ${entry.players}-player levels.`;
       }
-
       entry.played = entry.beaten = undefined;
     }
 
@@ -1165,6 +1164,10 @@ class ShenaniBot {
 
   _playLevel() {
     if (this.queue[0].type === "level") {
+      const upToDateLevel = this.levelCache.getLevel(this.queue[0].id);
+      this.queue[0].previouslyPlayed = upToDateLevel.played;
+      this.queue[0].previouslyBeaten = upToDateLevel.beaten;
+
       this.rce.levelhead.bookmarks.add(this.queue[0].id);
       this.levelCache.updateSessionInteractions(
                                          {id: this.queue[0].id, played: true});

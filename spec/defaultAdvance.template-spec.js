@@ -88,7 +88,9 @@ module.exports = itUsesDefaultAdvance = (cb, {botConfig = {}} = {}) => {
           name: "Valid Level 02",
           type: "level",
           submittedBy: "viewer02",
-          avatar: ""
+          avatar: "",
+          previouslyPlayed: false,
+          previouslyBeaten: false,
         }
       }]);
     });
