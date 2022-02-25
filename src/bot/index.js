@@ -826,7 +826,9 @@ class ShenaniBot {
   }
 
   showQueue() {
-    let response = `Total entries: ${this.queue.length}`;
+    const status = this.queueOpen ? "open!" : "closed.";
+    let response =
+                `The queue is ${status}  Total entries: ${this.queue.length}`;
     if (this.queue.length === 0) {
       return response;
     }
