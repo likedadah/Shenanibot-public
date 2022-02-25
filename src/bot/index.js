@@ -446,7 +446,7 @@ class ShenaniBot {
     if (this.queue.length) {
       this._stopPlayingLevel();
       this.levelCache.updateSessionInteractions(
-                                        {id: this.queue[0].id, played: false});
+               {id: this.queue[0].id, played: this.queue[0].previouslyPlayed});
     }
     this.queue.unshift(this.prevLevel);
     if (this.prevLevel.counted) {
@@ -457,7 +457,7 @@ class ShenaniBot {
       this.counts.session.won -= 1;
       this.persistenceManager.statDecremented('won');
       this.levelCache.updateSessionInteractions(
-                                       {id: this.prevLevel.id, beaten: false});
+             {id: this.prevLevel.id, beaten: this.prevLevel.previouslyBeaten});
     }
     if (this.prevLevel.countedLost) {
       this.counts.session.lost -= 1;
@@ -1167,7 +1167,6 @@ class ShenaniBot {
       const upToDateLevel = this.levelCache.getLevel(this.queue[0].id);
       this.queue[0].previouslyPlayed = upToDateLevel.played;
       this.queue[0].previouslyBeaten = upToDateLevel.beaten;
-
       this.rce.levelhead.bookmarks.add(this.queue[0].id);
       this.levelCache.updateSessionInteractions(
                                          {id: this.queue[0].id, played: true});

@@ -158,6 +158,46 @@ describe("the !back command", () => {
     expect(creatorInfo.levels[0].beaten).toBeFalsy();
   });
 
+  it("doesn't remove 'beaten' if set in prior session", async function() {
+    const bot = await this.buildBotInstance({ config: {persistence: {
+      enabled: true,
+      interactions: true
+    }}});
+    await bot.command("!add 001l001", "viewer");
+    await bot.command("!win", "streamer");
+
+    const bot2 = await this.buildBotInstance({ config: {persistence: {
+      enabled: true,
+      interactions: true
+    }}});
+    await bot2.command("!add 001l001", "viewer");
+    await bot2.command("!win", "streamer");
+    await bot2.command("!back", "streamer");
+
+    this.resetChat();
+    await bot2.command("!check 001l001", "viewer");
+    expect(this.getChat().join('')).toContain('beaten');
+  });
+
+  it("doesn't remove 'beaten' if set earlier in session", async function() {
+    const bot = await this.buildBotInstance({config: {
+      creatorCodeMode: "auto"
+    }});
+
+    await bot.command("!add valid01", "viewer");
+    await bot.command("!add emp001", "viewer");
+    await bot.command("!add 001l001", "viewer");
+    await bot.command("!next", "streamer");
+    await bot.command("!win", "streamer");
+
+    await bot.command("!win", "streamer");
+    await bot.command("!back", "streamer");
+
+    this.resetChat();
+    await bot.command("!check 001l001", "viewer");
+    expect(this.getChat().join('')).toContain('beaten');
+  });
+
   it("reduces 'lost' count when restoring a lost level", async function() {
     const bot = await this.buildBotInstance({config: {httpPort: 8080}});
     await this.addLevels(bot, 3);
@@ -272,6 +312,47 @@ describe("the !back command", () => {
 
     const creatorInfo = await this.getCreatorInfo();
     expect(creatorInfo.levels[0].played).toBeFalsy();
+  });
+
+  it("does not remove 'played' if set in prior session", async function() {
+    const bot = await this.buildBotInstance({ config: {persistence: {
+      enabled: true,
+      interactions: true
+    }}});
+    await bot.command("!add 001l001", "viewer");
+    await bot.command("!next", "streamer");
+
+    const bot2 = await this.buildBotInstance({ config: {persistence: {
+      enabled: true,
+      interactions: true
+    }}});
+    await bot2.command("!add valid01", "viewer");
+    await bot2.command("!add 001l001", "viewer");
+    await bot2.command("!next", "streamer");
+    await bot2.command("!back", "streamer");
+
+    this.resetChat();
+    await bot2.command("!check 001l001", "viewer");
+    expect(this.getChat().join('')).not.toContain('not played');
+  });
+
+  it("doesn't remove 'played' if set earlier in session", async function() {
+    const bot = await this.buildBotInstance({config: {
+      creatorCodeMode: "auto"
+    }});
+
+    await bot.command("!add valid01", "viewer");
+    await bot.command("!add emp001", "viewer");
+    await bot.command("!add valid02", "viewer");
+    await bot.command("!add 001l001", "viewer");
+    await bot.command("!next", "streamer");
+    await bot.command("!next", "streamer");
+    await bot.command("!next", "streamer");
+    await bot.command("!back", "streamer");
+
+    this.resetChat();
+    await bot.command("!check 001l001", "viewer");
+    expect(this.getChat().join('')).not.toContain('not played');
   });
 
   it("can 'un-postpone' a level", async function() {
