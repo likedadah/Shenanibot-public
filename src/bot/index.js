@@ -485,6 +485,11 @@ class ShenaniBot {
   async clearQueue() {
     const removedLevels = this.queue.filter(e => e.type === "level");
 
+    for (const user of (this.nextNoSpoilUsers || [])) {
+      this.dm(user,
+          `${this.streamer} has finished playing ${this.queue[1].display}`);
+    }
+
     if (this.queue[0] && this.queue[0].type !== "mark") {
       this.queue = [this.queue[0]];
       this.skipLevel();

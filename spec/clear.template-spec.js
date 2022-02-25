@@ -117,6 +117,24 @@ module.exports = async (cb, { botConfig = {} } = {}) => {
       expect(this.bookmarks).toEqual([]);
     });
 
+    it("sends nospoil notifications", async function() {
+      const bot = await buildBot();
+
+      await bot.command("!add valid01", "viwer");
+      await bot.command("!add valid02", "viwer");
+      await bot.command("!next", "streamer");
+      await bot.command("!nospoil", "viewer1");
+      await bot.command("!back", "streamer");
+      await bot.command("!nospoil", "viewer2");
+      await cb(bot);
+
+      expect(Object.keys(this.getAllDms())).toEqual(["viewer1", "viewer2"]);
+      expect(this.getDmsFor("viewer1")).toEqual([
+                    "streamer has finished playing Valid Level 02 (valid02)"]);
+      expect(this.getDmsFor("viewer2")).toEqual([
+                    "streamer has finished playing Valid Level 01 (valid01)"]);
+    });
+
     it("can handle the queue being empty", async function() {
       const bot = await buildBot({config: {httpPort: 8080}});
 
