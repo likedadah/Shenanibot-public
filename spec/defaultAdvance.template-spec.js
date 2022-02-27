@@ -2,10 +2,12 @@
 // advance the queue according to the defaultAdvance config setting.
 
 // Params:
-// - cb(bot) : a callback that accepts a bot instance as its 1st parameter.
-//   The callback should trigger the bot command or function being tested,
-//   which is expected to advance the queue in the manner specified by the
-//   configuration.
+// - cb(bot, id) : a callback that accepts a bot instance as its 1st parameter
+//   and an id as its 2nd parameter.  The callback should trigger the bot
+//   command or function being tested, which is expected to advance the queue
+//   in the manner specified by the bot's configuration.  The id of the level
+//   to be removed from the "now playing" position in the queue is passed as
+//   the 2nd parameter in case the callback needs it.
 // - options : an object which may specify any of the following values:
 //   - botConfig : an object that will be merged into the config for each
 //     test's bot.  This allows for callbacks that only advance the qeuue
@@ -37,37 +39,36 @@ module.exports = itUsesDefaultAdvance = (cb, {botConfig = {}} = {}) => {
 
     it("acts like !next by default", async function() {
       const bot = await this.setupBot();
-      await cb(bot);
+      await cb(bot, "valid01");
       expect(this.bookmarks).toEqual(["valid02"]);
-      await cb(bot);
+      await cb(bot, "valid02");
       expect(this.bookmarks).toEqual(["valid03"]);
     });
 
     it("can be configured to act like !random", async function() {
       const bot = await this.setupBot({config: {defaultAdvance: "random"}});
-      await cb(bot);
+      await cb(bot, "valid01");
       expect(this.bookmarks).toEqual(["valid08"]);
-      await cb(bot);
+      await cb(bot, "valid08");
       expect(this.bookmarks).toEqual(["valid07"]);
     });
 
     it("can be configured to alternate between !next and !random behavior",
         async function() {
       const bot = await this.setupBot({config: {defaultAdvance: "alternate"}});
-      await cb(bot);
+      await cb(bot, "valid01");
       expect(this.bookmarks).toEqual(["valid02"]);
-      await cb(bot);
+      await cb(bot, "valid02");
       expect(this.bookmarks).toEqual(["valid08"]);
     });
 
     it("always uses !next after a !back command", async function() {
       this.setRandomizerToMax();
       const bot = await this.setupBot({config: {defaultAdvance: "alternate"}});
-      await this.addLevels(bot, 5);
 
-      await cb(bot);
+      await cb(bot, "valid01");
       await bot.command("!back", "streamer");
-      await cb(bot);
+      await cb(bot, "valid01");
 
       expect(this.bookmarks).toEqual(["valid02"]);
     });
@@ -78,7 +79,7 @@ module.exports = itUsesDefaultAdvance = (cb, {botConfig = {}} = {}) => {
       const token = await this.openWebSocket("overlay/levels");
 
       const levelsMessage = (await Promise.all([
-        cb(bot),
+        cb(bot, "valid01"),
         this.waitForNextWsMessage(token)
       ]))[1];
       expect(levelsMessage).toEqual([{

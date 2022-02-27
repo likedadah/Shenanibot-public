@@ -3,22 +3,22 @@
 
 // Params:
 // - n : a position in the queue
-// - cb(bot, username, levelId) : a callback that accepts a bot instance as
-//   its 1st parameter, a username as its 2nd parameter, and a level ID as its
-//   3rd parameter.  The callback should trigger the bot command or function
-//   being tested, whose expected behavior depends on the queue position
-//   identified by n:
+// - cb(bot, username, newId, oldId) : a callback that accepts a bot instance
+//   as its 1st parameter, a username as its 2nd parameter, and ids as its
+//   3rd and 4th parameters.  The callback should trigger the bot command or
+//   function being tested, whose expected behavior depends on the queue
+//   position identified by n:
 //   - if n === 1, then the bot passed to cb() will have an empty queue, and
 //     the command/function triggered by cb() should add a level to fill
 //     position 1 in the queue.  The level ID and submitter should match the
-//     other parameters passed to cb().
-//   - If n > 1, then the queue will be pre-populated; the level at position
-//     n will match the id passed to cb(), and it will be the only level
-//     submitted by the username passed to cb().  The command/function
-//     triggered by cb() should move the level from the nth position in the
-//     queue to the "now playing" position.  (The now playing position itself
-//     is postiion 1.)
-// - options : an object which may icnlude the following values:
+//     oldId and username passed to cb().  (oldId should be ignored)
+//   - If n > 1, then the queue will be pre-populated; the "now playing"
+//     level's id will match oldId, the level at position n will match newId,
+//     and it will be the only level submitted by the username passed to
+//     cb().  The command/function triggered by cb() should move the level
+//     from the nth position in the queue to the "now playing" position.
+//     (The now playing position itself is postiion 1.)
+// - options : an object which may include the following values:
 //   - botConfig : an ojbect that will be merged into the config for each
 //     test's bot.  This allows for callbacks that only play a level with
 //     those settings.  However, note that some test scenarios require
@@ -27,10 +27,10 @@
 //     - creatorCodeMode
 //     - httpPort (to anything other than 8080)
 //     (default is {})
-//   - supportsCreatorCode (default true) : a boolean indicating whether the
-//     bot command or function being tested works with creator codes.  If
-//     false, omits any test that would pass a creator code as the 3rd
-//     parameter to cb
+//   - supportsCreatorCode (default true) : a boolean indicating whether
+//     the bot command or function being tested works to start playing a
+//     creator code.  If false, omits any test that would pass a creator
+//     code as newId
 
 const fp = require("lodash/fp");
 
@@ -55,7 +55,7 @@ module.exports = itPlaysALevel = (n, cb, {
           await this.addLevels(bot, 2, n);
         }
 
-        await cb(bot, "viewer0", "valid00");
+        await cb(bot, "viewer0", "valid00", "valid01");
 
         expect(this.bookmarks).toContain("valid00");
       });
@@ -66,15 +66,14 @@ module.exports = itPlaysALevel = (n, cb, {
           creatorCodeMode: "webui"
         }});
         await bot.command("!add emp001", "viewer");
+        await bot.command("!next", "streamer");
         if (n > 1) {
-          await this.addLevels(bot, n - 2);
+          await this.addLevels(bot, n - 1);
           await bot.command("!add 001l001", "viewer0");
           await this.addLevels(bot, 2, n);
-        } else {
-          await bot.command("!next", "streamer");
         }
 
-        await cb(bot, "viewer0", "001l001");
+        await cb(bot, "viewer0", "001l001", "valid01");
 
         await bot.command("!add emp001", "viewer");
         await bot.command("!play last from viewer", "streamer");
@@ -90,13 +89,12 @@ module.exports = itPlaysALevel = (n, cb, {
             creatorCodeMode: "clipboard"
           }});
           if (n > 1) {
-            await this.addLevels(bot, n - 2);
-            await bot.command("!add emp001", "viewer");
+            await this.addLevels(bot, n - 1);
             await bot.command("!add emp002", "viewer0");
             await bot.command("!add emp003", "viewer");
           }
 
-          await cb(bot, "viewer0", "emp002");
+          await cb(bot, "viewer0", "emp002", "valid01");
 
           expect(this.clipboard.content).toEqual("emp002");
         });
@@ -104,6 +102,8 @@ module.exports = itPlaysALevel = (n, cb, {
         it("picks a level randomly if configured to do so", async function() {
           let bot;
           let queue;
+          let lastUsed = 0;
+          let oldId = undefined;
           const setup = async () => {
             bot = await buildBot({config: {
               creatorCodeMode: "auto",
@@ -111,8 +111,9 @@ module.exports = itPlaysALevel = (n, cb, {
             }});
             await bot.command("!clear", "streamer");
             if (n > 1) {
-              await this.addLevels(bot, n - 2);
-              await bot.command("!add emp001", "viewer");
+              await this.addLevels(bot, n - 1, lastUsed + 1);
+              oldId = `valid${lastUsed < 9 ? "0" : ""}${lastUsed + 1}`;
+              lastUsed += n;
               await bot.command("!add emp010", "viewer0");
               await bot.command("!add emp003", "viewer");
             }
@@ -120,14 +121,14 @@ module.exports = itPlaysALevel = (n, cb, {
 
           await setup();
           this.setRandomizerToMax();
-          await cb(bot, "viewer0", "emp010");
+          await cb(bot, "viewer0", "emp010", oldId);
 
           queue = await this.getQueue();
           expect(queue[0].entry.id).toEqual("010l010");
 
           await setup();
           this.setRandomizerToMin();
-          await cb(bot, "viewer0", "emp010");
+          await cb(bot, "viewer0", "emp010", oldId);
 
           queue = await this.getQueue();
           expect(queue[0].entry.id).toEqual("010l001");
@@ -137,6 +138,8 @@ module.exports = itPlaysALevel = (n, cb, {
           jasmine.clock().install();
           let bot;
           let queue;
+          let oldId = undefined;
+          let lastUsed = 0;
           const setup = async () => {
             bot = await buildBot({config: {
               creatorCodeMode: "auto",
@@ -159,8 +162,9 @@ module.exports = itPlaysALevel = (n, cb, {
               await bot.command("!next", "streamer");
             }
             if (n > 1) {
-              await this.addLevels(bot, n - 2);
-              await bot.command("!add emp001", "viewer");
+              await this.addLevels(bot, n - 1, lastUsed + 1);
+              oldId = `valid${lastUsed < 9 ? "0" : ""}${lastUsed + 1}`;
+              lastUsed += n;
               await bot.command("!add emp010", "viewer0");
               await bot.command("!add emp003", "viewer");
             }
@@ -168,7 +172,7 @@ module.exports = itPlaysALevel = (n, cb, {
 
           await setup();
           this.setRandomizerToMax();
-          await cb(bot, "viewer0", "emp010");
+          await cb(bot, "viewer0", "emp010", oldId);
           jasmine.clock().tick(0);
 
           queue = await this.getQueue();
@@ -176,12 +180,47 @@ module.exports = itPlaysALevel = (n, cb, {
 
           await setup();
           this.setRandomizerToMin();
-          await cb(bot, "viewer0", "emp010");
+          await cb(bot, "viewer0", "emp010", oldId);
           jasmine.clock().tick(0);
 
           queue = await this.getQueue();
           expect(queue[0].entry.id).toEqual("010l003");
           jasmine.clock().uninstall();
+        });
+
+        it("will not randomly choose a banned level", async function() {
+          let bot;
+          let queue;
+          let oldId = undefined;
+          let lastUsed = 0;
+          const setup = async () => {
+            bot = await buildBot({config: {
+              persistence: {enabled: true},
+              creatorCodeMode: "auto",
+              httpPort: 8080
+            }});
+            await bot.command("!clear", "streamer");
+            if (n > 1) {
+              await this.addLevels(bot, n - 1, lastUsed + 1);
+              oldId = `valid${lastUsed < 9 ? "0" : ""}${lastUsed + 1}`;
+              lastUsed += n;
+              await bot.command("!add emp001", "viewer0");
+              await bot.command("!add emp003", "viewer");
+            }
+          };
+
+          await setup();
+          await bot.command("!nope 001l001", "streamer");
+          await cb(bot, "viewer0", "emp001", oldId); // right after banning
+
+          queue = await this.getQueue();
+          expect(queue[0].entry.id).toEqual("emp001");
+
+          await setup();
+          await cb(bot, "viewer0", "emp001", oldId); // in a future session
+
+          queue = await this.getQueue();
+          expect(queue[0].entry.id).toEqual("emp001");
         });
 
         it(  "prints the 'picking a level' message before the 'now playing'"
@@ -197,14 +236,13 @@ module.exports = itPlaysALevel = (n, cb, {
           await bot.command("!next", "streamer");
 
           if (n > 1) {
-            await this.addLevels(bot, n - 2);
-            await bot.command("!add emp001", "viewer");
+            await this.addLevels(bot, n - 1);
             await bot.command("!add emp010", "viewer0");
             await bot.command("!add emp003", "viewer");
           }
 
           this.resetChat();
-          await cb(bot, "viewer0", "emp010");
+          await cb(bot, "viewer0", "emp010", "valid01");
           jasmine.clock().tick(0);
 
           const chat = this.getChat();
@@ -229,13 +267,12 @@ module.exports = itPlaysALevel = (n, cb, {
             creatorCodeMode: "webui"
           }});
           if (n > 1) {
-            await this.addLevels(bot, n - 2);
-            await bot.command("!add emp001", "viewer");
+            await this.addLevels(bot, n - 1);
             await bot.command("!add emp002", "viewer0");
             await bot.command("!add emp003", "viewer");
           }
 
-          await cb(bot, "viewer0", "emp002");
+          await cb(bot, "viewer0", "emp002", "valid01");
 
           const creatorInfo = await this.getCreatorInfo();
           expect(creatorInfo.creatorId).toEqual("emp002");
@@ -252,13 +289,12 @@ module.exports = itPlaysALevel = (n, cb, {
             creatorCodeMode: "webui"
           }});
           if (n > 1) {
-            await this.addLevels(bot, n - 2);
-            await bot.command("!add emp001", "viewer");
+            await this.addLevels(bot, n - 1);
             await bot.command("!add emp200", "viewer0");
             await bot.command("!add emp003", "viewer");
           }
 
-          await cb(bot, "viewer0", "emp200");
+          await cb(bot, "viewer0", "emp200", "valid01");
 
           let creatorInfo = await this.getCreatorInfo();
           expect(creatorInfo.levels.length).toBe(128);
@@ -272,9 +308,11 @@ module.exports = itPlaysALevel = (n, cb, {
         });
 
         it("caches the level data for a creator code", async function() {
+          let id = 1;
           const buildQueue = async () => {
             if (n > 1) {
-              for (let i = 1; i < n; i++) {
+              await bot.command(`!add valid0${id}`, "viewer");
+              for (let i = 2; i < n; i++) {
                 await bot.command("!add emp001", "viewer");
               }
               await bot.command("!add emp200", "viewer0");
@@ -288,15 +326,16 @@ module.exports = itPlaysALevel = (n, cb, {
             creatorCodeMode: "webui"
           }});
           await buildQueue();
-          await cb(bot, "viewer0", "emp200");
+          await cb(bot, "viewer0", "emp200", `valid0${id}`);
           jasmine.clock().tick(1000);
           const queue = await this.getSimpleQueue();
           for (const entry of queue) {
             await bot.command("!next", "streamer");
           }
-          await buildQueue();
 
-          await cb(bot, "viewer0", "emp200");
+          id += 1;
+          await buildQueue();
+          await cb(bot, "viewer0", "emp200", `valid0${id}`);
 
           creatorInfo = await this.getCreatorInfo();
           expect(creatorInfo.levels.length).toBe(200);

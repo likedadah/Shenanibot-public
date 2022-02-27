@@ -6,7 +6,7 @@ describe("the !chadd command", () => {
   const cb = (bot, user, id) => bot.command(`!chadd ${id}`, user);
 
   itChecksALevel(cb);
-  itAddsALevel(cb);
+  itAddsALevel(cb, { supportsCreatorCode: false });
   itPlaysALevel(1, cb, { supportsCreatorCode: false });
 
   it("should not add a level that has already been beaten", async function() {

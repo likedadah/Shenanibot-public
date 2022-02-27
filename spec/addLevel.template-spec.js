@@ -10,8 +10,13 @@
 //   If the command or function has its own reasons for rejecting a level
 //   (apart from the reasons that all add commands would fail), then the
 //   callback should avoid those circumstances.
+// - options: an object which may include the following values:
+//   - supportsCreatorCode: if true, the command or function can add both
+//     levels and creators to the queue; if false, it only works with levels.
+//     (default: true)
+//   (deafult: {})
 
-module.exports = itAddsALevel = cb => {
+module.exports = itAddsALevel = (cb, {supportsCreatorCode = true} = {}) => {
   describe("adds a level, so it", () => {
     it("adds a level to the queue", async function() {
       const bot = await this.buildBotInstance();
@@ -126,6 +131,26 @@ module.exports = itAddsALevel = cb => {
         submittedBy: e.entry.submittedBy
       }))).toEqual([{id: "valid01", submittedBy: "viewer1"}]);
     });
+
+    if (supportsCreatorCode) {
+      it("accepts multiple instances of a creator code", async function() {
+        const bot = await this.buildBotInstance({config: { httpPort: 8080 }});
+
+        await cb(bot, "viewer1", "emp001");
+        await cb(bot, "viewer2", "emp001");
+        await cb(bot, "viewer1", "emp001");
+
+        const queue = await this.getQueue();
+        expect(queue.map(e => ({
+          id: e.entry.id,
+          submittedBy: e.entry.submittedBy
+        }))).toEqual([
+          {id: "emp001", submittedBy: "viewer1"},
+          {id: "emp001", submittedBy: "viewer2"},
+          {id: "emp001", submittedBy: "viewer1"}
+        ]);
+      });
+    }
 
     it("rejects levels that were already played this session",
                                                             async function() {

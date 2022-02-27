@@ -91,6 +91,22 @@ class PersistenceManager {
     }
   }
 
+  entryBanned(entry) {
+    if (this.options.enabled) {
+      if (entry.type !== "mark") {
+        fs.appendFileSync(this.file, `${entry.id}:X\n`, "utf8");
+      }
+    }
+  }
+
+  banReversed(entry) {
+    if (this.options.enabled) {
+      if (entry.type !== "mark") {
+        fs.appendFileSync(this.file, `${entry.id}:x\n`, "utf8");
+      }
+    }
+  }
+
   async _loadData() {
     this._clearData();
 
@@ -172,14 +188,20 @@ class PersistenceManager {
   _parseEntryInfo(entry, info) {
     for (const op of info) {
       switch(op) {
-        // may be used with any entry
+        // may be used with levels and creators
         case 'Q':
           initialEntries.push(entry);
           break;
         case 'q':
           if (initialEntries.at(-1) === entry) {
             initialEntries.pop();
-	  }
+          }
+          break;
+        case 'X':
+          entry.banned = true;
+          break;
+        case 'x':
+          entry.banned = false;
           break;
 
         // used only for levels
@@ -211,9 +233,15 @@ class PersistenceManager {
   _processLevels(fd, bot, levelCache) {
     for (const levelId of Object.keys(levels)) {
       const level = levels[levelId];
-      const info = (level.played ? 'P' : '') + (level.beaten ? 'B' : '');
+      const info = (level.played ? 'P' : '')
+                 + (level.beaten ? 'B' : '')
+                 + (level.banned ? 'X' : '');
       if (this.options.interactions) {
         levelCache.updateSessionInteractions(level);
+      }
+      if (level.banned) {
+        levelCache.levelIsBanned(level.id);
+        bot.levels[level.id] = "is banned from the queue";
       }
       if (info) {
         fs.writeSync(fd, `${levelId}:${info}\n`, "utf8");

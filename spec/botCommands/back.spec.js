@@ -396,6 +396,61 @@ describe("the !back command", () => {
     ]);
   });
 
+  it("can unban a level", async function() {
+    const bot = await this.buildBotInstance({config: {persistence: {
+      enabled: true
+    }}});
+    await bot.command("!add valid01", "viewer");
+    await bot.command("!nope", "streamer");
+    expect(await bot.command("!check valid01", "viewer")).toContain("banned");
+    await bot.command("!back", "streamer");
+    expect(await bot.command("!check valid01", "viewer"))
+                                                     .not.toContain("banned");
+    await bot.command("!skip", "streamer");
+
+    await bot.command("!add valid02", "viewer");
+    await bot.command("!win", "streamer");
+    await bot.command("!nope prev", "streamer");
+    expect(await bot.command("!check valid02", "viewer")).toContain("banned");
+    await bot.command("!back", "streamer");
+    expect(await bot.command("!check valid02", "viewer"))
+                                                     .not.toContain("banned");
+    await bot.command("!skip", "streamer");
+
+    await bot.command("!add valid03", "viewer");
+    await bot.command("!win", "streamer");
+    await bot.command("!nope valid03", "streamer");
+    expect(await bot.command("!check valid03", "viewer")).toContain("banned");
+    await bot.command("!back", "streamer");
+    expect(await bot.command("!check valid03", "viewer"))
+                                                     .not.toContain("banned");
+    await bot.command("!skip", "streamer");
+
+    await bot.command("!add valid04", "viewer");
+    await bot.command("!nope valid04", "streamer");
+    expect(await bot.command("!check valid04", "viewer")).toContain("banned");
+    await bot.command("!back", "streamer");
+    expect(await bot.command("!check valid04", "viewer"))
+                                                     .not.toContain("banned");
+    expect(this.bookmarks).toEqual(["valid04"]);
+    await bot.command("!skip", "streamer");
+
+    const bot2 = await this.buildBotInstance({config: {persistence: {
+      enabled: true
+    }}});
+    await bot2.command("!add valid01", "viewer");
+    expect(this.bookmarks).toEqual(['valid01']);
+    await bot2.command("!skip", "streamer");
+    await bot2.command("!add valid02", "viewer");
+    expect(this.bookmarks).toEqual(['valid02']);
+    await bot2.command("!skip", "streamer");
+    await bot2.command("!add valid03", "viewer");
+    expect(this.bookmarks).toEqual(['valid03']);
+    await bot2.command("!skip", "streamer");
+    await bot2.command("!add valid04", "viewer");
+    expect(this.bookmarks).toEqual(['valid04']);
+  });
+
   it("only works for the streamer", async function() {
     const bot = await this.buildBotInstance();
     await bot.command("!add valid01", "viewer");

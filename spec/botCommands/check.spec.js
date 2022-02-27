@@ -17,6 +17,17 @@ describe("the !check command", () => {
     expect(this.getChat().join("\t")).toContain("Unable to find levels for EmployEE 000's Profile");
   });
 
+  it("ignores banned levels", async function() {
+    const bot = await this.buildBotInstance({config: {persistence: {
+      enabled: true
+    }}});
+
+    await bot.command("!nope 001l001", "streamer");
+    await bot.command("!check emp001", "viewer");
+
+    expect(this.getChat().join("\t")).toContain("Unable to find levels for EmployEE 001's Profile");
+  });
+
   it("finds the most recent unplayed level for a creator", async function() {
     const checkChat = id => {
       const chat = this.getChat().join("\t");

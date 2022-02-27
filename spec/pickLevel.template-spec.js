@@ -1,4 +1,5 @@
 const itDequeues = require("./dequeue.template-spec");
+const itPlaysALevel = require("./playLevel.template-spec");
 
 // This template generates tests for commands that let the streamer pick a
 // level to play next.
@@ -21,12 +22,17 @@ const itDequeues = require("./dequeue.template-spec");
 //   - incrementPlayed : if true, it is expected that the command will add 1
 //     to the "played levels" count; if false, the count is not checked by
 //     these tests.  (default is true)
+//   - supportsCreatorCode : if true, the callback should work regardless of
+//     the type of level in the "now playing" position.  If false, tests will
+//     avoid having a creator code in "now playing" when the callback is
+//     invoked.  (default is true)
 
 const fp = require("lodash/fp");
 
 module.exports = itPicksALevel = (cmd, {
   botConfig = {},
-  incrementPlayed = true
+  incrementPlayed = true,
+  supportsCreatorCode = true,
 } = {}) => {
   describe("picks the next level to play, so", () => {
     let buildBot;
@@ -48,6 +54,7 @@ module.exports = itPicksALevel = (cmd, {
         incrementPlayed,
         nextPosition: 3,
         nextRequired: true,
+        supportsCreatorCode,
         updateCurrentRound: false,
       });
       itPlaysALevel(3, cb, { botConfig });
@@ -87,6 +94,7 @@ module.exports = itPicksALevel = (cmd, {
         incrementPlayed,
         nextPosition: 5,
         nextRequired: true,
+        supportsCreatorCode,
         updateCurrentRound: false
       });
       itPlaysALevel(5, cb, { botConfig });
@@ -147,6 +155,7 @@ module.exports = itPicksALevel = (cmd, {
         incrementPlayed,
         nextPosition: 5,
         nextRequired: true,
+        supportsCreatorCode,
         updateCurrentRound: false
       });
       itPlaysALevel(5, cb, { botConfig });

@@ -71,6 +71,9 @@
         position: relative;
         width: 90%;
       }
+      .level.banned {
+        background-color: #7f2f2f;
+      }
       .level.filtered-level {
         display: none;
       }
@@ -83,6 +86,12 @@
         position: absolute;
         top: 3px;
         width: 100%;
+      }
+      .banned > .cover {
+        opacity: .625;
+      }
+      .banned > .cover:hover {
+        opacity: .25;
       }
       .cover:hover {
         opacity: 0;
@@ -243,6 +252,11 @@
             <div class="checked-filter-row">
               <input type="checkbox" id="level-difficulty-unk-filter" checked>
               Unknown
+            </div>
+            <hr>
+            <div class="checked-filter-row">
+              <input type="checkbox" id="level-banned-filter" checked>
+              Show Banned Levels
             </div>
           </div>
           <div>
@@ -493,6 +507,11 @@
             buildLevelEl(level);
             listEl.appendChild(level.el);
           }
+          if (level.banned) {
+            level.el.classList.add('banned');
+          } else {
+            level.el.classList.remove('banned');
+          }
           if (filters.every(filter => filter(level))) {
             level.el.classList.remove('filtered-level');
             level.el.style.order = n;
@@ -537,6 +556,9 @@
         }
         if (!document.getElementById("level-difficulty-unk-filter").checked) {
           filters.push(l => l.difficulty);
+        }
+        if (!document.getElementById("level-banned-filter").checked) {
+          filters.push(l => !l.banned);
         }
 
         for (const tag of document.querySelectorAll(
@@ -599,6 +621,13 @@
             break;
           case "levels":
             model.levels = model.levels.concat(data.levels);
+            break;
+          case "level-update":
+            const i = model.levels.findIndex(l => l.id === data.level.id);
+            if (i > -1) {
+              model.levels[i].el.remove();
+              model.levels[i] = data.level;
+            }
             break;
         }
         updateView(data.type === "info");

@@ -10,6 +10,17 @@
 
 module.exports = itChecksALevel = cb => {
   describe("checks a level, so it", () => {
+    it("sees if a level is banned", async function() {
+      const bot = await this.buildBotInstance({config: {persistence: {
+        enabled: true
+      }}});
+      await bot.command("!nope valid01", "streamer");
+
+      const response = await cb(bot, "viewer", "valid01");
+
+      expect(response).toContain("has banned Valid Level 01 (valid01)");
+    });
+
     it("sees if the API says you've beaten a level", async function() {
       const bot = await this.buildBotInstance();
 

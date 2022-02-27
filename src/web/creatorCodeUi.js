@@ -24,7 +24,7 @@ module.exports = {
     const config = httpServer.getConfig();
 
     console.log( `Keep a browser at http://localhost:${config.httpPort}/ui/creatorCode.html to\n`
-               + 'control handling of creator codes.'); 
+               + 'control handling of creator codes.');
 
     httpServer.register(wsUrl, ws => {
       ws.send(infoMessage());
@@ -49,6 +49,17 @@ module.exports = {
       levels,
       type: 'levels'
     }));
+  },
+
+  updateCreatorLevel: level => {
+    const i = creatorInfo.levels.findIndex(l => l.id === level.id);
+    if (i > -1) {
+      creatorInfo.levels[i] = level;
+      httpServer.broadcast(wsUrl, JSON.stringify({
+        level,
+        type: 'level-update'
+      }));
+    }
   },
 
   clearCreatorInfo: () => {

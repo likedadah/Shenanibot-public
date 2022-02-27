@@ -36,7 +36,7 @@ class LevelCache {
   }
 
   getCreator(creatorId) {
-    return creators[creatorId]?.creator || null;
+    return fp.clone(creators[creatorId]?.creator || null);
   }
 
   addLevelsForCreator(creatorId, newLevels) {
@@ -77,6 +77,13 @@ class LevelCache {
     this.persistenceManager.interactionsChanged(level);
   }
 
+  levelIsBanned(levelId, banned = true) {
+    levels[levelId] = {
+      ...levels[levelId],
+      banned
+    }
+  }
+
   removeLevel(levelId) {
     const entry = levels[levelId];
     if (entry) {
@@ -91,7 +98,8 @@ class LevelCache {
 
 const mapLevel = level => Object.assign(fp.clone(level), {
   played: levels[level.id].interactions?.played || level.played,
-  beaten: levels[level.id].interactions?.beaten || level.beaten
-})
+  beaten: levels[level.id].interactions?.beaten || level.beaten,
+  banned: levels[level.id].banned
+});
 
 module.exports = { LevelCache };

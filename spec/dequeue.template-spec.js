@@ -2,11 +2,14 @@
 // level from the queue after that level has been played.
 
 // Params:
-// - cb(bot) : a callback that accepts a bot instance as its 1st parameter
-//   The callback should trigger the bot command or function being tested,
-//   which is expected to remove the "now playing" level.  The bot will
-//   already have its queue initialized in a manner consistent with the
-//   specified options (below).
+// - cb(bot, id) : a callback that accepts a bot instance as its 1st
+//   parameter and an id as its 2nd parameter.  The callback should trigger
+//   the bot command or function being tested, which is expected to remove
+//   the "now playing" level.  The bot will already have its queue
+//   initialized in a manner consistent with the specified options (below),
+//   and the 'now playing' level's id is passed as the 2nd parameter.  (If
+//   the supportsMarker option is true, then the id could be falsy, which
+//   would indicate that a marker is in the "now playing" position.)
 // - options : an object which may include the follwoing values:
 //   - botConfig : an ojbect that will be merged into the config for each
 //     test's bot.  This allows for callbacks that only dequeue levels with
@@ -30,6 +33,12 @@
 //     will be the only level submitted by "viewer0".  If nextRequired is
 //     false, then tests that don't depend on the next level will not place
 //     any level at nextPosition.  (default is false)
+//   - supportsCreatorCode : if true, cb() is expected to work whether the
+//     "now playing" entry is a level or a creator; if false, skips tests
+//     where the "now playing" entry is a creator.  (default is true)
+//   - supportsMarker : if true, cb() is expected to work even if the "now
+//     playing" entry is a marker; if false, skips tests where the "now
+//     playing" entry is a marker.  (default is true)
 //   - updateCurrentRound : a boolean indicating how the command updates the
 //     round (in rotation priority mode) in the event that the entry moving
 //     into the "now playing" position is not from the current round.  If true,
@@ -44,6 +53,8 @@ module.exports = async (cb, {
   incrementPlayed = true,
   nextPosition = 2,
   nextRequired = false,
+  supportsCreatorCode = true,
+  supportsMarker = true,
   updateCurrentRound = true
 } = {}) => {
   let buildBot;
@@ -74,7 +85,7 @@ module.exports = async (cb, {
       await buildQueue(bot);
       expect(this.bookmarks).toContain("valid01");
 
-      await cb(bot);
+      await cb(bot, "valid01");
 
       expect(this.bookmarks).not.toContain("valid01");
     });
@@ -87,7 +98,7 @@ module.exports = async (cb, {
       }});
       await buildQueue(bot);
 
-      await cb(bot);
+      await cb(bot, "valid01");
       await bot.command("!add 001l001", "viewer0");
 
       const queue = await this.getSimpleQueue();
@@ -104,7 +115,7 @@ module.exports = async (cb, {
       });
       await buildQueue(bot, true);
 
-      await cb(bot);
+      await cb(bot, "valid01");
 
       if (updateCurrentRound) {
         await bot.command("!add 001l001", "newviewer");
@@ -132,7 +143,7 @@ module.exports = async (cb, {
         await buildQueue(bot, true);
 
         jasmine.clock().tick(59999);
-        await cb(bot);
+        await cb(bot, "valid01");
         jasmine.clock().tick(1);
         await bot.command("!add 001l001", "newviewer");
         jasmine.clock().tick(60000);
@@ -154,7 +165,7 @@ module.exports = async (cb, {
       await bot.command("!nospoil", "viewer1");
       await bot.command("!nospoil", "viewer2");
 
-      await cb(bot);
+      await cb(bot, "valid01");
 
       expect(Object.keys(this.getAllDms())).toEqual(["viewer1", "viewer2"]);
       expect(this.getDmsFor("viewer1")).toEqual([
@@ -173,33 +184,35 @@ module.exports = async (cb, {
       await bot.command("!nospoil", "viewer2");
 
       this.resetDms();
-      await cb(bot);
+      await cb(bot, "valid01");
 
       expect(Object.keys(this.getAllDms())).toEqual(["viewer2"]);
     });
 
-    it("clears the creator code UI", async function() {
-      const bot = await buildBot({
-        config: {
-          creatorCodeMode: "webui",
-          httpPort: 8080
-        }
-      });
-      await buildQueue(bot, false, "emp001");
-      const token = await this.openWebSocket("ui/creatorCode");
+    if (supportsCreatorCode) {
+      it("clears the creator code UI", async function() {
+        const bot = await buildBot({
+          config: {
+            creatorCodeMode: "webui",
+            httpPort: 8080
+          }
+        });
+        await buildQueue(bot, false, "emp001");
+        const token = await this.openWebSocket("ui/creatorCode");
 
-      const wsMsg = (await Promise.all([
-        cb(bot),
-        this.waitForNextWsMessage(token)
-      ]))[1];
+        const wsMsg = (await Promise.all([
+          cb(bot, "emp001"),
+          this.waitForNextWsMessage(token)
+        ]))[1];
 
-      expect(wsMsg).toEqual({
-        type: "info",
-        creatorId: null,
-        name: null,
-        levels: []
+        expect(wsMsg).toEqual({
+          type: "info",
+          creatorId: null,
+          name: null,
+          levels: []
+        });
       });
-    });
+    }
 
     if (incrementPlayed) {
       it("increases the played level count", async function() {
@@ -209,7 +222,7 @@ module.exports = async (cb, {
         const preCounts = await this.getCounts();
         expect(preCounts.session.played).toEqual(0);
 
-        await cb(bot);
+        await cb(bot, "valid01");
 
         const postCounts = await this.getCounts();
         expect(postCounts.session.played).toEqual(1);
@@ -222,21 +235,23 @@ module.exports = async (cb, {
         await bot.command("!skip", "streamer");
         await bot.command("!back", "streamer");
 
-        await cb(bot);
+        await cb(bot, "valid01");
 
         const postCounts = await this.getCounts();
         expect(postCounts.session.played).toEqual(1);
       });
 
-      it("does not count a marker as a played level", async function() {
-        const bot = await buildBot({config: { httpPort: 8080 }});
-        await buildQueue(bot, false, null);
+      if (supportsMarker) {
+        it("does not count a marker as a played level", async function() {
+          const bot = await buildBot({config: { httpPort: 8080 }});
+          await buildQueue(bot, false, null);
 
-        await cb(bot);
+          await cb(bot);
 
-        const postCounts = await this.getCounts();
-        expect(postCounts.session.played).toEqual(0);
-      });
+          const postCounts = await this.getCounts();
+          expect(postCounts.session.played).toEqual(0);
+        });
+      }
     }
   });
 };

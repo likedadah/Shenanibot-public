@@ -131,6 +131,9 @@ class ShenaniBot {
         case "skip":
           logRaw();
           return this.skipLevel(args);
+        case "nope":
+          logRaw();
+          return this.banLevel(args);
         case "postpone":
           logRaw();
           return this.postponeLevel(args);
@@ -281,6 +284,66 @@ class ShenaniBot {
     this.levelCache.updateSessionInteractions(
              {id: this.queue[0].id, played: this.queue[0].previouslyPlayed} );
     return this.advance(args);
+  }
+
+  async banLevel(args) {
+    if (!this.options.persistence.enabled) {
+      return "To ban levels you need to enable persistence; check your configuration.";
+    }
+
+    let message;
+    const banEntry = entry => {
+      if (entry.type !== "level") {
+        const prefix = this.options.prefix;
+        message = `${args[0]} only works on levels; use ${prefix}skip?`;
+        return false;
+      }
+
+      entry.banned = true;
+      this.levelCache.levelIsBanned(entry.id);
+      this.persistenceManager.entryBanned(entry);
+      this.levels[entry.id] = "is banned from the queue";
+      if (this.options.creatorCodeMode === "webui") {
+        creatorCodeUi.updateCreatorLevel(entry);
+      }
+      message = `${entry.display} has been banned from the queue`;
+      return true;
+    }
+
+    if (['prev', 'previous'].includes(args[1])) {
+      if (!this.prevLevel || this.prevLevel.type === 'mark') {
+        return "There is no previous level to ban!";
+      }
+      banEntry(this.prevLevel);
+      return message;
+    }
+
+    const idType = this._getIdType(args[1] || '');
+    if (idType === 'level' && args[1] !== this.queue[0]?.id) {
+      let level;
+      if (args[1] === this.prevLevel?.id) {
+        level = this.prevLevel;
+      } else {
+        level = await this._getLevel(args[1]);
+        if (!level) {
+          return "Oops! That level does not exist!";
+        }
+      }
+
+      banEntry(level);
+      const i = this.queue.findIndex(e => e.id === args[1]);
+      if (i > -1) {
+        this._removeFromQueue(i);
+        this.onQueue();
+      }
+      return message;
+    }
+
+    if (!this.queue[0] || this.queue[0].type === 'mark') {
+      return "There is no current level to ban!";
+    }
+    return banEntry(this.queue[0]) ? `${message}\n${this.skipLevel(args)}`
+                                   : message;
   }
 
   postponeLevel(args) {
@@ -466,11 +529,16 @@ class ShenaniBot {
     if (this.prevLevel.postponed) {
       this.persistenceManager.postponeReversed(this.prevLevel);
     }
+    if (this.prevLevel.banned) {
+      this.levelCache.levelIsBanned(this.prevLevel.id, false);
+      this.persistenceManager.banReversed(this.prevLevel);
+    }
 
     delete this.prevLevel.counted;
     delete this.prevLevel.countedWon;
     delete this.prevLevel.countedLost;
     delete this.prevLevel.postponed;
+    delete this.prevLevel.banned;
 
     this.prevLevel.wasPrev = true;
     this.levels[this.prevLevel.id] = "is already in the queue";
@@ -623,6 +691,7 @@ class ShenaniBot {
 
       let levels = [];
       this._getLevelsForCreator(id, l => levels = levels.concat(l), () => {
+        levels = levels.filter(l => !l.banned);
         if (!levels.length) {
           this.sendAsync(`Unable to find levels for ${creator.display}!`);
           return;
@@ -798,13 +867,16 @@ class ShenaniBot {
       return response;
     }
 
-    const i = this.queue.findIndex(l => l && l.id === id);
+    let i = this.queue.findIndex(
+                               l => l.id === id && l.submittedBy === username);
+    if (i === -1) {
+      i = this.queue.findIndex(l => l.id === id);
+    }
     if (i === -1) {
       return "The level you tried to remove is not in the queue";
     }
 
     const entry = this.queue[i];
-
     if (entry.submittedBy !== username && this.streamer !== username) {
       return "You can't remove a level from the queue that you didn't submit!";
     }
@@ -1065,8 +1137,10 @@ class ShenaniBot {
       };
     }
 
-    const verb = level.beaten ? "beaten"
-               : (level.played ? "played" : "not played");
+    const verb = level.banned && "banned"
+              || level.beaten && "beaten"
+              || level.played && "played"
+              || "not played";
 
     let warning = "";
     if (verb !== "beaten" && level.players > this.players) {
@@ -1189,6 +1263,7 @@ class ShenaniBot {
           let levels = [];
           this._getLevelsForCreator(this.queue[0].id,
                                     l => levels = levels.concat(l), () => {
+            levels = levels.filter(l => !l.banned);
             if (!levels.length) {
               this.sendAsync(`Unable to find levels for ${this.queue[0].display}!`);
               return;

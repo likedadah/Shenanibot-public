@@ -9,11 +9,13 @@
 // or if it clears the queue, it may want to use clear.template-spec.js; etc.
 
 // Params:
-// - cb(bot) : a callback that accepts a bot instance as its 1st parameter
-//   The callback should trigger the bot command or function being tested,
-//   which is expected to remove the "now playing" level and treat it as not
-//   having been played.  The bot will already have its queue initialized in
-//   a manner consistent with the specified options (below).
+// - cb(bot, id) : a callback that accepts a bot instance as its 1st
+//   parameter and an id as the 2nd parameter.  The callback should trigger
+//   the bot command or function being tested, which is expected to remove
+//   the "now playing" level and treat it as not having been played.  The
+//   bot will already have its queue initialized in a manner consistent with
+//   the specified options (below), and the id passed to the callback will
+//   be the id of the entry to be skipped.
 // - options : an object which may include the follwoing values:
 //   - botConfig : an ojbect that will be merged into the config for each
 //     test's bot.  This allows for callbacks that only dequeue levels with
@@ -40,21 +42,24 @@ module.exports = async (cb, { botConfig = {} } = {}) => {
       const bot = await buildBot();
 
       console.log(await bot.command("!add valid01", "viewer"));
-      await cb(bot);
+      await cb(bot, "valid01");
 
       const counts = await bot.command("!stats");
       expect(counts).toContain('Played: 0');
     });
 
     it("removes 'played' interaction", async function() {
-      const bot = await buildBot();
+      const bot = await buildBot({config: {
+        httpPort: 8080,
+        creatorCodeMode: "webui"
+      }});
 
       await bot.command("!add 001l001", "viewer");
-      await cb(bot);
+      await cb(bot, "001l001");
+      await bot.command("!add emp001", "viewer");
 
-      this.resetChat();
-      await bot.command("!check emp001", "viewer");
-      expect(this.getChat().join('')).toContain('unplayed');
+      const {levels} = await this.getCreatorInfo();
+      expect(levels[0].played).toBeFalsy();
     });
 
     it("does not remove 'played' interactions from prior sessions",
@@ -71,7 +76,7 @@ module.exports = async (cb, { botConfig = {} } = {}) => {
         interactions: true
       }}});
       await bot2.command("!add 001l001", "viewer");
-      await cb(bot2);
+      await cb(bot2, "001l001");
 
       this.resetChat();
       await bot2.command("!check emp001", "viewer");
@@ -90,7 +95,7 @@ module.exports = async (cb, { botConfig = {} } = {}) => {
       await bot.command("!add 001l001", "viewer");
       await bot.command("!next", "streamer");
       await bot.command("!next", "streamer");
-      await cb(bot);
+      await cb(bot, "001l001");
 
       this.resetChat();
       await bot.command("!check emp001", "viewer");
