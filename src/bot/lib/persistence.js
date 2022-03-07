@@ -241,7 +241,6 @@ class PersistenceManager {
       }
       if (level.banned) {
         levelCache.levelIsBanned(level.id);
-        bot.levels[level.id] = "is banned from the queue";
       }
       if (info) {
         fs.writeSync(fd, `${levelId}:${info}\n`, "utf8");

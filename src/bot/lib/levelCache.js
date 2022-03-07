@@ -77,6 +77,13 @@ class LevelCache {
     this.persistenceManager.interactionsChanged(level);
   }
 
+  setLevelRejectReason(levelId, rejectReason) {
+    levels[levelId] = {
+      ...levels[levelId],
+      rejectReason
+    }
+  }
+
   levelIsBanned(levelId, banned = true) {
     levels[levelId] = {
       ...levels[levelId],
@@ -99,7 +106,9 @@ class LevelCache {
 const mapLevel = level => Object.assign(fp.clone(level), {
   played: levels[level.id].interactions?.played || level.played,
   beaten: levels[level.id].interactions?.beaten || level.beaten,
-  banned: levels[level.id].banned
+  banned: levels[level.id].banned,
+  rejectReason: levels[level.id].banned ? "is banned from the queue"
+                                        : levels[level.id].rejectReason
 });
 
 module.exports = { LevelCache };

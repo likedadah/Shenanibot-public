@@ -29,7 +29,6 @@ class ShenaniBot {
     this.queue = [];
     this.queueOpen = true;
     this.users = {};
-    this.levels = {};
     this.prevLevel = undefined;
     this.forcedAdvance = undefined;
     this.noSpoilUsers = new Set();
@@ -234,7 +233,7 @@ class ShenaniBot {
     this.clearQueue();
 
     for (const id of ids) {
-      this.levels[id] = "has been postponed";
+      this.levelCache.setLevelRejectReason(id, "has been postponed");
     }
 
     return "The queue is closed and all levels have been postponed.";
@@ -302,7 +301,6 @@ class ShenaniBot {
       entry.banned = true;
       this.levelCache.levelIsBanned(entry.id);
       this.persistenceManager.entryBanned(entry);
-      this.levels[entry.id] = "is banned from the queue";
       if (this.options.creatorCodeMode === "webui") {
         creatorCodeUi.updateCreatorLevel(entry);
       }
@@ -361,7 +359,7 @@ class ShenaniBot {
     entry.postponed = true;
 
     if (entry.type === 'level') {
-      this.levels[entry.id] = "has been postponed";
+      this.levelCache.setLevelRejectReason(entry.id, "has been postponed");
     }
 
     return response;
@@ -541,7 +539,8 @@ class ShenaniBot {
     delete this.prevLevel.banned;
 
     this.prevLevel.wasPrev = true;
-    this.levels[this.prevLevel.id] = "is already in the queue";
+    this.levelCache.setLevelRejectReason(
+                                 this.prevLevel.id, "is already in the queue");
     this.prevLevel = null;
 
     this.forcedAdvance = "next";
@@ -567,7 +566,7 @@ class ShenaniBot {
     this.prevLevel = undefined;
 
     for (const entry of removedLevels) {
-      this.levels[entry.id] = undefined;
+      this.levelCache.setLevelRejectReason(entry.id, undefined);
     }
 
     if (this.options.levelLimitType === "active") {
@@ -740,19 +739,18 @@ class ShenaniBot {
 
     let entry = null;
     if (type === "level") {
-      const reason = this.levels[id];
-      if (reason) {
-        return `That level ${reason}!`;
-      }
-
       entry = await this._getLevel(id);
+
       if (!entry) {
         return "Oops! That level does not exist!";
       }
-
+      if (entry.rejectReason) {
+        return `That level ${entry.rejectReason}!`;
+      }
       if (entry.players > this.players) {
         return `Sorry, ${this.streamer} is not accepting ${entry.players}-player levels.`;
       }
+
       entry.played = entry.beaten = undefined;
     }
 
@@ -777,7 +775,7 @@ class ShenaniBot {
     }
 
     if (type === "level") {
-      this.levels[id] = "is already in the queue";
+      this.levelCache.setLevelRejectReason(id, "is already in the queue");
     }
     return response;
   }
@@ -832,7 +830,7 @@ class ShenaniBot {
         entry.played = entry.beaten = undefined;
         entry.submittedBy = this.streamer;
         if (type === "level") {
-          this.levels[id] = "is already in the queue";
+          this.levelCache.setLevelRejectReason(id, "is already in the queue");
         }
       }
       this.queue.push(entry);
@@ -887,7 +885,11 @@ class ShenaniBot {
     this._removeFromQueue(i);
     this.onQueue();
     if (entry.type === "level") {
-      this.levels[id] = (username === this.streamer) ? `was removed by ${username}; it can't be re-added` : null;
+      this.levelCache.setLevelRejectReason(id,
+          (username === this.streamer)
+              ? `was removed by ${username}; it can't be re-added`
+              : null
+      );
     }
 
     return `${entry.display} was removed from the queue!`;
@@ -1208,7 +1210,8 @@ class ShenaniBot {
 
     this._stopPlayingLevel();
     if (this.queue[0].type === "level") {
-      this.levels[this.queue[0].id] = "was already played";
+      this.levelCache.setLevelRejectReason(
+                                      this.queue[0].id, "was already played");
     }
     if (this.queue[0].type !== "mark") {
       if (this.queue[0].counted === undefined) {
