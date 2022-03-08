@@ -18,6 +18,7 @@ The bot stores a list of viewer-submitted levelcodes for you to play, and automa
 `!noreward [reward behavior]` : Removes the assignment of a reward behavior from whatever custom reward currently has that behavior  
 `!reset stats` : reset the counts of levels played, won, and lost.  If stat persistence is enabled, then the historical counts are reset along with the current-session counts  
 `!players [n]` : change the maximum acceptable "required players" value for levels to be added to the queue.  This will revert to the default the next time you restart the bot (see [Queue Management Options](#queue-management-options))  
+`!nope [level code | prev]` : ban a level from future submission to the queue.  This command only works if persistence is enabled.  If you don't give any argument, this bans (and skips) the current "now playing" level.  If you say `!nope prev`, it bans the most recently dequeued level (so you can count the level as played, won, or lost but then ban it from resubmission).  If you give a level code as the argument and the level is in the queue, it wil be removed.  
 
 **Advancing the Queue**  
 When you are done with the current "now playing" level, there are several commands you can use to advance the queue (depending on how you want the new "now playing" level chosen and/or how you want level counts updated).
@@ -43,9 +44,12 @@ Like `!win` and `!lose`, `!skip` will use the "default advance mode" if the "and
 
 If persistence is enabled, you can also use
 
-`!postpone [and play ...]` : Saves the level to be played in the next session 
+`!postpone [and play ...]` : Saves the level to be played in the next session  
+`!nope [and play ...]` : Skips the level and bans it from future resubmission  
 
 The `!postpone` command works just like `!skip`, except the level will automatically be reloaded into the queue the next time the bot starts up (assuming persistence is still enabled).  Reloaded level(s) are not counted against any player's limit, and in "rotation" mode they are placed in a round before any newly-submitted levels.
+
+The `!nope` command is described in more detail in the previous section, but note that when using it to skip the current level `...and play...` syntax is also accepted.
 
 Finally, if you have set the "default advance mode" to alternate, there may be situations where you want to take advantage of this ability to automatically alternate between `!next` and `!random` even though none of the above commands that do that are applicable.  For example, you may not be counting wins and losses; or you may want to count the level as a draw.  In those cases, you can use
 
@@ -60,6 +64,8 @@ If you accidentally advance the queue and then realize you're not really done wi
 If dequeuing the level increased the played and/or win/loss counts, they are returned to their previous values.
 
 If the previous level had been postponed, this is also undone; so the level will not be reloaded when the bot restarts.
+
+If the previous level had been banned (see `!nope`), then it is unbanned (as it could not otherwise be put back into the queue).
 
 Only the most recently dequeued level is remembered; so although you can use the command as many times as you want, you can't use it "twice in a row" to go back two levels.
 
