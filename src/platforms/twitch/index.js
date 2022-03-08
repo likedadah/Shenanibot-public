@@ -37,13 +37,20 @@ function connectAs(username, password) {
   const dmClient = params.auth.streamerToken
                  ? connectAs(params.auth.streamer, params.auth.streamerToken)
                  : botClient;
+  const tryWhisper = async (u, m) => {
+    try {
+      await dmClient.whisper(u, m);
+    } catch(e) {
+      console.log(new Date(), `ERROR: unable to whisper to ${u} - ${e}`); 
+    }
+  }
+
   const shenanibot = new ShenaniBot(params,
                                     m => botClient.say(params.auth.channel, m),
-                                    (u, m) => dmClient.whisper(u, m),
-                                    u => dmClient.canWhisperTo(u));
+                                    tryWhisper, u => dmClient.canWhisperTo(u));
   await shenanibot.init();
   console.log('Don\'t worry if it says \'Error: No response from twitch\', it should still work!');
-  
+
   botClient.on('connected', (address, port) => {
     botClient.action(params.auth.channel, 'ShenaniBot Connected!');
   });
