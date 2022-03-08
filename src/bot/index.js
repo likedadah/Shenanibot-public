@@ -133,6 +133,9 @@ class ShenaniBot {
         case "nope":
           logRaw();
           return this.banLevel(args);
+        case "unban":
+          logRaw();
+          return args[1] ? this.unbanLevel(args[1]) : "";
         case "postpone":
           logRaw();
           return this.postponeLevel(args);
@@ -342,6 +345,34 @@ class ShenaniBot {
     }
     return banEntry(this.queue[0]) ? `${message}\n${this.skipLevel(args)}`
                                    : message;
+  }
+
+  async unbanLevel(id) {
+    if (!this.options.persistence.enabled) {
+      return "To unban levels you need to enable persistence; check your configuration.";
+    }
+
+    const idType = this._getIdType(id); 
+    if (idType !== "level") {
+      return `${id} is not a valid level code`;
+    }
+    const level = (id === this.prevLevel?.id) ? this.prevLevel
+                                              : await this._getLevel(id);
+    if (!level) {
+      return "Oops! That level does not exist!";
+    }
+	  console.log('>>', level);
+    if (!level.banned) {
+      return "That level was already not banned!";
+    }
+
+    level.banned = false;
+    this.levelCache.levelIsBanned(level.id, false);
+    this.persistenceManager.banReversed(level);
+    if (this.options.creatorCodeMode === "webui") {
+      creatorCodeUi.updateCreatorLevel(await this._getLevel(level.id));
+    }
+    return `${level.display} is no longer banned from the queue`;
   }
 
   postponeLevel(args) {
