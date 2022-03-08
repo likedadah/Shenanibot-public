@@ -29,7 +29,7 @@ class MockRumpusCE {
             if (typeof levelIds === 'string') {
               levelIds = [levelIds];
             }
-            for (const levelId of levelIds) {
+            for (const levelId of levelIds.slice(0,5)) {
               const validLevelMatch = levelId.match(/^valid(\d\d)$/);
               if (validLevelMatch) {
                 levels.push({
@@ -125,7 +125,7 @@ class MockRumpusCE {
           if (typeof userIds === 'string') {
             userIds = [userIds];
           }
-          for (const userId of userIds) {
+          for (const userId of userIds.slice(0,5)) {
             const validCreatorMatch = userId.match(/^emp(\d\d\d)$/);
             if (validCreatorMatch) {
               creators.push({

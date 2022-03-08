@@ -155,6 +155,31 @@ describe("the !postpone command", () => {
             [ 'valid03', 'emp002', 'valid01', 'emp001', 'valid02', 'emp003' ]);
   });
 
+  it("can requeue lots of entries", async function() {
+    const bot = await this.buildBotInstance({config: {persistence: {
+      enabled: true
+    }}});
+    for (let i = 0; i < 6; i++) {
+      await bot.command(`!add valid0${i}`, "viewer");
+      await bot.command(`!add emp00${i}`, "viewer");
+    }
+    for (let i = 0; i < 12; i++) {
+      await bot.command("!postpone", "streamer");
+    }
+
+    const bot2 = await this.buildBotInstance({config: {
+      persistence: { enabled: true },
+      httpPort: 8080
+    }});
+    const queue = await this.getSimpleQueue();
+    expect(queue.map(e => e.id).sort()).toEqual([
+      'emp000',  'emp001',  'emp002',
+      'emp003',  'emp004',  'emp005',
+      'valid00', 'valid01', 'valid02',
+      'valid03', 'valid04', 'valid05'
+    ]);
+  });
+
   it("in rotation mode puts reloaded levels in a round before new submissions",
      async function() {
     const bot = await this.buildBotInstance({config: {persistence: {

@@ -1357,7 +1357,7 @@ class ShenaniBot {
 
   async _getCreators(ids) {
     const creators = {};
-    const cacheMisses = [];
+    const remaining = new Set();
 
     for (const id of ids) {
       const cachedCreator = this.levelCache.getCreator(id);
@@ -1365,16 +1365,21 @@ class ShenaniBot {
         creators[id] = cachedCreator;
       } else {
         creators[id] = null;
-        cacheMisses.push(id);
+        remaining.add(id);
       }
     }
 
-    if (cacheMisses.length > 0) {
-      for (const creatorInfo of await this.rce.levelhead.players.search({
-        userIds: cacheMisses,
+    while (remaining.size > 0) {
+      const creatorInfos = await this.rce.levelhead.players.search({
+        userIds: Array.from(remaining),
         includeAliases: true
-      }, { doNotUseKey: true })) {
+      }, { doNotUseKey: true });
+      if (creatorInfos.length === 0) {
+        break;
+      }
+      for (const creatorInfo of creatorInfos) {
         const aliasInfo = await creatorInfo.alias;
+        remaining.delete(aliasInfo.userId);
         creators[aliasInfo.userId] = this.levelCache.addCreator(
                                                     this._mapAlias(aliasInfo));
       }
@@ -1389,7 +1394,7 @@ class ShenaniBot {
 
   async _getLevels(levelIds) {
     const levels = {};
-    const cacheMisses = [];
+    const remaining = new Set();
 
     for (const levelId of levelIds) {
       const cachedLevel = this.levelCache.getLevel(levelId);
@@ -1397,15 +1402,20 @@ class ShenaniBot {
         levels[levelId] = cachedLevel;
       } else {
         levels[levelId] = null;
-        cacheMisses.push(levelId);
+        remaining.add(levelId);
       }
     }
 
-    if (cacheMisses.length > 0) {
-      for (const levelInfo of await this.rce.levelhead.levels.search({
-        levelIds: cacheMisses,
+    while (remaining.size > 0) {
+      const levelInfos = await this.rce.levelhead.levels.search({
+        levelIds: Array.from(remaining),
         includeMyInteractions: true
-      })) {
+      });
+      if (levelInfos.length === 0) {
+        break;
+      }
+      for (const levelInfo of levelInfos) {
+        remaining.delete(levelInfo.levelId);
         levels[levelInfo.levelId] = this.levelCache.addLevel(
                                                    this._mapLevel(levelInfo));
       }
