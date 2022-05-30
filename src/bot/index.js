@@ -1034,6 +1034,9 @@ class ShenaniBot {
         const id = message[
           (message[0] === `${this.options.prefix}add`) ? 1 : 0
         ];
+        if (!id) {
+          return `The ${behavior} reward requires an id!`;
+        }
         return this.addEntryToQueue(id, username, behavior);
     }
     return "";

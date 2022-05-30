@@ -20,6 +20,16 @@ describe("the 'add' channel point reward", () => {
     expect(this.bookmarks).toEqual(["valid02"]);
   });
 
+  it("does nothing if not given a level code", async function() {
+    const bot = await this.buildBotInstance({twitch: {
+      rewardBehaviors: {"reward-id-add": "add"}
+    }});
+
+    await bot.command("!add", "noobjr", "reward-id-add");
+    await bot.command("", "noobjr", "reward-id-add");
+    expect(this.bookmarks).toEqual([]);
+  });
+
   it("works with creator codes", async function() {
     const bot = await this.buildBotInstance({config: {
       httpPort: 8080
