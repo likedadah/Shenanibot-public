@@ -39,6 +39,21 @@ beforeAll(function() {
     );
   };
 
+  this.waitForWsMessages = async (token, n) => {
+    const messages = [];
+    return new Promise(resolve => {
+      const listener = msg => {
+        messages.push(JSON.parse(msg));
+        n -= 1;
+        if (!n) {
+          webSockets[token].ws.off('message', listener);
+          resolve(messages);
+        }
+      }
+      webSockets[token].ws.on('message', listener);
+    });
+  };
+
   this.sendWsMessage = async (token, data) => {
     webSockets[token].ws.send(JSON.stringify(data));
   };

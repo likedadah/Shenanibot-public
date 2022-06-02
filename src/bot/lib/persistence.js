@@ -29,7 +29,7 @@ class PersistenceManager {
 
       fs.closeSync(fd);
 
-      bot.addInitialEntriesToQueue(initialEntries);
+      await bot.addInitialEntriesToQueue(initialEntries);
       this._clearData();
     }
   }
@@ -227,6 +227,7 @@ class PersistenceManager {
     }
     if (this.options.stats) {
       bot.counts.history = stats;
+      bot.onCounts();
     }
   }
 

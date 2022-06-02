@@ -1,7 +1,8 @@
-const Rumpus = require("@bscotch/rumpus-ce");
 const clipboard = require("clipboardy");
+const Rumpus = require("@bscotch/rumpus-ce");
 
 const version = require('../../package.json').version;
+const { LHClient } = require("../lhClient");
 const { LevelCache } = require("./lib/levelCache");
 const { PersistenceManager } = require("./lib/persistence");
 const { ViewerLevel, Creator, Marker } = require("./lib/queueEntry");
@@ -20,6 +21,7 @@ class ShenaniBot {
     this.dm = dm;
     this.canDm = canDm;
     this.rce = new Rumpus.RumpusCE(botOptions.auth.delegationToken);
+    this.lhClient = new LHClient(botOptions.auth.delegationToken, log);
     this.persistenceManager = new PersistenceManager(
                                                 botOptions.config.persistence);
     this.levelCache = new LevelCache(this.persistenceManager);
@@ -68,21 +70,19 @@ class ShenaniBot {
   }
 
   async init() {
-    await this.persistenceManager.init(this, this.levelCache);
-
     if (this.options.httpPort) {
       httpServer.start(this.options);
       overlay.init();
       overlay.sendCounts(this.counts);
       this.onStatus = isOpen => overlay.sendStatus(isOpen);
       this.onQueue = () => overlay.sendLevels(this.queue);
-      this.onCounts = () => {
-        overlay.sendCounts(this.counts);
-      }
+      this.onCounts = () => overlay.sendCounts(this.counts);
       if (this.options.creatorCodeMode === "webui") {
         creatorCodeUi.init((c, l) => this._specifyLevelForCreator(c, l));
       }
     }
+
+    await this.persistenceManager.init(this, this.levelCache);
   }
 
   async command(message, username, rewardId) {
@@ -108,7 +108,7 @@ class ShenaniBot {
           return this.closeQueue();
         case "suspend":
           logRaw();
-          return this.suspendQueue();
+          return await this.suspendQueue();
         case "players":
           logRaw();
           return this.setPlayers(args[1]);
@@ -120,16 +120,17 @@ class ShenaniBot {
           return args[1] ? this.giveBoostToUser(args[1].toLowerCase()) : "";
         case "next":
           logRaw();
-          return this.nextLevel();
+          return await this.nextLevel();
         case "play":
           logRaw();
-          return this.playSpecificLevel(args.slice(1).join(" ").toLowerCase());
+          return await this.playSpecificLevel(args.slice(1).join(" ")
+                                                              .toLowerCase());
         case "random":
           logRaw();
-          return this.randomLevel();
+          return await this.randomLevel();
         case "skip":
           logRaw();
-          return this.skipLevel(args);
+          return await this.skipLevel(args);
         case "nope":
           logRaw();
           return this.banLevel(args);
@@ -138,22 +139,22 @@ class ShenaniBot {
           return args[1] ? this.unbanLevel(args[1]) : "";
         case "postpone":
           logRaw();
-          return this.postponeLevel(args);
+          return await this.postponeLevel(args);
         case "advance":
           logRaw();
-          return this.advance();
+          return await this.advance();
         case "win":
           logRaw();
-          return this.winLevel(args);
+          return await this.winLevel(args);
         case "lose":
           logRaw();
-          return this.loseLevel(args);
+          return await this.loseLevel(args);
         case "back":
           logRaw();
-          return this.goBack();
+          return await this.goBack();
         case "clear":
           logRaw();
-          return this.clearQueue();
+          return await this.clearQueue();
         case "reset":
           logRaw();
           return this.reset(args[1]);
@@ -171,7 +172,7 @@ class ShenaniBot {
 
     if (rewardId) {
       logRaw();
-      return this.processReward(rewardId, args, username);
+      return await this.processReward(rewardId, args, username);
     }
 
     switch (command) {
@@ -179,7 +180,7 @@ class ShenaniBot {
         return args[1] ? this.checkId(args[1]) : "";
       case "add":
         logRaw();
-        return args[1] ? this.addEntryToQueue(args[1], username) : "";
+        return args[1] ? await this.addEntryToQueue(args[1], username) : "";
       case "chadd":
         logRaw();
         return args[1] ? this.checkAndAddLevel(args[1], username) : "";
@@ -217,7 +218,7 @@ class ShenaniBot {
     return "The queue has been closed! No more levels :(";
   }
 
-  suspendQueue() {
+  async suspendQueue() {
     if (!this.options.persistence.enabled) {
       return "To suspend the queue you need to enable persistence; check your configuration.";
     }
@@ -233,7 +234,7 @@ class ShenaniBot {
     }
 
     this.closeQueue();
-    this.clearQueue();
+    await this.clearQueue();
 
     for (const id of ids) {
       this.levelCache.setLevelRejectReason(id, "has been postponed");
@@ -278,14 +279,14 @@ class ShenaniBot {
     return `@${username}, you may boost one level in the queue now.`;
   }
 
-  skipLevel(args) {
+  async skipLevel(args) {
     if (!this.queue[0] || this.queue[0].type === 'mark') {
       return "There is no current level to skip!";
     }
     this.queue[0].counted = false;
     this.levelCache.updateSessionInteractions(
              {id: this.queue[0].id, played: this.queue[0].previouslyPlayed} );
-    return this.advance(args);
+    return await this.advance(args);
   }
 
   async banLevel(args) {
@@ -343,7 +344,7 @@ class ShenaniBot {
     if (!this.queue[0] || this.queue[0].type === 'mark') {
       return "There is no current level to ban!";
     }
-    return banEntry(this.queue[0]) ? `${message}\n${this.skipLevel(args)}`
+    return banEntry(this.queue[0]) ? `${message}\n${await this.skipLevel(args)}`
                                    : message;
   }
 
@@ -361,7 +362,6 @@ class ShenaniBot {
     if (!level) {
       return "Oops! That level does not exist!";
     }
-	  console.log('>>', level);
     if (!level.banned) {
       return "That level was already not banned!";
     }
@@ -375,7 +375,7 @@ class ShenaniBot {
     return `${level.display} is no longer banned from the queue`;
   }
 
-  postponeLevel(args) {
+  async postponeLevel(args) {
     if (!this.options.persistence.enabled) {
       return "To postpone levels you need to enable persistence; check your configuration.";
     }
@@ -386,7 +386,7 @@ class ShenaniBot {
     }
 
     this.persistenceManager.entryPostponed(this.queue[0]);
-    const response = this.skipLevel(args);
+    const response = await this.skipLevel(args);
     entry.postponed = true;
 
     if (entry.type === 'level') {
@@ -396,7 +396,7 @@ class ShenaniBot {
     return response;
   }
 
-  winLevel(args) {
+  async winLevel(args) {
     if (!this.queue[0] || this.queue[0].type === 'mark') {
       return "There is no current level to win!";
     }
@@ -405,47 +405,48 @@ class ShenaniBot {
     this.persistenceManager.statIncremented('won');
     this.levelCache.updateSessionInteractions(
                                          {id: this.queue[0].id, beaten: true});
-    return this.advance(args);
+    return await this.advance(args);
   }
 
-  loseLevel(args) {
+  async loseLevel(args) {
     if (!this.queue[0] || this.queue[0].type === 'mark') {
       return "There is no current level to lose!";
     }
     this.queue[0].countedLost = true;
     this.counts.session.lost += 1;
     this.persistenceManager.statIncremented('lost');
-    return this.advance(args);
+    return await this.advance(args);
   }
 
-  advance(args = []) {
+  async advance(args = []) {
     if (args.slice(1, 3).join(" ").toLowerCase() === 'and play') {
-      return this.playSpecificLevel(args.slice(3).join(" ").toLowerCase());
+      return await this.playSpecificLevel(args.slice(3).join(" ")
+                                                               .toLowerCase());
     }
     const advance = this.forcedAdvance || this.options.defaultAdvance
     this.forcedAdvance = undefined;
     switch (advance) {
       case "random":
-        return this.randomLevel();
+        return await this.randomLevel();
       case "alternate":
-        return (this.defaultAdvanceCallCount++ % 2) ? this.randomLevel()
-                                                    : this.nextLevel();
+        return (this.defaultAdvanceCallCount++ % 2) ? await this.randomLevel()
+                                                    : await this.nextLevel();
       default:
-        return this.nextLevel();
+        return await this.nextLevel();
     }
   }
 
-  nextLevel() {
+  async nextLevel() {
     let {empty, response} = this._dequeue();
     if (!empty) {
-      response = this._playLevel();
+      response = await this._playLevel();
     }
 
     this.onQueue();
     return response;
   }
 
-  playSpecificLevel(args) {
+  async playSpecificLevel(args) {
     let index;
 
     let match;
@@ -489,13 +490,13 @@ class ShenaniBot {
       this.queue.unshift(entry);
     }
     let response = `Pulled ${this.queue[0].display} to the front of the queue...`;
-    response += this._playLevel();
+    response += await this._playLevel();
 
     this.onQueue();
     return response;
   }
 
-  randomLevel() {
+  async randomLevel() {
     let {empty, response} = this._dequeue();
     if (!empty) {
       const markerIndex = this.queue.findIndex(e => e.type === "mark");
@@ -518,7 +519,7 @@ class ShenaniBot {
 
         response = `Random Level... `
       }
-      response = (response || "") + this._playLevel();
+      response = (response || "") + await this._playLevel();
     }
 
     this.onQueue();
@@ -577,7 +578,7 @@ class ShenaniBot {
     this.forcedAdvance = "next";
     this.onCounts();
     this.onQueue();
-    return `Restoring previous queue entry... ${this._playLevel()}}`;
+    return `Restoring previous queue entry... ${await this._playLevel()}`;
   }
 
   async clearQueue() {
@@ -590,7 +591,7 @@ class ShenaniBot {
 
     if (this.queue[0] && this.queue[0].type !== "mark") {
       this.queue = [this.queue[0]];
-      this.skipLevel();
+      await this.skipLevel();
     } else {
       this.queue = [];
     }
@@ -802,7 +803,7 @@ class ShenaniBot {
     response = this._hasLimit() ? `${response} Submission ${user.levelsSubmitted}/${this.options.levelLimit}` : response;
 
     if (this.queue.length === 1) {
-      response = `${response}\n${this._playLevel()}`;
+      response = `${response}\n${await this._playLevel()}`;
     }
 
     if (type === "level") {
@@ -845,12 +846,12 @@ class ShenaniBot {
       const entry = getEntry(type, id, name);
 
       if (!entry) {
-        console.log(`WARNING: failed to reload ${type} ${id}!`);
+        log(`WARNING: failed to reload ${type} ${id}!`);
         continue;
       }
       if (entry.players > this.players) {
-        console.log(`WARNING: ${type} ${id} requires ${entry.players} players;`
-                  + " leaving it for a future session.");
+        log(`WARNING: ${type} ${id} requires ${entry.players} players;`
+           + " leaving it for a future session.");
         this.persistenceManager.entryPostponed(entry);
         continue;
       }
@@ -869,10 +870,9 @@ class ShenaniBot {
     if (this.options.priority === "rotation") {
       this.minOpenRound = round + 1;
     }
-
     this.onQueue();
     if (this.queue.length) {
-      this.sendAsync(this._playLevel());
+      this.sendAsync(await this._playLevel());
     }
   }
 
@@ -1020,7 +1020,7 @@ class ShenaniBot {
     Want to use it in your own stream? Learn about it here: https://github.com/madelsberger/Shenanibot-public`;
   }
 
-  processReward(rewardId, message, username) {
+  async processReward(rewardId, message, username) {
     const behavior = this.twitch.rewardBehaviors[rewardId];
     switch (behavior) {
       case "urgent":
@@ -1037,7 +1037,7 @@ class ShenaniBot {
         if (!id) {
           return `The ${behavior} reward requires an id!`;
         }
-        return this.addEntryToQueue(id, username, behavior);
+        return await this.addEntryToQueue(id, username, behavior);
     }
     return "";
   }
@@ -1280,15 +1280,19 @@ class ShenaniBot {
     };
   }
 
-  _playLevel() {
+  async _playLevel() {
     if (this.queue[0].type === "level") {
+      let warning = "";
       const upToDateLevel = this.levelCache.getLevel(this.queue[0].id);
       this.queue[0].previouslyPlayed = upToDateLevel.played;
       this.queue[0].previouslyBeaten = upToDateLevel.beaten;
-      this.rce.levelhead.bookmarks.add(this.queue[0].id);
+      if (! await this.lhClient.addBookmark(this.queue[0].id) ) {
+        this.queue[0].bookmarkError = true;
+	warning = "\nWARNING: Unable to create bookmark for current level!";
+      }
       this.levelCache.updateSessionInteractions(
                                          {id: this.queue[0].id, played: true});
-      return `Now playing ${this.queue[0].display} submitted by ${this.queue[0].submittedBy}`;
+      return `Now playing ${this.queue[0].display} submitted by ${this.queue[0].submittedBy}${warning}`;
     }
     if (this.queue[0].type === "creator") {
       switch (this.options.creatorCodeMode) {
@@ -1515,7 +1519,7 @@ class ShenaniBot {
     return new Creator(aliasInfo.userId, aliasInfo.alias, aliasInfo.avatarId);
   }
 
-  _specifyLevelForCreator(creatorId, level) {
+  async _specifyLevelForCreator(creatorId, level) {
     const oldEntry = this.queue[0];
     if (!oldEntry || oldEntry.type !== "creator"
                   || oldEntry.id !== creatorId) {
@@ -1525,7 +1529,7 @@ class ShenaniBot {
       level[key] = oldEntry[key];
     }
     this.queue[0] = level;
-    this.sendAsync( this._playLevel() );
+    this.sendAsync( await this._playLevel() );
 
     this.onQueue();
     return true;

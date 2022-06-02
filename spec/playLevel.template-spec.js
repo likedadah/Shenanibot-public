@@ -33,6 +33,7 @@
 //     code as newId
 
 const fp = require("lodash/fp");
+const { LHClient } = require("../src/lhClient");
 
 module.exports = itPlaysALevel = (n, cb, {
   botConfig = {},
@@ -48,6 +49,39 @@ module.exports = itPlaysALevel = (n, cb, {
   describe("changes the 'now playing' entry, so", () => {
     describe("if the new 'now playing' entry is a level, it", () => {
       it("bookmarks the level", async function() {
+        const bot = await buildBot();
+        if (n > 1) {
+          await this.addLevels(bot, n - 1);
+          await bot.command("!add valid00", "viewer0");
+          await this.addLevels(bot, 2, n);
+        }
+
+        await cb(bot, "viewer0", "valid00", "valid01");
+
+        expect(this.bookmarks).toContain("valid00");
+      });
+
+      it("does not crash if bookmarking fails", async function() {
+        LHClient.baseDelay = 0;
+        this.MockRumpusCE.setAddBookmarkFailure(100);
+
+        const bot = await buildBot();
+        if (n > 1) {
+          await this.addLevels(bot, n - 1);
+          await bot.command("!add valid00", "viewer0");
+          await this.addLevels(bot, 2, n);
+        }
+
+        this.resetChat();
+        await cb(bot, "viewer0", "valid00", "valid01");
+
+        expect(this.getChat().join("")).toContain("Unable to create bookmark");
+      });
+
+      it("retries bookmarking (3 total attempts)", async function() {
+        LHClient.baseDelay = 0;
+        this.MockRumpusCE.setAddBookmarkFailure(2);
+
         const bot = await buildBot();
         if (n > 1) {
           await this.addLevels(bot, n - 1);
@@ -226,24 +260,26 @@ module.exports = itPlaysALevel = (n, cb, {
         it(  "prints the 'picking a level' message before the 'now playing'"
            + "message when choosing randomly, even if level info is cached",
            async function() {
-          jasmine.clock().install();
           const bot = await buildBot({config: {
             creatorCodeMode: "auto",
             httpPort: 8080
           }});
+          const ws = await this.openWebSocket('overlay/levels');
 
           await bot.command("!add emp010", "viewer0");
           await bot.command("!next", "streamer");
+          await this.waitForWsMessages(ws, 3);
 
           if (n > 1) {
             await this.addLevels(bot, n - 1);
             await bot.command("!add emp010", "viewer0");
             await bot.command("!add emp003", "viewer");
+            await this.waitForWsMessages(ws, n + 1);
           }
 
           this.resetChat();
           await cb(bot, "viewer0", "emp010", "valid01");
-          jasmine.clock().tick(0);
+          await this.waitForWsMessages(ws, 2);
 
           const chat = this.getChat();
           const pickingIndex = chat.findIndex(m => m.includes(
@@ -258,7 +294,8 @@ module.exports = itPlaysALevel = (n, cb, {
             fail("Did not receive 'now playing' message");
           }
           expect(playingIndex).toBeGreaterThan(pickingIndex);
-          jasmine.clock().uninstall();
+
+          this.closeWebSocket(ws);
         });
 
         it("sends a websocket update if configured to do so", async function() {

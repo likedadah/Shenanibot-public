@@ -114,34 +114,41 @@ describe("the players configuration option", () => {
   });
 
   it("limits auto-selection of levels for a creator code", async function() {
-    jasmine.clock().install();
     const bot = await this.buildBotInstance({config: {
       players: 1,
-      creatorCodeMode: "auto"
+      creatorCodeMode: "auto",
+      httpPort: 8080
     }});
+    const ws = await this.openWebSocket('overlay/levels');
 
     this.setRandomizerToMin();
 
     await bot.command("!add 1plevel", "viewer");
     await bot.command("!win", "streamer");
-    await bot.command("!add cooper", "viewer");
-    jasmine.clock().tick(0);
+    await Promise.all([
+      bot.command("!add cooper", "viewer"),
+      this.waitForWsMessages(ws, 4)
+    ]);
 
     expect(this.bookmarks).toEqual(['1plevel']);
 
     await bot.command("!win", "streamer");
     await bot.command("!players 2", "streamer");
-    await bot.command("!add cooper", "viewer");
-    jasmine.clock().tick(0);
+    await Promise.all([
+      bot.command("!add cooper", "viewer"),
+      this.waitForWsMessages(ws, 3)
+    ]);
 
     expect(this.bookmarks).toEqual(['2plevel']);
 
     await bot.command("!win", "streamer");
-    await bot.command("!add cooper", "viewer");
-    jasmine.clock().tick(0);
+    await Promise.all([
+      bot.command("!add cooper", "viewer"),
+      this.waitForWsMessages(ws, 3)
+    ]);
 
     expect(this.bookmarks).toEqual(['1plevel']);
 
-    jasmine.clock().uninstall();
+    this.closeWebSocket(ws);
   });
 });

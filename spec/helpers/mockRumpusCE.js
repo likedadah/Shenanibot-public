@@ -1,6 +1,7 @@
 const Rumpus = require("@bscotch/rumpus-ce");
 
 const bookmarks = [];
+let addBookmarkFailure = 0;
 
 const makeLevel = (_id, levelId, title, userId, requiredPlayers = 1) => {
   return {
@@ -9,14 +10,6 @@ const makeLevel = (_id, levelId, title, userId, requiredPlayers = 1) => {
     stats: {}
   };
 };
-
-beforeAll(function () {
-  this.bookmarks = bookmarks;
-});
-
-beforeEach(() => {
-  bookmarks.length = 0;
-});
 
 class MockRumpusCE {
   constructor(_) {
@@ -151,7 +144,12 @@ class MockRumpusCE {
       },
       bookmarks: {
         add: id => {
+          if (addBookmarkFailure) {
+            addBookmarkFailure -= 1;
+            throw new Error("What if the API fails?");
+          }
           bookmarks.push(id);
+          return true;
         },
         remove: id => {
           bookmarks.splice(bookmarks.indexOf(id), 1);
@@ -159,6 +157,21 @@ class MockRumpusCE {
       }
     }
   }
+
+  static setAddBookmarkFailure(times) {
+    addBookmarkFailure = times;
+  }
 };
 
 Rumpus.RumpusCE = MockRumpusCE;
+
+beforeAll(function () {
+  this.MockRumpusCE = MockRumpusCE;
+  this.bookmarks = bookmarks;
+});
+
+beforeEach(() => {
+  bookmarks.length = 0;
+  addBookmarkFailure = 0;
+});
+
