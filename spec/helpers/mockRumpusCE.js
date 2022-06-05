@@ -1,7 +1,9 @@
 const Rumpus = require("@bscotch/rumpus-ce");
+const { LHClient } = require("../../src/lhClient");
 
 const bookmarks = [];
 let addBookmarkFailure = 0;
+let removeBookmarkFailure = 0;
 
 const makeLevel = (_id, levelId, title, userId, requiredPlayers = 1) => {
   return {
@@ -152,7 +154,12 @@ class MockRumpusCE {
           return true;
         },
         remove: id => {
+          if (removeBookmarkFailure) {
+            removeBookmarkFailure -= 1;
+            throw new Error("What if the API fails?");
+          }
           bookmarks.splice(bookmarks.indexOf(id), 1);
+          return true;
         }
       }
     }
@@ -161,6 +168,10 @@ class MockRumpusCE {
   static setAddBookmarkFailure(times) {
     addBookmarkFailure = times;
   }
+
+  static setRemoveBookmarkFailure(times) {
+    removeBookmarkFailure = times;
+  }
 };
 
 Rumpus.RumpusCE = MockRumpusCE;
@@ -168,10 +179,12 @@ Rumpus.RumpusCE = MockRumpusCE;
 beforeAll(function () {
   this.MockRumpusCE = MockRumpusCE;
   this.bookmarks = bookmarks;
+  LHClient.baseDelay = 0;
 });
 
 beforeEach(() => {
   bookmarks.length = 0;
   addBookmarkFailure = 0;
+  removeBookmarkFailure = 0;
 });
 

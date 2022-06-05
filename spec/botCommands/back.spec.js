@@ -50,15 +50,39 @@ describe("the !back command", () => {
     ]);
   });
 
-  it("when pushing a level out of 'now playing' removes the bookmark",
-      async function() {
-    const bot = await this.buildBotInstance();
-    await this.addLevels(bot, 2);
-    await bot.command("!next", "streamer");
+  describe("when pushing a level out of 'now playing'", () => {
+    it("removes the bookmark", async function() {
+      const bot = await this.buildBotInstance();
+      await this.addLevels(bot, 2);
+      await bot.command("!next", "streamer");
 
-    await bot.command("!back", "streamer");
+      await bot.command("!back", "streamer");
 
-    expect(this.bookmarks).toEqual(['valid01']);
+      expect(this.bookmarks).toEqual(['valid01']);
+    });
+
+    it("does not crash if it can't remove the bookmark", async function() {
+      this.MockRumpusCE.setRemoveBookmarkFailure(-1);
+      const bot = await this.buildBotInstance();
+      await this.addLevels(bot, 2);
+      await bot.command("!next", "streamer");
+
+      this.resetChat();
+      await bot.command("!back", "streamer");
+
+      expect(this.getChat().join("")).toContain("Unable to remove bookmark");
+    });
+
+    it("retries removing the bookmark (3 total tries)", async function() {
+      this.MockRumpusCE.setRemoveBookmarkFailure(2);
+      const bot = await this.buildBotInstance();
+      await this.addLevels(bot, 2);
+      await bot.command("!next", "streamer");
+
+      await bot.command("!back", "streamer");
+
+      expect(this.bookmarks).toEqual(['valid01']);
+    });
   });
 
   it("when pushing a creator out of 'now playing' resets the ui",

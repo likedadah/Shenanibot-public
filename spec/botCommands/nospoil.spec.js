@@ -8,7 +8,7 @@ describe("the !nospoil command", () => {
          "@viewer, I'll send a direct message when the current level is done");
 
     expect(this.getDmsFor("viewer")).toEqual([]);
-    bot.command("!next", "streamer");
+    await bot.command("!next", "streamer");
     expect(this.getDmsFor('viewer')).toEqual([
                     'streamer has finished playing Valid Level 01 (valid01)']);
   });

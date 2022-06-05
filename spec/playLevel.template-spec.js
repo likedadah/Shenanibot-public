@@ -33,7 +33,6 @@
 //     code as newId
 
 const fp = require("lodash/fp");
-const { LHClient } = require("../src/lhClient");
 
 module.exports = itPlaysALevel = (n, cb, {
   botConfig = {},
@@ -62,8 +61,7 @@ module.exports = itPlaysALevel = (n, cb, {
       });
 
       it("does not crash if bookmarking fails", async function() {
-        LHClient.baseDelay = 0;
-        this.MockRumpusCE.setAddBookmarkFailure(100);
+        this.MockRumpusCE.setAddBookmarkFailure(-1);
 
         const bot = await buildBot();
         if (n > 1) {
@@ -79,7 +77,6 @@ module.exports = itPlaysALevel = (n, cb, {
       });
 
       it("retries bookmarking (3 total attempts)", async function() {
-        LHClient.baseDelay = 0;
         this.MockRumpusCE.setAddBookmarkFailure(2);
 
         const bot = await buildBot();

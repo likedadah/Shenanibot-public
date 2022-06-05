@@ -90,6 +90,29 @@ module.exports = async (cb, {
       expect(this.bookmarks).not.toContain("valid01");
     });
 
+    it("doesn't crash if unable to remove the bookmark", async function() {
+      this.MockRumpusCE.setRemoveBookmarkFailure(-1);
+      const bot = await buildBot();
+      await buildQueue(bot);
+      expect(this.bookmarks).toContain("valid01");
+
+      this.resetChat();
+      await cb(bot, "valid01");
+
+      expect(this.getChat().join("")).toContain("Unable to remove bookmark");
+    });
+
+    it("retries clearing the bookmark (3 total tries)", async function() {
+      this.MockRumpusCE.setRemoveBookmarkFailure(2);
+      const bot = await buildBot();
+      await buildQueue(bot);
+      expect(this.bookmarks).toContain("valid01");
+
+      await cb(bot, "valid01");
+
+      expect(this.bookmarks).not.toContain("valid01");
+    });
+
     it("decreases viewer level count for active limits", async function() {
       const bot = await buildBot({ config: {
         httpPort: 8080,

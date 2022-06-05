@@ -437,7 +437,7 @@ class ShenaniBot {
   }
 
   async nextLevel() {
-    let {empty, response} = this._dequeue();
+    let {empty, response} = await this._dequeue();
     if (!empty) {
       response = await this._playLevel();
     }
@@ -478,7 +478,7 @@ class ShenaniBot {
       return `You're already playing ${this.queue[index].display}!`;
     }
 
-    this._dequeue();
+    await this._dequeue();
     index -= 1;
     if (index > 0) {
       const entry = this.queue[index];
@@ -497,7 +497,7 @@ class ShenaniBot {
   }
 
   async randomLevel() {
-    let {empty, response} = this._dequeue();
+    let {empty, response} = await this._dequeue();
     if (!empty) {
       const markerIndex = this.queue.findIndex(e => e.type === "mark");
       if (markerIndex !== 0) {
@@ -537,7 +537,7 @@ class ShenaniBot {
     this.nextNoSpoilUsers = this.noSpoilUsers;
     this.noSpoilUsers = new Set();
     if (this.queue.length) {
-      this._stopPlayingLevel();
+      await this._stopPlayingLevel();
       this.levelCache.updateSessionInteractions(
                {id: this.queue[0].id, played: this.queue[0].previouslyPlayed});
     }
@@ -1234,7 +1234,7 @@ class ShenaniBot {
     return pos;
   }
 
-  _dequeue() {
+  async _dequeue() {
     if (this.queue.length === 0) {
       return {
         empty: true,
@@ -1242,7 +1242,7 @@ class ShenaniBot {
       };
     }
 
-    this._stopPlayingLevel();
+    await this._stopPlayingLevel();
     if (this.queue[0].type === "level") {
       this.levelCache.setLevelRejectReason(
                                       this.queue[0].id, "was already played");
@@ -1288,7 +1288,7 @@ class ShenaniBot {
       this.queue[0].previouslyBeaten = upToDateLevel.beaten;
       if (! await this.lhClient.addBookmark(this.queue[0].id) ) {
         this.queue[0].bookmarkError = true;
-	warning = "\nWARNING: Unable to create bookmark for current level!";
+        warning = "\nWARNING: Unable to create bookmark for current level!";
       }
       this.levelCache.updateSessionInteractions(
                                          {id: this.queue[0].id, played: true});
@@ -1330,10 +1330,14 @@ class ShenaniBot {
     return "Not currently playing a queued level.";
   }
 
-  _stopPlayingLevel() {
-    if (this.queue[0].type === "level") {
-      this.rce.levelhead.bookmarks.remove(this.queue[0].id);
+  async _stopPlayingLevel() {
+    if (this.queue[0].type === "level" && !this.queue[0].bookmarkError) {
+      if (! await this.lhClient.removeBookmark(this.queue[0].id) ) {
+        this.sendAsync(
+           `WARNING: Unable to remove bookmark for ${this.queue[0].display}!`);
+      }
     }
+    this.queue[0].bookmarkError = undefined;
     if (this.options.creatorCodeMode === "webui") {
       creatorCodeUi.clearCreatorInfo();
     }

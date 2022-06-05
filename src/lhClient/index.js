@@ -22,6 +22,7 @@ class LHClient {
     const rce = new Rumpus.RumpusCE(token);
 
     this.addBookmark = wrap(rce.levelhead.bookmarks.add, log);
+    this.removeBookmark = wrap(rce.levelhead.bookmarks.remove, log);
   }
 
   static baseDelay = 500;
