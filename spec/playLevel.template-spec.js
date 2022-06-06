@@ -166,57 +166,57 @@ module.exports = itPlaysALevel = (n, cb, {
         });
 
         it("prefers unplayed levels when choosing randomly", async function() {
-          jasmine.clock().install();
-          let bot;
-          let queue;
-          let oldId = undefined;
-          let lastUsed = 0;
-          const setup = async () => {
-            bot = await buildBot({config: {
-              creatorCodeMode: "auto",
-              httpPort: 8080
-            }});
-            await bot.command("!clear", "streamer");
+          await this.withMockTime(async () => {
+            let bot;
+            let queue;
+            let oldId = undefined;
+            let lastUsed = 0;
+            const setup = async () => {
+              bot = await buildBot({config: {
+                creatorCodeMode: "auto",
+                httpPort: 8080
+              }});
+              await bot.command("!clear", "streamer");
 
-            // not easy for the mocks to let us control which levels are played,
-            // so we'll populate the cache and update played status there
+              // not easy with the mocks to control which levels are played,
+              // so we'll populate the cache and update played status there
+              this.setRandomizerToMin();
+              await bot.command("!add emp010", "viewer");  // will play 001
+              await bot.command("!add 010l002", "viewer");
+              await bot.command("!add 010l004", "viewer");
+              await bot.command("!add 010l005", "viewer");
+              await bot.command("!add 010l006", "viewer");
+              await bot.command("!add 010l008", "viewer");
+              await bot.command("!add 010l009", "viewer");
+              await bot.command("!add 010l010", "viewer");
+              for(let i = 0; i < 8; i++) {
+                await bot.command("!next", "streamer");
+              }
+              if (n > 1) {
+                await this.addLevels(bot, n - 1, lastUsed + 1);
+                oldId = `valid${lastUsed < 9 ? "0" : ""}${lastUsed + 1}`;
+                lastUsed += n;
+                await bot.command("!add emp010", "viewer0");
+                await bot.command("!add emp003", "viewer");
+              }
+            };
+
+            await setup();
+            this.setRandomizerToMax();
+            await cb(bot, "viewer0", "emp010", oldId);
+            jasmine.clock().tick(0);
+
+            queue = await this.getQueue();
+            expect(queue[0].entry.id).toEqual("010l007");
+
+            await setup();
             this.setRandomizerToMin();
-            await bot.command("!add emp010", "viewer");  // will play 001
-            await bot.command("!add 010l002", "viewer");
-            await bot.command("!add 010l004", "viewer");
-            await bot.command("!add 010l005", "viewer");
-            await bot.command("!add 010l006", "viewer");
-            await bot.command("!add 010l008", "viewer");
-            await bot.command("!add 010l009", "viewer");
-            await bot.command("!add 010l010", "viewer");
-            for(let i = 0; i < 8; i++) {
-              await bot.command("!next", "streamer");
-            }
-            if (n > 1) {
-              await this.addLevels(bot, n - 1, lastUsed + 1);
-              oldId = `valid${lastUsed < 9 ? "0" : ""}${lastUsed + 1}`;
-              lastUsed += n;
-              await bot.command("!add emp010", "viewer0");
-              await bot.command("!add emp003", "viewer");
-            }
-          };
+            await cb(bot, "viewer0", "emp010", oldId);
+            jasmine.clock().tick(0);
 
-          await setup();
-          this.setRandomizerToMax();
-          await cb(bot, "viewer0", "emp010", oldId);
-          jasmine.clock().tick(0);
-
-          queue = await this.getQueue();
-          expect(queue[0].entry.id).toEqual("010l007");
-
-          await setup();
-          this.setRandomizerToMin();
-          await cb(bot, "viewer0", "emp010", oldId);
-          jasmine.clock().tick(0);
-
-          queue = await this.getQueue();
-          expect(queue[0].entry.id).toEqual("010l003");
-          jasmine.clock().uninstall();
+            queue = await this.getQueue();
+            expect(queue[0].entry.id).toEqual("010l003");
+          });
         });
 
         it("will not randomly choose a banned level", async function() {
@@ -317,64 +317,62 @@ module.exports = itPlaysALevel = (n, cb, {
 
         it("takes time to load all the level data for a new creator code",
            async function() {
-          jasmine.clock().install();
-          const bot = await buildBot({config: {
-            httpPort: 8080,
-            creatorCodeMode: "webui"
-          }});
-          if (n > 1) {
-            await this.addLevels(bot, n - 1);
-            await bot.command("!add emp200", "viewer0");
-            await bot.command("!add emp003", "viewer");
-          }
-
-          await cb(bot, "viewer0", "emp200", "valid01");
-
-          let creatorInfo = await this.getCreatorInfo();
-          expect(creatorInfo.levels.length).toBe(128);
-
-          jasmine.clock().tick(1000);
-
-          creatorInfo = await this.getCreatorInfo();
-          expect(creatorInfo.levels.length).toBe(200);
-
-          jasmine.clock().uninstall();
-        });
-
-        it("caches the level data for a creator code", async function() {
-          let id = 1;
-          const buildQueue = async () => {
+          await this.withMockTime(async () => {
+            const bot = await buildBot({config: {
+              httpPort: 8080,
+              creatorCodeMode: "webui"
+            }});
             if (n > 1) {
-              await bot.command(`!add valid0${id}`, "viewer");
-              for (let i = 2; i < n; i++) {
-                await bot.command("!add emp001", "viewer");
-              }
+              await this.addLevels(bot, n - 1);
               await bot.command("!add emp200", "viewer0");
               await bot.command("!add emp003", "viewer");
             }
-          }
 
-          jasmine.clock().install();
-          const bot = await buildBot({config: {
-            httpPort: 8080,
-            creatorCodeMode: "webui"
-          }});
-          await buildQueue();
-          await cb(bot, "viewer0", "emp200", `valid0${id}`);
-          jasmine.clock().tick(1000);
-          const queue = await this.getSimpleQueue();
-          for (const entry of queue) {
-            await bot.command("!next", "streamer");
-          }
+            await cb(bot, "viewer0", "emp200", "valid01");
 
-          id += 1;
-          await buildQueue();
-          await cb(bot, "viewer0", "emp200", `valid0${id}`);
+            let creatorInfo = await this.getCreatorInfo();
+            expect(creatorInfo.levels.length).toBe(128);
 
-          creatorInfo = await this.getCreatorInfo();
-          expect(creatorInfo.levels.length).toBe(200);
+            jasmine.clock().tick(1000);
 
-          jasmine.clock().uninstall();
+            creatorInfo = await this.getCreatorInfo();
+            expect(creatorInfo.levels.length).toBe(200);
+          });
+        });
+
+        it("caches the level data for a creator code", async function() {
+          await this.withMockTime(async () => {
+            let id = 1;
+            const buildQueue = async () => {
+              if (n > 1) {
+                await bot.command(`!add valid0${id}`, "viewer");
+                for (let i = 2; i < n; i++) {
+                  await bot.command("!add emp001", "viewer");
+                }
+                await bot.command("!add emp200", "viewer0");
+                await bot.command("!add emp003", "viewer");
+              }
+            }
+
+            const bot = await buildBot({config: {
+              httpPort: 8080,
+              creatorCodeMode: "webui"
+            }});
+            await buildQueue();
+            await cb(bot, "viewer0", "emp200", `valid0${id}`);
+            jasmine.clock().tick(1000);
+            const queue = await this.getSimpleQueue();
+            for (const entry of queue) {
+              await bot.command("!next", "streamer");
+            }
+
+            id += 1;
+            await buildQueue();
+            await cb(bot, "viewer0", "emp200", `valid0${id}`);
+
+            creatorInfo = await this.getCreatorInfo();
+            expect(creatorInfo.levels.length).toBe(200);
+          });
         });
       });
     }

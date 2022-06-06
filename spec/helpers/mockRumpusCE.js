@@ -4,6 +4,7 @@ const { LHClient } = require("../../src/lhClient");
 const bookmarks = [];
 let addBookmarkFailure = 0;
 let removeBookmarkFailure = 0;
+let searchPlayersFailure = 0;
 
 const makeLevel = (_id, levelId, title, userId, requiredPlayers = 1) => {
   return {
@@ -116,6 +117,10 @@ class MockRumpusCE {
       },
       players: {
         search: ({userIds, includeAliases}) => {
+          if (searchPlayersFailure)  {
+            searchPlayersFailure -= 1;
+            throw new Error("What if the API fails?");
+          }
           const creators = [];
           if (typeof userIds === 'string') {
             userIds = [userIds];
@@ -172,6 +177,10 @@ class MockRumpusCE {
   static setRemoveBookmarkFailure(times) {
     removeBookmarkFailure = times;
   }
+
+  static setSearchPlayersFailure(times) {
+    searchPlayersFailure = times;
+  }
 };
 
 Rumpus.RumpusCE = MockRumpusCE;
@@ -186,5 +195,6 @@ beforeEach(() => {
   bookmarks.length = 0;
   addBookmarkFailure = 0;
   removeBookmarkFailure = 0;
+  searchPlayersFailure = 0;
 });
 

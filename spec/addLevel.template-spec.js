@@ -227,25 +227,25 @@ module.exports = itAddsALevel = (cb, {supportsCreatorCode = true} = {}) => {
         priority: "rotation",
         roundDuration: 1
       }});
-      jasmine.clock().install();
 
-      await bot.command("!add valid01", "viewer0");
-      jasmine.clock().tick(59999);
-      await bot.command("!next", "streamer");
-      await cb(bot, "viewer0", "valid02");
-      jasmine.clock().tick(1);
-      await bot.command("!add valid03", "viewer1");
-      jasmine.clock().tick(60000);
-      await bot.command("!add valid04", "viewer2");
+      await this.withMockTime(async () => {
+        await bot.command("!add valid01", "viewer0");
+        jasmine.clock().tick(59999);
+        await bot.command("!next", "streamer");
+        await cb(bot, "viewer0", "valid02");
+        jasmine.clock().tick(1);
+        await bot.command("!add valid03", "viewer1");
+        jasmine.clock().tick(60000);
+        await bot.command("!add valid04", "viewer2");
 
-      const queue = await this.getQueue();
-      expect(queue.map(e => ({id: e.entry.id, round: e.entry.round})))
+        const queue = await this.getQueue();
+        expect(queue.map(e => ({id: e.entry.id, round: e.entry.round})))
                                                                     .toEqual([
-        {id: "valid02", round: 2},
-        {id: "valid03", round: 2},
-        {id: "valid04", round: 3}
-      ]);
-      jasmine.clock().uninstall();
+          {id: "valid02", round: 2},
+          {id: "valid03", round: 2},
+          {id: "valid04", round: 3}
+        ]);
+      });
     });
   });
 };

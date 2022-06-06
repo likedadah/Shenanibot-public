@@ -14,4 +14,23 @@ describe("the !add command", () => {
     const queue = await this.getSimpleQueue();
     expect(queue).toEqual([{ type: "creator", id: "emp001" }]);
   });
+
+  it("doesn't crash if the API fails when adding a creator", async function() {
+    this.MockRumpusCE.setSearchPlayersFailure(-1);
+    const bot = await this.buildBotInstance({config: { httpPort: 8080 }});
+
+    await bot.command("!add emp001", "viewer");
+
+    expect(this.getChat().join("")).toContain("Unable to load creator data");
+  });
+
+  it("retries API calls (3 tries) when adding a creator", async function() {
+    this.MockRumpusCE.setSearchPlayersFailure(2);
+    const bot = await this.buildBotInstance({config: { httpPort: 8080 }});
+
+    await bot.command("!add emp001", "viewer");
+
+    const queue = await this.getSimpleQueue();
+    expect(queue).toEqual([{ type: "creator", id: "emp001" }]);
+  });
 });

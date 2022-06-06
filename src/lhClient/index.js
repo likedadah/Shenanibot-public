@@ -10,7 +10,7 @@ const wrap = (fn, log) => async (...args) => {
       retry++;
       const severity = (retry < 3) ? 'WARNING' : 'ERROR';
       log(`${severity}: Rumpus call failed (attempt ${retry}) - ${e}`);
-      if (retry < 3) {
+      if (retry < 3 && LHClient.baseDelay > 0) {
         await new Promise(r => setTimeout(r, LHClient.baseDelay * retry));
       }
     }
@@ -23,6 +23,7 @@ class LHClient {
 
     this.addBookmark = wrap(rce.levelhead.bookmarks.add, log);
     this.removeBookmark = wrap(rce.levelhead.bookmarks.remove, log);
+    this.searchPlayers = wrap(rce.levelhead.players.search, log);
   }
 
   static baseDelay = 500;

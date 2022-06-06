@@ -716,8 +716,11 @@ class ShenaniBot {
       return (await this._checkLevel(id)).message;
     } else {
       const creator = await this._getCreator(id);
-      if (!creator) {
+      if (creator === null) {
         return "Oops! That creator does not exist!";
+      }
+      if (!creator) {
+        return "";
       }
 
       let levels = [];
@@ -788,8 +791,11 @@ class ShenaniBot {
 
     if (type === "creator") {
       entry = await this._getCreator(id);
-      if (!entry) {
+      if (entry === null) {
         return "Oops! That creator does not exist!";
+      }
+      if (!entry) {
+        return "";
       }
     }
 
@@ -1412,10 +1418,17 @@ class ShenaniBot {
     }
 
     while (remaining.size > 0) {
-      const creatorInfos = await this.rce.levelhead.players.search({
+      const creatorInfos = await this.lhClient.searchPlayers({
         userIds: Array.from(remaining),
         includeAliases: true
       }, { doNotUseKey: true });
+      if (!creatorInfos) {
+        this.sendAsync("WARNING: Unable to load creator data");
+        for (const id of remaining) {
+          creators[id] = undefined;
+	}
+        break;
+      }
       if (creatorInfos.length === 0) {
         break;
       }

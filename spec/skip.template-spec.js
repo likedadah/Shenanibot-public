@@ -88,21 +88,20 @@ module.exports = async (cb, { botConfig = {} } = {}) => {
       const bot = await buildBot({config: {
         creatorCodeMode: 'auto'
       }});
-      jasmine.clock().install();
 
-      await bot.command("!add valid01", "viewer");
-      await bot.command("!add emp001", "viewer");
-      await bot.command("!add 001l001", "viewer");
-      await bot.command("!next", "streamer");
-      await bot.command("!next", "streamer");
-      await cb(bot, "001l001");
+      await this.withMockTime(async () => {
+        await bot.command("!add valid01", "viewer");
+        await bot.command("!add emp001", "viewer");
+        await bot.command("!add 001l001", "viewer");
+        await bot.command("!next", "streamer");
+        await bot.command("!next", "streamer");
+        await cb(bot, "001l001");
 
-      this.resetChat();
-      await bot.command("!check emp001", "viewer");
-      jasmine.clock().tick(0);
-      expect(this.getChat().join('')).not.toContain('unplayed');
-
-      jasmine.clock().uninstall();
+        this.resetChat();
+        await bot.command("!check emp001", "viewer");
+        jasmine.clock().tick(0);
+        expect(this.getChat().join('')).not.toContain('unplayed');
+      });
     });
   });
 };
