@@ -113,6 +113,30 @@ describe("the !nope command", () => {
 
       expect(this.bookmarks).toEqual([]);
     });
+
+    it("doesn't crash if the API fails to load the level", async function() {
+      this.MockRumpusCE.setSearchLevelsFailure(-1);
+      const bot = await this.buildBotInstance({config: botConfig});
+      await bot.command("!nope valid02", "streamer");
+
+      expect(this.getChat().join("")).toContain("Unable to load level data");
+      expect(this.getChat().join("")).toContain(
+         "Couldn't verify the id due to API issues; please try again later");
+
+      this.MockRumpusCE.setSearchLevelsFailure(0);
+      await bot.command("!add valid02", "viewer");
+
+      expect(this.bookmarks).toEqual(["valid02"]);
+    });
+
+    it("retries the API call (3 total tries)", async function() {
+      this.MockRumpusCE.setSearchLevelsFailure(2);
+      const bot = await this.buildBotInstance({config: botConfig});
+      await bot.command("!nope valid02", "streamer");
+      await bot.command("!add valid02", "viewer");
+
+      expect(this.bookmarks).toEqual([]);
+    });
   });
 
   it("shows the ban in the creator code ui", async function() {

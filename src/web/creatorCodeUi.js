@@ -1,3 +1,4 @@
+const _ = require("lodash/fp");
 const httpServer = require("./server");
 
 const wsUrl = "/ui/creatorCode";
@@ -51,12 +52,14 @@ module.exports = {
     }));
   },
 
-  updateCreatorLevel: level => {
-    const i = creatorInfo.levels.findIndex(l => l.id === level.id);
-    if (i > -1) {
-      creatorInfo.levels[i] = level;
+  patchCreatorLevel: patch => {
+    const level = creatorInfo.levels.find(l => l.id === patch.id);
+    if (level) {
+      for (const k of Object.keys(patch)) {
+        level[k] = patch[k];
+      }
       httpServer.broadcast(wsUrl, JSON.stringify({
-        level,
+        level: _.omit("rejectReason", level),
         type: 'level-update'
       }));
     }

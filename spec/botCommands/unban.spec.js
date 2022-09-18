@@ -87,7 +87,15 @@ describe("the !unban command", () => {
       enabled: true
     }}});
     const response = await bot.command("!unban valid01", "streamer");
-    expect(response).toContain("was already not banned");
+    expect(response).toContain("is not a banned level");
+  });
+
+  it("does not distinguish 'nonexistant' from 'not banned'", async function() {
+    const bot = await this.buildBotInstance({config: {persistence: {
+      enabled: true
+    }}});
+    const response = await bot.command("!unban invalid", "streamer");
+    expect(response).toContain("is not a banned level");
   });
 
   it("does nothing if given invalid level id", async function() {
@@ -96,14 +104,6 @@ describe("the !unban command", () => {
     }}});
     const response = await bot.command("!unban emp001", "streamer");
     expect(response).toContain("not a valid level code");
-  });
-
-  it("does nothing if given a nonexistent level", async function() {
-    const bot = await this.buildBotInstance({config: {persistence: {
-      enabled: true
-    }}});
-    const response = await bot.command("!unban invalid", "streamer");
-    expect(response).toContain("level does not exist");
   });
 
   it("only works if persistence is enabled", async function() {

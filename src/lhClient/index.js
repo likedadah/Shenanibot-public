@@ -24,6 +24,7 @@ class LHClient {
     this.addBookmark = wrap(rce.levelhead.bookmarks.add, log);
     this.removeBookmark = wrap(rce.levelhead.bookmarks.remove, log);
     this.searchPlayers = wrap(rce.levelhead.players.search, log);
+    this.searchLevels = wrap(rce.levelhead.levels.search, log);
   }
 
   static baseDelay = 500;

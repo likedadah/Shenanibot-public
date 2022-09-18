@@ -5,6 +5,7 @@ const bookmarks = [];
 let addBookmarkFailure = 0;
 let removeBookmarkFailure = 0;
 let searchPlayersFailure = 0;
+let searchLevelsFailure = 0;
 
 const makeLevel = (_id, levelId, title, userId, requiredPlayers = 1) => {
   return {
@@ -20,6 +21,10 @@ class MockRumpusCE {
       levels: {
         search: ({levelIds, userIds, includeMyInteractions,
                   limit, tiebreakerItemId}) => {
+          if (searchLevelsFailure)  {
+            searchLevelsFailure -= 1;
+            throw new Error("What if the API fails?");
+          }
           const levels = [];
           if (levelIds) {
             if (typeof levelIds === 'string') {
@@ -181,6 +186,10 @@ class MockRumpusCE {
   static setSearchPlayersFailure(times) {
     searchPlayersFailure = times;
   }
+
+  static setSearchLevelsFailure(times) {
+    searchLevelsFailure = times;
+  }
 };
 
 Rumpus.RumpusCE = MockRumpusCE;
@@ -196,5 +205,6 @@ beforeEach(() => {
   addBookmarkFailure = 0;
   removeBookmarkFailure = 0;
   searchPlayersFailure = 0;
+  searchLevelsFailure = 0;
 });
 

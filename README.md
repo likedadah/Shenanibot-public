@@ -48,7 +48,7 @@ If persistence is enabled, you can also use
 `!postpone [and play ...]` : Saves the level to be played in the next session  
 `!nope [and play ...]` : Skips the level and bans it from future resubmission  
 
-The `!postpone` command works just like `!skip`, except the level will automatically be reloaded into the queue the next time the bot starts up (assuming persistence is still enabled).  Reloaded level(s) are not counted against any player's limit, and in "rotation" mode they are placed in a round before any newly-submitted levels.
+The `!postpone` command works just like `!skip`, except the level will automatically be reloaded into the queue the next time the bot starts up (assuming persistence is still enabled).  Reloaded level(s) are not counted against any player's limit, and in "rotation" mode they are placed in a single round before any newly-submitted levels.
 
 The `!nope` command is described in more detail in the previous section, but note that when using it to skip the current level `...and play...` syntax is also accepted.
 

@@ -228,6 +228,53 @@ describe("the !postpone command", () => {
     expect(this.bookmarks).toEqual(["2plevel"]);
   });
 
+  it("doesn't crash due to API failures when reloading", async function() {
+    const bot = await this.buildBotInstance({config: {persistence: {
+      enabled: true
+    }}});
+    await bot.command("!add valid01", "viewer");
+    await bot.command("!add emp001", "viewer");
+    await bot.command("!postpone", "streamer");
+    await bot.command("!postpone", "streamer");
+
+    this.MockRumpusCE.setSearchPlayersFailure(-1);
+    this.MockRumpusCE.setSearchLevelsFailure(-1);
+    this.resetChat();
+
+    const bot2 = await this.buildBotInstance({config: {
+      persistence: {
+        enabled: true
+      },
+      httpPort: 8080
+    }});
+    expect(this.getChat().join("")).toContain("Unable to load level data");
+    expect(this.getChat().join("")).toContain("Unable to load creator data");
+  });
+
+  it("retries API calls (3 tries each) when reloading", async function() {
+    const bot = await this.buildBotInstance({config: {persistence: {
+      enabled: true
+    }}});
+    await bot.command("!add valid01", "viewer");
+    await bot.command("!add emp001", "viewer");
+    await bot.command("!postpone", "streamer");
+    await bot.command("!postpone", "streamer");
+
+    this.MockRumpusCE.setSearchPlayersFailure(2);
+    this.MockRumpusCE.setSearchLevelsFailure(2);
+    const bot2 = await this.buildBotInstance({config: {
+      persistence: {
+        enabled: true
+      },
+      httpPort: 8080
+    }});
+
+    expect(await this.getSimpleQueue()).toEqual([
+      {type: "level", id: "valid01"},
+      {type: "creator", id: "emp001"},
+    ]);
+  });
+
   it("only works when persistence is enabled", async function() {
     const bot = await this.buildBotInstance({config: {
       httpPort: 8080

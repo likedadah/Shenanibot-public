@@ -84,5 +84,24 @@ module.exports = itChecksALevel = cb => {
       const response = await bot.command("!check 2plevel", "viewer");
       expect(response).toContain('not accepting 2-player levels')
     });
+
+    it("warns if API failures prevent loading data", async function() {
+      const bot = await this.buildBotInstance();
+
+      this.MockRumpusCE.setSearchLevelsFailure(-1);
+      await cb(bot, "viewer", "beaten1");
+
+      expect(this.getChat().join(""))
+                              .toContain("WARNING: Unable to load level data");
+    });
+
+    it("retries API calls (3 tries)", async function() {
+      const bot = await this.buildBotInstance();
+
+      this.MockRumpusCE.setSearchLevelsFailure(2);
+      const response = await cb(bot, "viewer", "beaten1");
+
+      expect(response).toContain("has beaten");
+    });
   });
 }

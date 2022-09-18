@@ -14,7 +14,8 @@ describe("the !check command", () => {
     const bot = await this.buildBotInstance();
     await bot.command("!check emp000", "viewer");
 
-    expect(this.getChat().join("\t")).toContain("Unable to find levels for EmployEE 000's Profile");
+    expect(this.getChat().join("\t"))
+                .toContain("Unable to find levels for EmployEE 000's Profile");
   });
 
   it("ignores banned levels", async function() {
@@ -110,7 +111,7 @@ describe("the !check command", () => {
     });
   });
 
-  it("responds if the API call fails", async function() {
+  it("responds if the player search API call fails", async function() {
     await this.withMockTime(async () => {
       this.MockRumpusCE.setSearchPlayersFailure(-1);
       const bot = await this.buildBotInstance();
@@ -122,9 +123,22 @@ describe("the !check command", () => {
     });
   });
 
-  it("retries the player search API call (3 total tries) ", async function() {
+  it("responds if the level search API call fails", async function() {
+    await this.withMockTime(async () => {
+      this.MockRumpusCE.setSearchLevelsFailure(-1);
+      const bot = await this.buildBotInstance();
+
+      await bot.command("!check emp010", "viewer");
+      jasmine.clock().tick(0);
+
+      expect(this.getChat().join("")).toContain("Unable to load level data");
+    });
+  });
+
+  it("retries API calls (3 tries each) ", async function() {
     await this.withMockTime(async () => {
       this.MockRumpusCE.setSearchPlayersFailure(2);
+      this.MockRumpusCE.setSearchLevelsFailure(2);
       const bot = await this.buildBotInstance();
 
       await bot.command("!check emp010", "viewer");

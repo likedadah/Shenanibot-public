@@ -25,6 +25,24 @@ module.exports = itAddsALevel = (cb, {supportsCreatorCode = true} = {}) => {
       expect(this.bookmarks).toEqual(["valid01"]);
     });
 
+    it("warns if it's unable to load level data", async function() {
+      const bot = await this.buildBotInstance();
+
+      this.MockRumpusCE.setSearchLevelsFailure(-1);
+      await cb(bot, "viewer", "valid01");
+
+      expect(this.getChat().join("")).toContain("Unable to load level data");
+    });
+
+    it("retries loading level data (3 total tries)", async function() {
+      const bot = await this.buildBotInstance();
+
+      this.MockRumpusCE.setSearchLevelsFailure(2);
+      await cb(bot, "viewer", "valid01");
+
+      expect(this.bookmarks).toEqual(["valid01"]);
+    });
+
     it("respects fifo ordering", async function() {
       const bot = await this.buildBotInstance({config: {
         httpPort: 8080,

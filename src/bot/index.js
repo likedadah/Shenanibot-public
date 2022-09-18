@@ -1,5 +1,4 @@
 const clipboard = require("clipboardy");
-const Rumpus = require("@bscotch/rumpus-ce");
 
 const version = require('../../package.json').version;
 const { LHClient } = require("../lhClient");
@@ -20,7 +19,6 @@ class ShenaniBot {
     this.sendAsync = sendAsync;
     this.dm = dm;
     this.canDm = canDm;
-    this.rce = new Rumpus.RumpusCE(botOptions.auth.delegationToken);
     this.lhClient = new LHClient(botOptions.auth.delegationToken, log);
     this.persistenceManager = new PersistenceManager(
                                                 botOptions.config.persistence);
@@ -306,7 +304,7 @@ class ShenaniBot {
       this.levelCache.levelIsBanned(entry.id);
       this.persistenceManager.entryBanned(entry);
       if (this.options.creatorCodeMode === "webui") {
-        creatorCodeUi.updateCreatorLevel(entry);
+        creatorCodeUi.patchCreatorLevel({id: entry.id, banned: entry.banned});
       }
       message = `${entry.display} has been banned from the queue`;
       return true;
@@ -327,8 +325,11 @@ class ShenaniBot {
         level = this.prevLevel;
       } else {
         level = await this._getLevel(args[1]);
-        if (!level) {
+        if (level === null) {
           return "Oops! That level does not exist!";
+        }
+        if (!level) {
+          return "Couldn't verify the id due to API issues; please try again later";
         }
       }
 
@@ -357,20 +358,18 @@ class ShenaniBot {
     if (idType !== "level") {
       return `${id} is not a valid level code`;
     }
-    const level = (id === this.prevLevel?.id) ? this.prevLevel
-                                              : await this._getLevel(id);
-    if (!level) {
-      return "Oops! That level does not exist!";
-    }
+    const level = (id === this.prevLevel?.id)
+                ? this.prevLevel
+                : { id, banned: this.levelCache.isLevelBanned(id) }
     if (!level.banned) {
-      return "That level was already not banned!";
+      return "That is not a banned level!";
     }
 
     level.banned = false;
     this.levelCache.levelIsBanned(level.id, false);
     this.persistenceManager.banReversed(level);
     if (this.options.creatorCodeMode === "webui") {
-      creatorCodeUi.updateCreatorLevel(await this._getLevel(level.id));
+      creatorCodeUi.patchCreatorLevel(level);
     }
     return `${level.display} is no longer banned from the queue`;
   }
@@ -711,8 +710,7 @@ class ShenaniBot {
       return error;
     }
 
-    if (type === "level")
-    {
+    if (type === "level") {
       return (await this._checkLevel(id)).message;
     } else {
       const creator = await this._getCreator(id);
@@ -776,8 +774,11 @@ class ShenaniBot {
     if (type === "level") {
       entry = await this._getLevel(id);
 
-      if (!entry) {
+      if (entry === null) {
         return "Oops! That level does not exist!";
+      }
+      if (!entry) {
+        return "";
       }
       if (entry.rejectReason) {
         return `That level ${entry.rejectReason}!`;
@@ -1172,10 +1173,16 @@ class ShenaniBot {
 
   async _checkLevel(levelId) {
     const level = await this._getLevel(levelId);
-    if (!level) {
+    if (level === null) {
       return {
         canAutoAdd: false,
         message: "Oops! That level does not exist!"
+      };
+    }
+    if (!level) {
+      return {
+        canAutoAdd: false,
+        message: ""
       };
     }
 
@@ -1426,7 +1433,7 @@ class ShenaniBot {
         this.sendAsync("WARNING: Unable to load creator data");
         for (const id of remaining) {
           creators[id] = undefined;
-	}
+        }
         break;
       }
       if (creatorInfos.length === 0) {
@@ -1462,10 +1469,17 @@ class ShenaniBot {
     }
 
     while (remaining.size > 0) {
-      const levelInfos = await this.rce.levelhead.levels.search({
+      const levelInfos = await this.lhClient.searchLevels({
         levelIds: Array.from(remaining),
         includeMyInteractions: true
       });
+      if (!levelInfos) {
+        this.sendAsync("WARNING: Unable to load level data");
+        for (const id of remaining) {
+          levels[id] = undefined;
+        }
+        break;
+      }
       if (levelInfos.length === 0) {
         break;
       }
@@ -1501,15 +1515,20 @@ class ShenaniBot {
     };
 
     do {
-      const levelInfo = await this.rce.levelhead.levels.search(query);
-      const loadedLevels = levelInfo.map(this._mapLevel);
-      _levelsCb(this.levelCache.addLevelsForCreator(creatorId, loadedLevels));
+      const levelInfo = await this.lhClient.searchLevels(query);
+      if (levelInfo) {
+        const loadedLevels = levelInfo.map(this._mapLevel);
+        _levelsCb(this.levelCache.addLevelsForCreator(creatorId, loadedLevels));
 
-      gotMaxLevels = levelInfo.length === maxLevels;
-      if (gotMaxLevels) {
-        query.maxCreatedAt = levelInfo[maxLevels - 1].createdAt;
-        query.tiebreakerItemId = levelInfo[maxLevels - 1]._id;
-        await new Promise(r => setTimeout(r, 1000));
+        gotMaxLevels = levelInfo.length === maxLevels;
+        if (gotMaxLevels) {
+          query.maxCreatedAt = levelInfo[maxLevels - 1].createdAt;
+          query.tiebreakerItemId = levelInfo[maxLevels - 1]._id;
+          await new Promise(r => setTimeout(r, 1000));
+        }
+      } else {
+        this.sendAsync("WARNING: Unable to load level data");
+        gotMaxLevels = false;
       }
     } while( gotMaxLevels );
 

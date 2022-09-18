@@ -91,6 +91,10 @@ class LevelCache {
     }
   }
 
+  isLevelBanned(levelId) {
+    return !! (levels[levelId]?.banned);
+  }
+
   removeLevel(levelId) {
     const entry = levels[levelId];
     if (entry) {

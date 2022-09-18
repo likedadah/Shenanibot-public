@@ -58,6 +58,7 @@ describe("the !suspend command", () => {
     await bot.command("!suspend", "streamer");
 
     this.MockRumpusCE.setSearchPlayersFailure(-1);
+    this.MockRumpusCE.setSearchLevelsFailure(-1);
     this.resetChat();
     const bot2 = await this.buildBotInstance({config: {
       persistence: {
@@ -65,6 +66,7 @@ describe("the !suspend command", () => {
       },
       httpPort: 8080
     }});
+    expect(this.getChat().join("")).toContain("Unable to load level data");
     expect(this.getChat().join("")).toContain("Unable to load creator data");
   });
 
@@ -79,6 +81,7 @@ describe("the !suspend command", () => {
     await bot.command("!suspend", "streamer");
 
     this.MockRumpusCE.setSearchPlayersFailure(2);
+    this.MockRumpusCE.setSearchLevelsFailure(2);
     const bot2 = await this.buildBotInstance({config: {
       persistence: {
         enabled: true
