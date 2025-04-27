@@ -166,7 +166,7 @@ If you also provide an OAuth token for your streamer account, then whispers will
 ### Twitch Bot Authentication (required)
 The bot needs an account to use when logging into Twitch chat. This account can be shared with other bots, but it should not be your streamer account.
 
-Rather than a password, bots use an OAuth token to log in; so you need to provide a username and OAuth token for the bot account. Once you've created the bot account, you can generate an OAuth token for it at https://twitchapps.com/tmi
+Rather than a password, bots use an OAuth token to log in; so you need to provide a username and OAuth token for the bot account. Once you've created the bot account, you can generate an OAuth token for it at https://twitchtokengenerator.com/
 
 ### Rumpus Authentication (required)
 The Rumpus API allows the bot to communicate with LevelHead. (Most importantly, this is how bookmarks are updated.) The API uses a "delegation key" to provide access to various game functions. You can manage your delegation tokens at https://www.bscotch.net/account
